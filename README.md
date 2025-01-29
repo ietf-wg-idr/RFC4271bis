@@ -11,22 +11,22 @@ We've agreed that we do not want to try to boil the ocean and want the smallest 
 # Committed
 ## Errata
 These are listed by errata ID.  Please use one pull request per errata.
-- 2838
-- 1633
-- 4493
-- 5369
-- 5000
-- 5001
-- 6498
-- 150
-- 3264
-- 3459
+- 150 (tli)
+- 1633 (tli)
+- 2838 (tli)
+- 3264 (tli)
+- 3459 (tli)
 - 3464
 - 3809
+- 4493
 - 4496
+- 5000
+- 5001
+- 5369
 - 5421
 - 5766
 - 6256
+- 6498
 
 
 # In discussion
