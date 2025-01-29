@@ -3,19 +3,18 @@ title: "A Border Gateway Protocol 4 (BGP-4)"
 abbrev: BGP-4
 docname: draft-ietf-idr-bgp4-rfc4271bis
 category: std
-date: 2024-11-21
+date: 2025
 
 stand_alone: yes
 pi: [toc, sortrefs, symrefs, comments]
 
 ipr: trust200902
-stream: IETF
+submissiontype: IETF
 area: "rtg"
 wg: idr
 keyword: 
   - BGP-4
   - outing
-v: 3
 
 author:
  -
