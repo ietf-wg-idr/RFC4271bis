@@ -4370,7 +4370,7 @@ less specific route should combine them into the same UPDATE message.
 ##  Path Attribute Ordering
 
 Implementations that combine update messages (as described above in
-Section 6.1) may prefer to see all path attributes presented in a
+Appendix F.1) may prefer to see all path attributes presented in a
 known order.  This permits them to quickly identify sets of
 attributes from different update messages that are semantically
 identical.  To facilitate this, it is a useful optimization to order
