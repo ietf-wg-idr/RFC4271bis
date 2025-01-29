@@ -3278,6 +3278,8 @@ configured.  The local system automatically disconnects the peer.
 If the HoldTimer_Expires event occurs (Event 10), the local
 system:
 
+- deletes all routes associated with this connection,
+
 - sends a NOTIFICATION message with the Error Code Hold Timer
   Expired,
 
