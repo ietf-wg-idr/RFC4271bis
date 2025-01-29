@@ -1538,7 +1538,7 @@ with the Error Code Cease.  The speaker MAY also log this locally.
 ## BGP Connection Collision Detection
 
 If a pair of BGP speakers try to establish a BGP connection with each
-other simultaneously, then two parallel connections well be formed.
+other simultaneously, then two parallel connections will be formed.
 If the source IP address used by one of these connections is the same
 as the destination IP address used by the other, and the destination
 IP address used by the first connection is the same as the source IP
