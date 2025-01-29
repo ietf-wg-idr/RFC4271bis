@@ -3514,7 +3514,7 @@ The Phase 1 decision function is invoked whenever the local BGP
 speaker receives, from a peer, an UPDATE message that advertises a
 new route, a replacement route, or withdrawn routes.
 
-The Phase 1 decision function is a separate process,f which completes
+The Phase 1 decision function is a separate process, which completes
 when it has no further work to do.
 
 The Phase 1 decision function locks an Adj-RIB-In prior to operating
