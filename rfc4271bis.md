@@ -3542,7 +3542,7 @@ may result in formation of persistent routing loops.
 > If the route is learned from an external peer, then the local BGP
 speaker computes the degree of preference based on preconfigured
 policy information.  If the return value indicates the route is
-ineligible, the route MAY NOT serve as an input to the next phase
+ineligible, the route MUST NOT serve as an input to the next phase
 of route selection; otherwise, the return value MUST be used as
 the LOCAL_PREF value in any IBGP readvertisement.
 
