@@ -1318,8 +1318,7 @@ the Loc-RIB associated with the remote peer are marked as invalid.
 The local system recalculates its best routes for the destinations of
 the routes marked as invalid.  Before the invalid routes are deleted
 from the system, it advertises, to its peers, either withdraws for
-the routes marked as invalid, or the new best routes before the
-invalid routes are deleted from the system.
+the routes marked as invalid, or the new best routes.
 
 Unless specified explicitly, the Data field of the NOTIFICATION
 message that is sent to indicate an error is empty.
