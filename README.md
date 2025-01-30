@@ -18,7 +18,7 @@ These are listed by errata ID.  Please use one pull request per errata.
 - 3459 (tli)
 - 3464 (tli)
 - 3809 (tli)
-- 4493
+- 4493 (tli)
 - 4496
 - 5000
 - 5001

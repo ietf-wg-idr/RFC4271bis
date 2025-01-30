@@ -946,33 +946,43 @@ Error subcode:
    If no appropriate Error Subcode is defined, then a zero
    (Unspecific) value is used for the Error Subcode field.
 
-<!-- [rfced] convert these to tables? -->
-
 Message Header Error subcodes:
-: 1. Connection Not Synchronized.
-  2. Bad Message Length.
-  3. Bad Message Type.
+
+| Value | Name                            |
+|-------|---------------------------------|
+| 0     | Unspecific                      |
+| 1     | Connection Not Synchronized     |
+| 2     | Bad Message Length              |
+| 3     | Bad Message Type                |
 
 OPEN Message Error subcodes:
-: 1. Unsupported Version Number.
-  2. Bad Peer AS.
-  3. Bad BGP Identifier.
-  4. Unsupported Optional Parameter.
-  5. [Deprecated - see Appendix A].
-  6. Unacceptable Hold Time.
+
+| Value | Name                            |
+|-------|---------------------------------|
+| 0     | Unspecific                      |
+| 1     | Unsupported Version Number      |
+| 2     | Bad Peer AS                     |
+| 3     | Bad BGP Identifier              |
+| 4     | Unsupported Optional Parameter  |
+| 5     | [Deprecated - see Appendix A]   |
+| 6     | Unacceptable Hold Time          |
 
 UPDATE Message Error subcodes:
-: 1. Malformed Attribute List.
-  2. Unrecognized Well-known Attribute.
-  3. Missing Well-known Attribute.
-  4. Attribute Flags Error.
-  5. Attribute Length Error.
-  6. Invalid ORIGIN Attribute.
-  7. [Deprecated - see Appendix A].
-  8. Invalid NEXT_HOP Attribute.
-  9. Optional Attribute Error.
-  10. Invalid Network Field.
-  11. Malformed AS_PATH.
+
+| Value | Name                            |
+|-------|---------------------------------|
+| 0     | Unspecific                      |
+| 1     | Malformed Attribute List        |
+| 2     | Unrecognized Well-known Attribute |
+| 3     | Missing Well-known Attribute    |
+| 4     | Attribute Flags Error           |
+| 5     | Attribute Length Error          |
+| 6     | Invalid ORIGIN Attribute        |
+| 7     | [Deprecated - see Appendix A]   |
+| 8     | Invalid NEXT_HOP Attribute      |
+| 9     | Optional Attribute Error        |
+| 10    | Invalid Network Field           |
+| 11    | Malformed AS_PATH               |
 
 Data:
   : This variable-length field is used to diagnose the reason for
@@ -4566,6 +4576,7 @@ This document defines the following Message Header Error subcodes:
 
 | Name                         | Value | Definition
 |------------------------------|-------|------------------|
+| Unspecific                   | 0     | See Section 6.1  |
 | Connection Not Synchronized  | 1     | See Section 6.1  |
 | Bad Message Length           | 2     | See Section 6.1  |
 | Bad Message Type             | 3     | See Section 6.1  |
@@ -4574,6 +4585,7 @@ This document defines the following OPEN Message Error subcodes:
 
 | Name                          | Value | Definition      |
 |-------------------------------|-------|-----------------| 
+| Unspecific                    | 0     | See Section 6.2 |
 | Unsupported Version Number    | 1     | See Section 6.2 |
 | Bad Peer AS                   | 2     | See Section 6.2 |
 | Bad BGP Identifier            | 3     | See Section 6.2 |
@@ -4585,6 +4597,7 @@ This document defines the following UPDATE Message Error subcodes:
 
 | Name                             |Value | Definition      |
 |----------------------------------|------|-----------------|
+| Unspecific                       |  0   | See Section 6.3 |
 | Malformed Attribute List         |  1   | See Section 6.3 |
 | Unrecognized Well-known Attribute|  2   | See Section 6.3 |
 | Missing Well-known Attribute     |  3   | See Section 6.3 |
