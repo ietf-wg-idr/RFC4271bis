@@ -4021,7 +4021,7 @@ ORIGIN attribute:
      Otherwise, if at least one route among routes that are
      aggregated has ORIGIN with the value EGP, then the aggregated
      route MUST have the ORIGIN attribute with the value EGP.  In
-     all other cases,, the value of the ORIGIN attribute of the
+     all other cases, the value of the ORIGIN attribute of the
      aggregated route is IGP.
 
 AS_PATH attribute:
