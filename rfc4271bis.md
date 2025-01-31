@@ -1255,7 +1255,7 @@ Section 9.1.2.2 for necessary restrictions on this.
 
 ###  LOCAL_PREF
 
-LOCAL_PREF is a well-known attribute that SHALL be included in all
+LOCAL_PREF is a well-known discretionary attribute that SHALL be included in all
 UPDATE messages that a given BGP speaker sends to other internal
 peers.  A BGP speaker SHALL calculate the degree of preference for
 each external route based on the locally-configured policy, and
