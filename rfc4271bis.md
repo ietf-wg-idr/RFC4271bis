@@ -1196,8 +1196,8 @@ calculated as follows:
      the NEXT_HOP attribute).
 
    - By default, the BGP speaker SHOULD use the IP address of the
-     interface that the speaker uses in the NEXT_HOP attribute to
-     establish the BGP connection to peer X.
+     interface that the speaker uses to establish the BGP connection
+     to peer X in the NEXT_HOP attribute.
 
 Normally, the NEXT_HOP attribute is chosen such that the shortest
 available path will be taken.  A BGP speaker MUST be able to support
