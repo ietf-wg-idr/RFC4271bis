@@ -3109,7 +3109,7 @@ If the local system receives a KeepaliveTimer_Expires event (Event
 
 - restarts the KeepaliveTimer, and
 
-- remains in the OpenConfirmed state.
+- remains in the OpenConfirm state.
 
 In the event of a TcpConnection_Valid event (Event 14), or the
 success of a TCP connection (Event 16 or Event 17) while in
