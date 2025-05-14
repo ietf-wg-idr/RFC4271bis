@@ -1473,10 +1473,9 @@ message.  If the check determines this is not the case, the Error
 Subcode MUST be set to Malformed AS_PATH.
 
 If an optional attribute is recognized, then the value of this
-attribute MUST be checked.  If an error is detected, the attribute
-MUST be discarded, and the Error Subcode MUST be set to Optional
-Attribute Error.  The Data field MUST contain the attribute (type,
-length, and value).
+attribute MUST be checked.  If an error is detected, the Error Subcode
+MUST be set to Optional Attribute Error.  The Data field MUST contain
+the attribute (type, length, and value).
 
 If any attribute appears more than once in the UPDATE message, then
 the Error Subcode MUST be set to Malformed Attribute List.
@@ -4596,3 +4595,4 @@ This document defines the following UPDATE Message Error subcodes:
 | Optional Attribute Error         |  9   | See Section 6.3 |
 | Invalid Network Field            | 10   | See Section 6.3 |
 | Malformed AS_PATH                | 11   | See Section 6.3 |
+
