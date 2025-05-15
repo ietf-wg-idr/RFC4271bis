@@ -27,6 +27,7 @@ These are listed by errata ID.  Please use one pull request per errata.
 - 5766 (tli)
 - 6256 (tli)
 - 6498 (tli)
+- 8406 (jgs)
 
 
 # In discussion
