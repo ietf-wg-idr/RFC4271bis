@@ -3890,7 +3890,7 @@ system SHALL also be advertised in an UPDATE message.
 
 If, due to the limits on the maximum size of an UPDATE message (see
 Section 4), a single route doesn't fit into the message, the BGP
-speaker MUST not advertise the route to its peers and MAY choose to
+speaker MUST NOT advertise the route to its peers and MAY choose to
 log an error locally.
 
 ###  Controlling Routing Traffic Overhead
