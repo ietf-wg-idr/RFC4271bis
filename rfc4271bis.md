@@ -1011,8 +1011,8 @@ Path attributes fall into four separate categories:
 
 BGP implementations MUST recognize all well-known attributes.  Some
 of these attributes are mandatory and MUST be included in every
-UPDATE message that contains NLRI.  Others are discretionary and MAY
-or MAY NOT be sent in a particular UPDATE message.
+UPDATE message that contains NLRI.  Others are discretionary and may
+or may not be sent in a particular UPDATE message.
 
 Once a BGP peer has updated any well-known attributes, it MUST pass
 these attributes to its peers in any updates it transmits.
