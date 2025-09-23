@@ -1,7 +1,7 @@
 ---
 title: "A Border Gateway Protocol 4 (BGP-4)"
 abbrev: BGP-4
-docname: draft-ietf-idr-bgp4-rfc4271bis-00
+docname: draft-ietf-idr-bgp4-rfc4271bis
 category: std
 date: 2025
 
@@ -46,7 +46,8 @@ normative:
   RFC793: 
   RFC2119: 
   RFC2385: 
-  RFC2434: 
+  RFC5925:
+  RFC8126: 
   RFC8174: 
 
 informative: 
@@ -69,9 +70,19 @@ informative:
   RFC3392:
   RFC2918:
   RFC3065:
-  RFC3562:
+<!-- XXX Key management considerations for MD5  RFC3562: -->
+  RFC4271:
   RFC4272:
-  RFC4020:
+  RFC4456:
+  RFC4760:
+  RFC5004:
+  RFC5065:
+  RFC6793:
+  RFC7606:
+  RFC7705:
+  RFC7964:
+  RFC9072:
+  RFC9774:
 
   IS10747:
     title: "Information Processing Systems - Telecommunications and Information Exchange between Systems - Protocol for Exchange of Inter-domain Routeing Information among Intermediate Systems to Support Forwarding of ISO 8473 PDUs"
@@ -84,7 +95,7 @@ informative:
 This document discusses the Border Gateway Protocol (BGP), which is
 an inter-Autonomous System routing protocol.
 
-The primary function of a BGP speaking system is to exchange network
+The primary function of a BGP-speaking system is to exchange network
 reachability information with other BGP systems.  This network
 reachability information includes information on the list of
 Autonomous Systems (ASes) that reachability information traverses.
@@ -99,16 +110,22 @@ the concept of network "class" within BGP.  BGP-4 also introduces
 mechanisms that allow aggregation of routes, including aggregation of
 AS paths.
 
-This document obsoletes RFC 1771.
+This document obsoletes RFC 4271.
 
 --- middle
+
+<!-- XXX TODO
+ 1. Scrub 2119 keywords, especially SHOULD.
+-->
 
 # Introduction
 
 The Border Gateway Protocol (BGP) is an inter-Autonomous System
-routing protocol.
+routing protocol. This version of BGP, BGP-4, was first documented
+in {{RFC1771}}, which was superceded by {{RFC4271}}, which in 
+turn is obsoleted by this document.
 
-The primary function of a BGP speaking system is to exchange network
+The primary function of a BGP-speaking system is to exchange network
 reachability information with other BGP systems.  This network
 reachability information includes information on the list of
 Autonomous Systems (ASes) that reachability information traverses.
@@ -123,7 +140,7 @@ eliminating the concept of network "class" within BGP.  BGP-4 also
 introduces mechanisms that allow aggregation of routes, including
 aggregation of AS paths.
 
-Routing information exchanged via BGP supports only the destination-
+Routing information exchanged via the procedures documented here supports only the destination-
 based forwarding paradigm, which assumes that a router forwards a
 packet based solely on the destination address carried in the IP
 header of the packet.  This, in turn, reflects the set of policy
@@ -131,17 +148,19 @@ decisions that can (and cannot) be enforced using BGP.  BGP can
 support only those policies conforming to the destination-based
 forwarding paradigm.
 
+Since its first publication, BGP-4 has been extended by many other specifications. Notable extensions include {{RFC4760}}, which generalizes BGP-4 to allow support for advertising routing information of address families beyond IP Version 4 as documented in the present specification, and IP Version 6 in particular.
+
 ## Definition of Commonly Used Terms
 
 This section provides definitions for terms that have a specific
 meaning to the BGP protocol and that are used throughout the text.
 
 Adj-RIB-In:
-  : The Adj-RIBs-In contains unprocessed routing information that 
+  : The Adj-RIBs-In contain unprocessed routing information that 
     has been advertised to the local BGP speaker by its peers.
 
 Adj-RIB-Out: 
-  : The Adj-RIBs-Out contains the routes for advertisement to specific 
+  : The Adj-RIBs-Out contain the routes for advertisement to specific 
     peers by means of the local speaker's UPDATE messages.
 
 Autonomous System (AS): 
@@ -164,6 +183,7 @@ BGP Identifier:
     its BGP Identifier to an IP address assigned to that BGP speaker.
     The value of the BGP Identifier is determined upon startup and is
     the same for every local interface and BGP peer.
+    XXX edit this for RFC 6286
 
 BGP speaker:
   : A router that implements BGP.
@@ -176,7 +196,7 @@ External peer:
     system.
 
 Feasible route:
-  : An advertised route that is available for use by the recipient.
+  : An advertised route that is available for use by the recipient. XXX this is basically an "advertised route"
 
 IBGP:
   : Internal BGP (BGP connection between internal peers).
@@ -194,7 +214,7 @@ Loc-RIB:
     local BGP speaker's Decision Process.
 
 NLRI:
-  : Network Layer Reachability Information.
+  : Network Layer Reachability Information. When used without modification, one of the IP address prefixes carried in the NLRI field of an UPDATE message. When the NLRI field itself is intended, it is written as such.
 
 Route:
   : A unit of information that pairs a set of destinations with the
@@ -210,62 +230,15 @@ RIB:
 
 Unfeasible route:
   : A previously advertised feasible route that is no longer available
-    for use.
+    for use. XXX this is basically a "withdrawn route"
 
 ##  Specification of Requirements
 
 {::boilerplate bcp14-tagged}
 
-The key words "MUST", "MUST NOT",
-"REQUIRED", "SHALL", "SHALL NOT",
-"SHOULD", "SHOULD NOT",
-"RECOMMENDED", "NOT RECOMMENDED",
-"MAY", and "OPTIONAL" in this document are to be
-interpreted as described in BCP&nbsp;14 {{!RFC2119}} {{!RFC8174}} when, and only when, they appear in all capitals, as
-shown here.
+# XXX Placeholder
 
-# Acknowledgements
-
-This document was originally published as {{?RFC1267}} in October 1991,
-jointly authored by Kirk Lougheed and Yakov Rekhter.
-
-We would like to express our thanks to Guy Almes, Len Bosack, and
-Jeffrey C. Honig for their contributions to the earlier version
-(BGP-1) of this document.
-
-We would like to specially acknowledge numerous contributions by
-Dennis Ferguson to the earlier version of this document.
-
-We would like to explicitly thank Bob Braden for the review of the
-earlier version (BGP-2) of this document, and for his constructive
-and valuable comments.
-
-We would also like to thank Bob Hinden, Director for Routing of the
-Internet Engineering Steering Group, and the team of reviewers he
-assembled to review the earlier version (BGP-2) of this document.
-This team, consisting of Deborah Estrin, Milo Medin, John Moy, Radia
-Perlman, Martha Steenstrup, Mike St. Johns, and Paul Tsuchiya, acted
-with a strong combination of toughness, professionalism, and
-courtesy.
-
-Certain sections of the document borrowed heavily from IDRP
-[IS10747], which is the OSI counterpart of BGP.  For this, credit
-should be given to the ANSI X3S3.3 group chaired by Lyman Chapin and
-to Charles Kunzinger, who was the IDRP editor within that group.
-
-We would also like to thank Benjamin Abarbanel, Enke Chen, Edward
-Crabbe, Mike Craren, Vincent Gillet, Eric Gray, Jeffrey Haas, Dimitry
-Haskin, Stephen Kent, John Krawczyk, David LeRoy, Dan Massey,
-Jonathan Natale, Dan Pei, Mathew Richardson, John Scudder, John
-Stewart III, Dave Thaler, Paul Traina, Russ White, Curtis Villamizar,
-and Alex Zinin for their comments.
-
-We would like to specially acknowledge Andrew Lange for his help in
-preparing the final version of this document.
-
-Finally, we would like to thank all the members of the IDR Working
-Group for their ideas and the support they have given to this
-document.
+This section is here because I moved the Acknowledgements to the end, which is the more normal place -- but that results in all the sections being renumbered, and I would prefer that Section 9 remain Section 9, it's stuck in my head that way. Perhaps we can put something up front here that's relevant, like a short discussion of what's changed since 4271 (not a changelog though... an overview?) and/or a discussion of why it should be an Internet Standard.
 
 # Summary of Operation
 
@@ -275,7 +248,10 @@ defined in {{?RFC904}}) and EGP usage in the NSFNET Backbone (as
 described in {{?RFC1092}} and {{?RFC1093}}).  For more BGP-related
 information, see {{?RFC1772}}, {{?RFC1930}}, {{?RFC1997}}, and {{?RFC2858}}.
 
-The primary function of a BGP speaking system is to exchange network
+{:aside}
+> XXX any more recent references to add? delete any of these?
+
+The primary function of a BGP-speaking system is to exchange network
 reachability information with other BGP systems.  This network
 reachability information includes information on the list of
 Autonomous Systems (ASes) that reachability information traverses.
@@ -286,7 +262,7 @@ level, some policy decisions may be enforced.
 In the context of this document, we assume that a BGP speaker
 advertises to its peers only those routes that it uses itself (in
 this context, a BGP speaker is said to "use" a BGP route if it is the
-most preferred BGP route and is used in forwarding).  All other cases
+most-preferred BGP route and is used in forwarding).  All other cases
 are outside the scope of this document.
 
 In the context of this document, the term "IP address" refers to an
@@ -308,6 +284,9 @@ originating in the neighboring AS (for that same destination).  On
 the other hand, BGP can support any policy conforming to the
 destination-based forwarding paradigm.
 
+{:aside}
+> XXX the preceding paragraph seems somewhat dated, or at least, of its time, and I wonder if it's needed any more. Other considerations aside, the full zoo of BGP extensions includes multiple ways to do flavors of what this paragraph says can't be done (consider segment routing, or even flowspec, for two). I propose deleting this para.
+
 BGP-4 provides a new set of mechanisms for supporting Classless
 Inter-Domain Routing (CIDR) {{?RFC1518}} {{?RFC1519}}.  These mechanisms
 include support for advertising a set of destinations as an IP prefix
@@ -315,7 +294,10 @@ and eliminating the concept of a network "class" within BGP.  BGP-4
 also introduces mechanisms that allow aggregation of routes,
 including aggregation of AS paths.
 
-This document uses the term `Autonomous System' (AS) throughout.  The
+{:aside}
+> XXX this one, too. I think the argument against deleting it is that as Jeff has pointed out to me, nothing in this document tells the reader to do things "we all know" have to be done, notably installing a reject route for an aggregate.
+
+This document uses the term 'Autonomous System' (AS) throughout.  The
 classic definition of an Autonomous System is a set of routers under
 a single technical administration, using an interior gateway protocol
 (IGP) and common metrics to determine how to route packets within the
@@ -335,11 +317,15 @@ error notification mechanism used in BGP assumes that TCP supports a
 "graceful" close (i.e., that all outstanding data will be delivered
 before the connection is closed).
 
+{:aside}
+> XXX I wonder if we should mention/cite MD5 and more importantly, TCP-AO here. Also, the justification for the use of TCP ("eliminates the need...") is somewhat dated at this point, I don't know that we need to keep selling it. At time of first writing it was different.
+
 A TCP connection is formed between two systems.  They exchange
 messages to open and confirm the connection parameters.
 
-The initial data flow is the portion of the BGP routing table that is
-allowed by the export policy, called the Adj-Ribs-Out (see 3.2).
+The initial data flow (sometimes called "initial convergence")
+is the portion of the BGP routing table that is
+allowed by the export policy, called the Adj-Ribs-Out (see {{rib}}).
 Incremental updates are sent as the routing tables change.  BGP does
 not require a periodic refresh of the routing table.  To allow local
 policy changes to have the correct effect without resetting any BGP
@@ -348,10 +334,10 @@ version of the routes advertised to it by all of its peers for the
 duration of the connection, or (b) make use of the Route Refresh
 extension {{?RFC2918}}.
 
-KEEPALIVE messages may be sent periodically to ensure that the
+KEEPALIVE messages are normally sent periodically to ensure that the
 connection is live.  NOTIFICATION messages are sent in response to
 errors or special conditions.  If a connection encounters an error
-condition, a NOTIFICATION message is sent and the connection is
+condition, a NOTIFICATION message is sent, and the connection is
 closed.
 
 A peer in a different AS is referred to as an external peer, while a
@@ -366,12 +352,15 @@ For the purpose of this document, it is assumed that a consistent
 view of the routes exterior to the AS is provided by having all BGP
 speakers within the AS maintain IBGP with each other.
 
+{:aside}
+> XXX we should probably reference route reflection here. I don't think we have to (or should) integrate it into this spec, but it's too important to blow off completely.
+
 This document specifies the base behavior of the BGP protocol.  This
 behavior can be, and is, modified by extension specifications.  When
 the protocol is extended, the new behavior is fully documented in the
 extension specifications.
 
-##  Routes: Advertisement and Storage
+##  Routes: Advertisement and Storage {#routes_adv_store}
 
 For the purpose of this protocol, a route is defined as a unit of
 information that pairs a set of destinations with the attributes of a
@@ -386,27 +375,35 @@ Multiple routes that have the same path attributes can be advertised
 in a single UPDATE message by including multiple prefixes in the NLRI
 field of the UPDATE message.
 
+{:aside}
+> XXX I'm torn as to whether it's worth taking a run at generalizing "prefixes". In the context of this document, "prefixes" is right. In the context of BGP as she is spoke, there are NLRI types that don't have even a notional prefix character (other than the degenerate identity case). It might be as simple as replacing "prefix" with "NLRI" throughout (pretty much). This might actually have the salubrious effect of making the document more consistent anyway -- for example in the list a few lines down, we say "IP prefix" in bullet one/item a, then "NLRI" in bullet two/item b, talking about the same thing. I am inclined to try this, but in a separate branch.
+
 Routes are stored in the Routing Information Bases (RIBs): namely,
 the Adj-RIBs-In, the Loc-RIB, and the Adj-RIBs-Out, as described in
-Section 3.2.
+{{rib}}.
 
 If a BGP speaker chooses to advertise a previously received route, it
-MAY add to, or modify, the path attributes of the route before
-advertising it to a peer.
+may add to, or modify, the path attributes of the route before
+advertising it to a peer. In some cases, such operations are required.
+
+{:aside}
+> XXX the MAY was wrong since it implies it's completely optional, but obvs in many cases it's not (e.g. AS_PATH).
 
 BGP provides mechanisms by which a BGP speaker can inform its peers
 that a previously advertised route is no longer available for use.
 There are three methods by which a given BGP speaker can indicate
 that a route has been withdrawn from service:
 
-a) the IP prefix that expresses the destination for a previously
+{: style="format %c)"}
+
+* the IP prefix that expresses the destination for a previously
    advertised route can be advertised in the WITHDRAWN ROUTES
    field in the UPDATE message, thus marking the associated route
    as being no longer available for use,
 
-b) a replacement route with the same NLRI can be advertised, or
+* a replacement route with the same NLRI can be advertised, or
 
-c) the BGP speaker connection can be closed, which implicitly
+* the BGP speaker connection can be closed, which implicitly
    removes all routes the pair of speakers had advertised to each
    other from service.
 
@@ -414,36 +411,44 @@ Changing the attribute(s) of a route is accomplished by advertising a
 replacement route.  The replacement route carries new (changed)
 attributes and has the same address prefix as the original route.
 
-## Routing Information Base
+## Routing Information Base {#rib}
 
 The Routing Information Base (RIB) within a BGP speaker consists of
 three distinct parts:
 
-a) Adj-RIBs-In: 
-   : The Adj-RIBs-In stores routing information learned
+{:ribparts: counter="ribparts" style="format %c)"}
+
+{: ribparts}
+
+* Adj-RIBs-In: 
+   The Adj-RIBs-In store routing information learned
    from inbound UPDATE messages that were received from other BGP
    speakers.  Their contents represent routes that are available
    as input to the Decision Process.
 
-b) Loc-RIB: 
-   : The Loc-RIB contains the local routing information the
+* Loc-RIB: 
+   The Loc-RIB contains the local routing information the
    BGP speaker selected by applying its local policies to the
    routing information contained in its Adj-RIBs-In.  These are
    the routes that will be used by the local BGP speaker.  The
-   next hop for each of these routes MUST be resolvable via the
+   next hop for each of these routes must be resolvable via the
    local BGP speaker's Routing Table.
+   
+{:aside}
+> XXX any need to update the resolvability condition? I can see two things to address: first, I changed the MUST to a "must", because the normative requirement actually exists in Section 9, we shouldn't do it twice. That part is easy. The other part is that this language has proven imprecise over time: what is "the Routing Table"? And also, don't we have some AFs that waive the resolvability condition? Nonetheless because this is the summary/overview part, it is probably ok. 
 
-c) Adj-RIBs-Out: 
-   : The Adj-RIBs-Out stores information the local BGP
+* Adj-RIBs-Out: 
+   The Adj-RIBs-Out store information the local BGP
    speaker selected for advertisement to its peers.  The routing
    information stored in the Adj-RIBs-Out will be carried in the
    local BGP speaker's UPDATE messages and advertised to its
    peers.
+{: ribparts}
 
-In summary, the Adj-RIBs-In contains unprocessed routing information
+In summary, the Adj-RIBs-In contain unprocessed routing information
 that has been advertised to the local BGP speaker by its peers; the
 Loc-RIB contains the routes that have been selected by the local BGP
-speaker's Decision Process; and the Adj-RIBs-Out organizes the routes
+speaker's Decision Process; and the Adj-RIBs-Out organize the routes
 for advertisement to specific peers (by means of the local speaker's
 UPDATE messages).
 
@@ -464,9 +469,9 @@ whether a BGP route should override a route to the same destination
 installed by another source, is a local policy decision, and is not
 specified in this document.  In addition to actual packet forwarding,
 the Routing Table is used for resolution of the next-hop addresses
-specified in BGP updates (see Section 5.1.3).
+specified in BGP updates (see {{nexthop}}).
 
-# Message Formats
+# Message Formats {#msgformat}
 
 This section describes message formats used by BGP.
 
@@ -482,11 +487,11 @@ All multi-octet fields are in network byte order.
 
 Each message has a fixed-size header.  There may or may not be a data
 portion following the header, depending on the message type.  The
-layout of these fields is shown below:
+layout of the fields is shown below:
 
-~~~~
-0                   1                   2                   3
-0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+~~~~ aasvg
+ 0                   1                   2                   3
+ 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 |                                                               |
 +                                                               +
@@ -495,10 +500,11 @@ layout of these fields is shown below:
 |                           Marker                              |
 +                                                               +
 |                                                               |
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
++-------------------------------+---------------+---------------+
 |          Length               |      Type     |
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
++-------------------------------+---------------+
 ~~~~
+{: title="Message Header Format"}
 
 Marker:
   : This 16-octet field is included for compatibility; it MUST be
@@ -514,6 +520,9 @@ Length:
     the message is not allowed.  Therefore, the Length field MUST
     have the smallest value required, given the rest of the
     message.
+    
+{:aside}
+> XXX this could be a place to non-normatively xref RFC 8654/Extended message size
 
 Type:
   : This 1-octet unsigned integer indicates the type code of the
@@ -524,10 +533,14 @@ Type:
     3. NOTIFICATION
     4. KEEPALIVE
 
-  : {{RFC2918}} defines one more type code.
+  : {{RFC2918}} defines one more type code. The authoritative list of 
+    type codes is maintained by IANA, see {{iana}}.
+    
+{:aside}
+> XXX The reference to RFC 2918 is kind of weird IMO but it was in 4271 so I guess imma just leave it.
 
 
-##  OPEN Message Format
+##  OPEN Message Format {#openfmt}
 
 After a TCP connection is established, the first message sent by each
 side is an OPEN message.  If the OPEN message is acceptable, a
@@ -536,25 +549,29 @@ KEEPALIVE message confirming the OPEN is sent back.
 In addition to the fixed-size BGP header, the OPEN message contains
 the following fields:
 
-~~~~
-0                   1                   2                   3
-0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+~~~~ aasvg
+ 0                   1                   2                   3
+ 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
 +-+-+-+-+-+-+-+-+
 |    Version    |
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
++---------------+-+-+-+-+-+-+-+-+
 |     My Autonomous System      |
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
++-------------------------------+
 |           Hold Time           |
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
++-------------------------------+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 |                         BGP Identifier                        |
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
++---------------+-----------------------------------------------+
 | Opt Parm Len  |
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
++---------------+-----------------------------------------------+
 |                                                               |
 |             Optional Parameters (variable)                    |
 |                                                               |
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
++---------------------------------------------------------------+
 ~~~~
+{: title="OPEN Message Format"}
+
+{:aside}
+> XXX I don't love these weirdo not-square figures, but that's how it is in the base doc and I see why they're that way -- it avoids having fields break across two lines. We can redraw them in the future if there are any complaints.
 
 Version:
   : This 1-octet unsigned integer indicates the protocol version
@@ -562,7 +579,7 @@ Version:
 
 My Autonomous System:
   : This 2-octet unsigned integer indicates the Autonomous System
-    number of the sender.
+    number of the sender. (This is modified by {{RFC6793}}, if used.)
  
 Hold Time:
   : This 2-octet unsigned integer indicates the number of seconds
@@ -575,6 +592,9 @@ Hold Time:
     Time.  The calculated value indicates the maximum number of
     seconds that may elapse between the receipt of successive
     KEEPALIVE and/or UPDATE messages from the sender.
+    
+{:aside}
+> XXX RFC 9687 (Send Hold Timer) touches on this but not adding anything.
 
 BGP Identifier:
    : This 4-octet unsigned integer indicates the BGP Identifier of
@@ -582,24 +602,29 @@ BGP Identifier:
      Identifier to an IP address that is assigned to that BGP
      speaker.  The value of the BGP Identifier is determined upon
      startup and is the same for every local interface and BGP peer.
+     
+{:aside}
+> XXX consider revising the above to integrate RFC RFC 6286.
 
 Optional Parameters Length:
   : This 1-octet unsigned integer indicates the total length of the
     Optional Parameters field in octets.  If the value of this
-    field is zero, no Optional Parameters are present.
+    field is zero, no Optional Parameters are present. (This is 
+    modified by {{RFC9072}}, if used.)
 
 Optional Parameters:
   : This field contains a list of optional parameters, in which
     each parameter is encoded as a <Parameter Type, Parameter
     Length, Parameter Value> triplet.
 
-~~~~
-    0                   1
-    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5
+~~~~ aasvg
+     0                   1
+     0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-...
     |  Parm. Type   | Parm. Length  |  Parameter Value (variable)
-    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-...
+    +---------------+---------------+-------...
 ~~~~
+{: title="Optional Parameters"}
 
   > Parameter Type is a one octet field that unambiguously identifies individual parameters.  Parameter Length is a one octet field that contains the length of the Parameter Value field in octets.  Parameter Value is a variable length field that is interpreted according to the value of the Parameter Type field.
 
@@ -608,24 +633,31 @@ Optional Parameters:
 The minimum length of the OPEN message is 29 octets (including the
 message header).
 
-##  UPDATE Message Format
+##  UPDATE Message Format {#updatefmt}
 
 UPDATE messages are used to transfer routing information between BGP
 peers.  The information in the UPDATE message can be used to
 construct a graph that describes the relationships of the various
-Autonomous Systems.  By applying rules to be discussed, routing
+Autonomous Systems.  By applying rules discussed below, routing
 information loops and some other anomalies may be detected and
 removed from inter-AS routing.
 
+{:aside}
+> XXX I've always found the "construct a graph" thing to be a little incongruous. No implementation I'm aware of does anything the average punter would recognize as graph operations; furthermore, any given BGP speaker doesn't have the whole graph available as the sentence would seem to imply. I'm tempted to remove this sentence, which AFAICT doesn't clarify and does overclaim.
+
 An UPDATE message is used to advertise feasible routes that share
 common path attributes to a peer, or to withdraw multiple unfeasible
-routes from service (see 3.1).  An UPDATE message MAY simultaneously
+routes from service (see {{routes_adv_store}}).  An UPDATE message MAY simultaneously
 advertise a feasible route and withdraw multiple unfeasible routes
-from service.  The UPDATE message always includes the fixed-size BGP
+from service. ({{RFC4760}} specifies an alternate encoding to advertise
+and withdraw routes, and can be used to support address families other than
+IP Version 4.)
+
+The UPDATE message always includes the fixed-size BGP
 header, and also includes the other fields, as shown below (note,
 some of the shown fields may not be present in every UPDATE message):
 
-~~~~
+~~~~ aasvg
 +-----------------------------------------------------+
 |   Withdrawn Routes Length (2 octets)                |
 +-----------------------------------------------------+
@@ -638,6 +670,7 @@ some of the shown fields may not be present in every UPDATE message):
 |   Network Layer Reachability Information (variable) |
 +-----------------------------------------------------+
 ~~~~
+{: title="UPDATE message format"}
 
 Withdrawn Routes Length:
   : This 2-octets unsigned integer indicates the total length of
@@ -655,27 +688,34 @@ Withdrawn Routes:
    service.  Each IP address prefix is encoded as a 2-tuple of the
    form <length, prefix>, whose fields are described below:
 
-~~~~
+~~~~ aasvg
     +---------------------------+
     |   Length (1 octet)        |
     +---------------------------+
     |   Prefix (variable)       |
     +---------------------------+
 ~~~~
+{: title="IP Address Prefix" #ipaddressprefix}
 
 The use and the meaning of these fields are as follows:
 
-a) Length:
-   : The Length field indicates the length in bits of the IP
+{: style="format %c)"}
+
+* Length:
+   The Length field indicates the length in bits of the IP
    address prefix.  A length of zero indicates a prefix that
    matches all IP addresses (with prefix, itself, of zero
    octets).
 
-b) Prefix:
-   : The Prefix field contains an IP address prefix, followed by
+* Prefix:
+   The Prefix field contains an IP address prefix, followed by
    the minimum number of trailing bits needed to make the end
    of the field fall on an octet boundary.  Note that the value
-   of trailing bits is irrelevant.
+   of trailing bits is irrelevant. Trailing bits SHOULD be set
+   to zero on transmission and MUST be disregarded on receipt.
+   
+{:aside}
+> XXX this was discussed on the idr list recently. I considered leaving it alone on the basis that "is irrelevant" is sufficient, but it seems better to me to tighten it up. The SHOULD be zero might be controversial. I would really prefer that it be MUST, but that would be a normative change, whereas the SHOULD is arguably not. It's highly likely all implementations already comply with the SHOULD anyway, but phrasing it as SHOULD is intended to mollify any fears about noncompliant implementations. In rfc4271ter this should be upgraded to MUST.
 
 Total Path Attribute Length:
    : This 2-octet unsigned integer indicates the total length of the
@@ -690,7 +730,7 @@ Total Path Attribute Length:
 Path Attributes:
   : A variable-length sequence of path attributes is present in
    every UPDATE message, except for an UPDATE message that carries
-   only the withdrawn routes.  Each path attribute is a triple
+   only withdrawn routes.  Each path attribute is a triple
    &lt;attribute type, attribute length, attribute value&gt; of variable
    length.
 
@@ -698,13 +738,14 @@ Path Attributes:
    Attribute Flags octet, followed by the Attribute Type Code
    octet.
 
-~~~~
-    0                   1
-    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5
+~~~~ aasvg
+     0                   1
+     0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     |  Attr. Flags  |Attr. Type Code|
-    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    +---------------+---------------+
 ~~~~
+{: title="Attribute Type"}
 
 <!-- [rfced] this text should be indented under path attributes -->
 
@@ -718,7 +759,7 @@ attribute is transitive (if set to 1) or non-transitive (if set
 to 0).
 
 > For well-known attributes, the Transitive bit MUST be set to 1.
-(See Section 5 for a discussion of transitive attributes.)
+(See {{pathattributes}} for a discussion of transitive attributes.)
 
 > The third high-order bit (bit 2) of the Attribute Flags octet
 is the Partial bit.  It defines whether the information
@@ -736,8 +777,7 @@ unused.  They MUST be zero when sent and MUST be ignored when
 received.
 
 > The Attribute Type Code octet contains the Attribute Type Code.
-Currently defined Attribute Type Codes are discussed in Section
-5.
+Currently defined Attribute Type Codes are discussed in {{pathattributes}}.
 
 > If the Extended Length bit of the Attribute Flags octet is set
 to 0, the third octet of the Path Attribute contains the length
@@ -752,6 +792,7 @@ attribute value and are interpreted according to the Attribute
 Flags and the Attribute Type Code.  The supported Attribute
 Type Codes, and their attribute values and uses are as follows:
 
+<!-- XXX if possible, clean this up to use list syntax instead of hardcoding the list counters -->
 > a) ORIGIN (Type Code 1):
  : ORIGIN is a well-known mandatory attribute that defines the
    origin of the path information.  The data octet can assume
@@ -760,10 +801,11 @@ Type Codes, and their attribute values and uses are as follows:
 |Value  |    Meaning                                          |
 |-------|-----------------------------------------------------|
 |  0    |  IGP - Network Layer Reachability Information is interior to the originating AS                  |
-|  1    |  EGP - Network Layer Reachability Information learned via the EGP protocol [RFC904]              |
+|  1    |  EGP - Network Layer Reachability Information learned via the EGP protocol {{RFC904}}              |
 |  2    |  INCOMPLETE - Network Layer Reachability Information learned by some other means            |
+{: title="ORIGIN Values"}
 
- > Usage of this attribute is defined in 5.1.1.
+ > Usage of this attribute is defined in {{origin}}.
 
 > b) AS_PATH (Type Code 2):
  : AS_PATH is a well-known mandatory attribute that is composed
@@ -778,23 +820,29 @@ following values defined:
 |-------|-----------------------------------------------------|
 | 1     |    AS_SET: unordered set of ASes a route in the UPDATE message has traversed                     |
 | 2     |    AS_SEQUENCE: ordered set of ASes a route in the UPDATE message has traversed                 |
+{: title="AS_PATH Segment Type Values"}
 
 > The path segment length is a 1-octet length field,
   containing the number of ASes (not the number of octets) in
   the path segment value field.
 
 > The path segment value field contains one or more AS
-  numbers, each encoded as a 2-octet length field.
+  numbers, each encoded as a 2-octet length field. 
+  (This is modified by {{RFC6793}}, if used.)
 
-> Usage of this attribute is defined in 5.1.2.
+> Usage of this attribute is defined in {{aspath}}.
 
 c) NEXT_HOP (Type Code 3):
 : This is a well-known mandatory attribute that defines the
 (unicast) IP address of the router that SHOULD be used as
 the next hop to the destinations listed in the Network Layer
-Reachability Information field of the UPDATE message.
+Reachability Information field of the UPDATE message. (This 
+is modified by {{RFC4760}}, if used.)
 
-: Usage of this attribute is defined in 5.1.3.
+: Usage of this attribute is defined in {{nexthop}}.
+
+{:aside}
+> XXX what is going on with that SHOULD? In what circumstances would we not do that (within the BGP protocol, legacy encoding)? Is this a bug, and should be MUST?
 
 d) MULTI_EXIT_DISC (Type Code 4):
 : This is an optional non-transitive attribute that is a
@@ -803,7 +851,9 @@ MAY be used by a BGP speaker's Decision Process to
 discriminate among multiple entry points to a neighboring
 autonomous system.
 
-: Usage of this attribute is defined in 5.1.4.
+: Considerations for the deployment of this attribute are given in {{RFC7964}}.
+
+: Usage of this attribute is defined in {{med}}.
 
 e) LOCAL_PREF (Type Code 5):
 : LOCAL_PREF is a well-known attribute that is a four-octet
@@ -811,13 +861,13 @@ unsigned integer.  A BGP speaker uses it to inform its other
 internal peers of the advertising speaker's degree of
 preference for an advertised route.
 
-: Usage of this attribute is defined in 5.1.5.
+: Usage of this attribute is defined in {{localpref}}.
 
 f) ATOMIC_AGGREGATE (Type Code 6): 
    : ATOMIC_AGGREGATE is a well-known discretionary attribute of
    length 0.
 
-   : Usage of this attribute is defined in 5.1.6.
+   : Usage of this attribute is defined in {{atomic}}.
 
 g) AGGREGATOR (Type Code 7): 
    : AGGREGATOR is an optional transitive attribute of length 6.
@@ -826,8 +876,9 @@ g) AGGREGATOR (Type Code 7):
    address of the BGP speaker that formed the aggregate route
    (encoded as 4 octets).  This SHOULD be the same address as
    the one used for the BGP Identifier of the speaker.
+   (This is modified by {{RFC6793}}, if used.)
 
-   : Usage of this attribute is defined in 5.1.7.
+   : Usage of this attribute is defined in {{aggregator}}.
 
 Network Layer Reachability Information:
    : This variable length field contains a list of IP address
@@ -839,38 +890,20 @@ Network Layer Reachability Information:
    UPDATE message Length - 23 - Total Path Attributes Length
    - Withdrawn Routes Length
 ~~~~
+{: title="NLRI Length Calculation"}
 
-   > where UPDATE message Length is the value encoded in the fixed-
-size BGP header, Total Path Attribute Length, and Withdrawn
+   > where UPDATE message Length is the value encoded in the fixed-size
+BGP header, Total Path Attribute Length, and Withdrawn
 Routes Length are the values encoded in the variable part of
-the UPDATE message, and 23 is a combined length of the fixed-
-size BGP header, the Total Path Attribute Length field, and the
+the UPDATE message, and 23 is a combined length of the fixed-size
+BGP header, the Total Path Attribute Length field, and the
 Withdrawn Routes Length field.
 
-   > Reachability information is encoded as one or more 2-tuples of
-the form <length, prefix>, whose fields are described below:
-
-~~~~
-    +---------------------------+
-    |   Length (1 octet)        |
-    +---------------------------+
-    |   Prefix (variable)       |
-    +---------------------------+
-~~~~
-
-> The use and the meaning of these fields are as follows:
-
-> a) Length:
-   : The Length field indicates the length in bits of the IP
-   address prefix.  A length of zero indicates a prefix that
-   matches all IP addresses (with prefix, itself, of zero
-   octets).
-
-> b) Prefix:
-   : The Prefix field contains an IP address prefix, followed by
-   enough trailing bits to make the end of the field fall on an
-   octet boundary.  Note that the value of the trailing bits is
-   irrelevant.
+   > Reachability information is encoded as a list of IP
+address prefixes for the routes that are being made available for
+service.  Each IP address prefix is encoded as described above
+under {{ipaddressprefix}}.
+<!--XXX not really the right xref but right now withdrawn routes isn't a standalone subsection-->
 
 The minimum length of the UPDATE message is 23 octets -- 19 octets
 for the fixed header + 2 octets for the Withdrawn Routes Length + 2
@@ -904,7 +937,7 @@ However, a BGP speaker MUST be able to process UPDATE messages in
 this form.  A BGP speaker SHOULD treat an UPDATE message of this form
 as though the WITHDRAWN ROUTES do not contain the address prefix.
 
-## KEEPALIVE Message Format
+## KEEPALIVE Message Format {#keepalivefmt}
 
 BGP does not use any TCP-based, keep-alive mechanism to determine if
 peers are reachable.  Instead, KEEPALIVE messages are exchanged
@@ -918,10 +951,13 @@ Time interval.
 If the negotiated Hold Time interval is zero, then periodic KEEPALIVE
 messages MUST NOT be sent.
 
+{:aside}
+> XXX is "negotiated" a misnomer we should fix?
+
 A KEEPALIVE message consists of only the message header and has a
 length of 19 octets.
 
-## NOTIFICATION Message Format
+## NOTIFICATION Message Format {#notifyfmt}
 
 A NOTIFICATION message is sent when an error condition is detected.
 The BGP connection is closed immediately after it is sent.
@@ -929,26 +965,31 @@ The BGP connection is closed immediately after it is sent.
 In addition to the fixed-size BGP header, the NOTIFICATION message
 contains the following fields:
 
-~~~~
-0                   1                   2                   3
-0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+~~~~ aasvg
+ 0                   1                   2                   3
+ 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-| Error code    | Error subcode |   Data (variable)             |
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+| Error code    | Error subcode |     Data (variable )          |
++---------------+---------------+-------------------------------+
 ~~~~
+{: title="NOTIFICATION Message Format"}
+<!-- the extra space before the close paren above is to keep aasvg from rendering a spurious line -->
 
 Error Code:
   : This 1-octet unsigned integer indicates the type of
-   NOTIFICATION.  The following Error Codes have been defined:
+   NOTIFICATION.  The following Error Codes are defined 
+   by this document. The authoritative list is maintained
+   by IANA, see {{iana}}:
 
 | Error Code|      Symbolic Name           |   Reference    |
 |-----------|------------------------------|----------------|
-|  1        | Message Header Error         |   Section 6.1  |
-|  2        | OPEN Message Error           |   Section 6.2  |
-|  3        | UPDATE Message Error         |   Section 6.3  |
-|  4        | Hold Timer Expired           |   Section 6.5  |
-|  5        | Finite State Machine Error   |   Section 6.6  |
-|  6        | Cease                        |   Section 6.7  |
+|  1        | Message Header Error         |   {{msgheadererr}}  |
+|  2        | OPEN Message Error           |   {{openmsgerr}}  |
+|  3        | UPDATE Message Error         |   {{updatemsgerr}}  |
+|  4        | Hold Timer Expired           |   {{holdtimerexperr}}  |
+|  5        | Finite State Machine Error   |   {{fsmerr}}  |
+|  6        | Cease                        |   {{ceaseerr}}  |
+{: title="NOTIFICATION Error Codes"}
 
 Error subcode:
   : This 1-octet unsigned integer provides more specific
@@ -956,6 +997,9 @@ Error subcode:
    Code may have one or more Error Subcodes associated with it.
    If no appropriate Error Subcode is defined, then a zero
    (Unspecific) value is used for the Error Subcode field.
+   The following subcodes are defined 
+   by this document. The authoritative list is maintained
+   by IANA, see {{iana}}:
 
 Message Header Error subcodes:
 
@@ -965,6 +1009,8 @@ Message Header Error subcodes:
 | 1     | Connection Not Synchronized     |
 | 2     | Bad Message Length              |
 | 3     | Bad Message Type                |
+{: title="Message Header Error subcodes"}
+<!-- XXX maybe adding the title makes the above titletext redundant -->
 
 OPEN Message Error subcodes:
 
@@ -977,6 +1023,7 @@ OPEN Message Error subcodes:
 | 4     | Unsupported Optional Parameter  |
 | 5     | [Deprecated - see Appendix A]   |
 | 6     | Unacceptable Hold Time          |
+{: title="OPEN Message Error subcodes"}
 
 UPDATE Message Error subcodes:
 
@@ -994,11 +1041,12 @@ UPDATE Message Error subcodes:
 | 9     | Optional Attribute Error        |
 | 10    | Invalid Network Field           |
 | 11    | Malformed AS_PATH               |
+{: title="UPDATE Message Error subcodes"}
 
 Data:
   : This variable-length field is used to diagnose the reason for
    the NOTIFICATION.  The contents of the Data field depend upon
-   the Error Code and Error Subcode.  See Section 6 for more
+   the Error Code and Error Subcode.  See {{errorhandling}} for more
    details.
 
   : Note that the length of the Data field can be determined from
@@ -1009,16 +1057,21 @@ Data:
 The minimum length of the NOTIFICATION message is 21 octets
 (including message header).
 
-# Path Attributes
+# Path Attributes {#pathattributes}
 
 This section discusses the path attributes of the UPDATE message.
 
 Path attributes fall into four separate categories:
 
-: 1. Well-known mandatory.
-  2. Well-known discretionary.
-  3. Optional transitive.
-  4. Optional non-transitive.
+{: style="format %d."}
+
+* Well-known mandatory.
+* Well-known discretionary.
+* Optional transitive.
+* Optional non-transitive.
+
+{:aside}
+> XXX Errata 6498 says that, "The terminology in rfc4271 is not ideal, so using "discretionary" with a required action can cause significant confusion, even if that is the correct term for this attribute. A future version of this RFC should consider updating/cleaning up the terminology." Reader, this is that version. (Rejected) errata 3673 also has relevant discussion.
 
 BGP implementations MUST recognize all well-known attributes.  Some
 of these attributes are mandatory and MUST be included in every
@@ -1045,6 +1098,12 @@ NOT be set back to 0 by the current AS.  Unrecognized non-transitive
 optional attributes MUST be quietly ignored and not passed along to
 other BGP peers.
 
+{:aside}
+> XXX it strikes me that the usage of "path" in the paragraph above is wrong, unless we add a definition that says that the unadorned word "path" means "route", I guess. I guess the closest we have to a definition is in Section 3.1: "the path is the information reported in the path attributes field of the same UPDATE message". So maybe we just add that to the definitions section. I don't love it, and want to audit all uses of the word (193 of them, sigh).
+
+{:aside}
+> XXX also, I'm tempted to change "transitive optional" to "optional transitive" throughout, to match common usage. For that matter, Section 9 uses "optional transitive".
+
 New, transitive optional attributes MAY be attached to the path by
 the originator or by any other BGP speaker in the path.  If they are
 not attached by the originator, the Partial bit in the Attribute
@@ -1056,14 +1115,22 @@ the MULTI_EXIT_DISC attribute gives an example).  All optional
 attributes (both transitive and non-transitive), MAY be updated (if
 appropriate) by BGP speakers in the path.
 
+{:aside}
+> XXX oh ha ha, I had forgotten the rule that you have to set Partial if you're not the ultimate source of the route. I wonder if that is widely honored. Given that Partial isn't used for squat, I wouldn't count on it. (I think "isn't used for squat" is OK with the "unused features" language in 6410 since it doesn't "greatly increase implementation complexity")
+
 The sender of an UPDATE message SHOULD order path attributes within
 the UPDATE message in ascending order of attribute type.  The
 receiver of an UPDATE message MUST be prepared to handle path
 attributes within UPDATE messages that are out of order.
+(If {{RFC7606}} is in use, an exception is made for the MP_REACH_NLRI
+and MP_UNREACH_NLRI attributes.)
 
 The same attribute (attribute with the same type) cannot appear more
 than once within the Path Attributes field of a particular UPDATE
 message.
+
+{:aside}
+> XXX it's a path attribute error otherwise, but handled differently depending on if 7606 or not. Probably rephrase the "cannot".
 
 The mandatory category refers to an attribute that MUST be present in
 both IBGP and EBGP exchanges if NLRI are contained in the UPDATE
@@ -1071,45 +1138,57 @@ message.  Attributes classified as optional for the purpose of the
 protocol extension mechanism may be purely discretionary,
 discretionary, required, or disallowed in certain contexts.
 
-~~~~
-   attribute           EBGP                    IBGP
-    ORIGIN             mandatory               mandatory
-    AS_PATH            mandatory               mandatory
-    NEXT_HOP           mandatory               mandatory
-    MULTI_EXIT_DISC    discretionary           discretionary
-    LOCAL_PREF         see Section 5.1.5       required
-    ATOMIC_AGGREGATE   see Section 5.1.6 and 9.1.4
-    AGGREGATOR         discretionary           discretionary
-~~~~
+| Attribute           | EBGP                 | IBGP            |
+|---------------------|----------------------|-----------------|
+|   ORIGIN            |  mandatory           |   mandatory     |
+|   AS_PATH           |  mandatory           |   mandatory     |
+|   NEXT_HOP          |  mandatory           |   mandatory     |
+|   MULTI_EXIT_DISC   |  discretionary       |   discretionary |
+|   LOCAL_PREF        |  see {{localpref}}   |   required      |
+|   ATOMIC_AGGREGATE  |  see {{atomic}} and {{overlap}} |      |
+|   AGGREGATOR        |  discretionary       |   discretionary |
+{: title="Path Attribute Classification"}
+
+{:aside}
+> XXX has this table/set of categories ever helped anyone? :-(
 
 ## Path Attribute Usage
 
 The usage of each BGP path attribute is described in the following
 clauses.
 
-### ORIGIN
+### ORIGIN {#origin}
 
 ORIGIN is a well-known mandatory attribute.  The ORIGIN attribute is
 generated by the speaker that originates the associated routing
 information.  Its value SHOULD NOT be changed by any other speaker.
 
-### AS_PATH
+{:aside}
+> XXX it's tempting to scrub the SHOULD (NOT) but moving them to MUST (as this one should be) is probably too fraught.
+
+### AS_PATH {#aspath}
 
 AS_PATH is a well-known mandatory attribute.  This attribute
 identifies the autonomous systems through which routing information
 carried in this UPDATE message has passed.  The components of this
-list can be AS_SETs or AS_SEQUENCEs.
+list can be AS_SETs or AS_SEQUENCEs. (Other segments and behaviors 
+are added by {{RFC5065}}, if used.) 
+
+{:aside}
+> XXX RFC 9774 deprecates AS_SETs. Probably need to mention something about that. Happily, the way RFC 9774 is written means the text in this section about AS_SETs is OK -- it talks about how to propagate AS_SETs... but in an implementation that complies with 9774, there won't BE any AS_SETs (they are treat-as-withdrawn at Rx time), so in that context the text here is vacuous, but not wrong. 
 
 When a BGP speaker propagates a route it learned from another BGP
 speaker's UPDATE message, it modifies the route's AS_PATH attribute
 based on the location of the BGP speaker to which the route will be
 sent:
 
-a) When a given BGP speaker advertises the route to an internal peer, the advertising speaker SHALL NOT modify the AS_PATH attribute associated with the route.
+{: style="format %c)"}
 
-b) When a given BGP speaker advertises the route to an external peer, the advertising speaker updates the AS_PATH attribute as follows:
+* When a given BGP speaker advertises the route to an internal peer, the advertising speaker SHALL NOT modify the AS_PATH attribute associated with the route.
 
-> 1. if the first path segment of the AS_PATH is of type
+* When a given BGP speaker advertises the route to an external peer, the advertising speaker updates the AS_PATH attribute as follows:
+
+  1. if the first path segment of the AS_PATH is of type
    AS_SEQUENCE, the local system prepends its own AS number as
    the last element of the sequence (put it in the leftmost
    position with respect to the position of octets in the
@@ -1124,19 +1203,27 @@ b) When a given BGP speaker advertises the route to an external peer, the advert
   3. if the AS_PATH is empty, the local system creates a path
    segment of type AS_SEQUENCE, places its own AS into that
    segment, and places that segment into the AS_PATH.
+   
+{:aside}
+> XXX is there *ever* a justification for the SHOULD in item 1 above? I suppose one *could* under some circumstances do something different, although the only ones I can think of that wouldn't be blatantly broken are, (a) look for any repeated ASes in the path and collapse them down to a single instance. That would maintain the loop-free property, while shrinking the AS_PATH. Or, (b) don't propagate the route. Under any other circumstances, I would change this to a MUST, and might still.
 
 When a BGP speaker originates a route then:
 
-a) the originating speaker includes its own AS number in a path
+{: style="format %c)"}
+
+* the originating speaker includes its own AS number in a path
    segment, of type AS_SEQUENCE, in the AS_PATH attribute of all
    UPDATE messages sent to an external peer.  In this case, the AS
    number of the originating speaker's autonomous system will be
-   the only entry the path segment, and this path segment will be
+   the only entry in the path segment, and this path segment will be
    the only segment in the AS_PATH attribute.
 
-b) the originating speaker includes an empty AS_PATH attribute in
+* the originating speaker includes an empty AS_PATH attribute in
    all UPDATE messages sent to internal peers.  (An empty AS_PATH
    attribute is one whose length field contains the value zero).
+   
+{:aside}
+> XXX there's a kind of disagreement in number adjacent thing above -- "originates *a* route", singular, but then "... all UPDATE messages", plural. Maybe fix?
 
 Whenever the modification of the AS_PATH attribute calls for
 including or prepending the AS number of the local system, the local
@@ -1144,12 +1231,15 @@ system MAY include/prepend more than one instance of its own AS
 number in the AS_PATH attribute.  This is controlled via local
 configuration.
 
-###  NEXT_HOP
+###  NEXT_HOP {#nexthop}
 
 The NEXT_HOP is a well-known mandatory attribute that defines the IP
 address of the router that SHOULD be used as the next hop to the
 destinations listed in the UPDATE message.  The NEXT_HOP attribute is
 calculated as follows:
+
+{:aside}
+> XXX two things: First, it's only mandatory if MP-BGP isn't in use. If RFC 4760 is in use, any update that includes MP_REACH_NLRI isn't supposed to include NEXT_HOP. Second, the SHOULD is suss.
 
 1. When sending a message to an internal peer, if the route is not
    locally originated, the BGP speaker SHOULD NOT modify the
@@ -1164,6 +1254,18 @@ calculated as follows:
    peer's address, then the BGP speaker SHOULD use its own IP
    address for the NEXT_HOP attribute (the address of the
    interface that is used to reach the peer).
+   
+{:aside}
+> XXX is it true that implementations comply with the first part of this? It effectively says that when sending an EBGP route into IBGP, you have to default to sending the external peer's NEXT_HOP (generally, the external peer's address) into IBGP. That is not the usual practice AFAIK, although maybe everyone always configures nexthop self and the default is what's written here. (And yes it's a SHOULD NOT but that doesn't mean "ignore this".)
+
+{:aside}
+> XXX for that matter I'm suspicious of whether the other rules are generally complied with as well. This whole paragraph needs a hard look. See also later comment about loopbacks.
+
+{:aside}
+> XXX we don't define anywhere what it means for a route to be "locally originated". Might not be a bad idea. I believe it means, anything other than a route received in BGP, i.e. it could be a local route or redistributed from another protocol.
+
+{:aside}
+> XXX wait what. "if the interface address of the router through which the announced network is reachable for the speaker is the internal peer's address, then the BGP speaker SHOULD use its own IP address for the NEXT_HOP attribute". That seems absolutely wrong -- it's telling me I have to create routing loops when redistributing between protocols, ish. In what scenario would this make sense?
 
 2. When sending a message to an external peer, X, and the peer is
    one IP hop away from the speaker:
@@ -1183,6 +1285,9 @@ calculated as follows:
      the NEXT_HOP attribute, provided that peer X shares a common
      subnet with this address.  This is a second form of "third
      party" NEXT_HOP attribute.
+     
+{:aside}
+> XXX the "any adjacent router" thing makes little sense to me. Consider a rewrite.
 
    - Otherwise, if the external peer to which the route is being
      advertised shares a common subnet with one of the interfaces
@@ -1190,6 +1295,9 @@ calculated as follows:
      address associated with such an interface in the NEXT_HOP
      attribute.  This is known as a "first party" NEXT_HOP
      attribute.
+     
+{:aside}
+> XXX is this a no-op, or anyway effectively redundant with the next bullet? How am I supposed to know that I share a subnet with my peer, other than by inspection of the peering addresses... which latter cases reduces to the next bullet?
 
    - By default (if none of the above conditions apply), the BGP
      speaker SHOULD use the IP address of the interface that the
@@ -1209,18 +1317,24 @@ calculated as follows:
    - By default, the BGP speaker SHOULD use the IP address of the
      interface that the speaker uses to establish the BGP connection
      to peer X in the NEXT_HOP attribute.
+     
+{:aside}
+> XXX should we add text somewhere talking about binding sessions to loopbacks? It's a best practice but I don't know where documented. It would apply to the above bullet, for example.
 
 Normally, the NEXT_HOP attribute is chosen such that the shortest
 available path will be taken.  A BGP speaker MUST be able to support
-the disabling advertisement of third party NEXT_HOP attributes in
+disabling the advertisement of third party NEXT_HOP attributes in
 order to handle imperfectly bridged media.
 
 A route originated by a BGP speaker SHALL NOT be advertised to a peer
 using an address of that peer as NEXT_HOP.  A BGP speaker SHALL NOT
 install a route with itself as the next hop.
 
+{:aside}
+> XXX I don't think the second sentence is reflected in Section 9, and it should be. 
+
 The NEXT_HOP attribute is used by the BGP speaker to determine the
-actual outbound interface and immediate next-hop address that SHOULD
+actual outbound interface and immediate next-hop address to
 be used to forward transit packets to the associated destinations.
 
 The immediate next-hop address is determined by performing a
@@ -1235,18 +1349,24 @@ next-hop address.  If the entry also specifies the next-hop address,
 this address SHOULD be used as the immediate next-hop address for
 packet forwarding.
 
-###  MULTI_EXIT_DISC
+{:aside}
+> XXX the "no ECMP for you!" text above is probably wrong or at least incomplete. The whole paragraph needs a scrub.
+
+###  MULTI_EXIT_DISC {#med}
 
 The MULTI_EXIT_DISC is an optional non-transitive attribute that is
 intended to be used on external (inter-AS) links to discriminate
 among multiple exit or entry points to the same neighboring AS.  The
 value of the MULTI_EXIT_DISC attribute is a four-octet unsigned
 number, called a metric.  All other factors being equal, the exit
-point with the lower metric SHOULD be preferred.  If received over
+point with the lower metric is preferred.  If received over
 EBGP, the MULTI_EXIT_DISC attribute MAY be propagated over IBGP to
-other BGP speakers within the same AS (see also 9.1.2.2).  The
+other BGP speakers within the same AS (see also {{phase2tiebreak}}).  The
 MULTI_EXIT_DISC attribute received from a neighboring AS MUST NOT be
 propagated to other neighboring ASes.
+
+{:aside}
+> XXX s/exit or// ?
 
 A BGP speaker MUST implement a mechanism (based on local
 configuration) that allows the MULTI_EXIT_DISC attribute to be
@@ -1262,9 +1382,9 @@ speaker is configured to alter the value of the MULTI_EXIT_DISC
 attribute received over EBGP, then altering the value MUST be done
 prior to determining the degree of preference of the route and prior
 to performing route selection (Decision Process phases 1 and 2).  See
-Section 9.1.2.2 for necessary restrictions on this.
+{{phase2tiebreak}} for necessary restrictions on this.
 
-###  LOCAL_PREF
+###  LOCAL_PREF {#localpref}
 
 LOCAL_PREF is a well-known discretionary attribute that SHALL be included in all
 UPDATE messages that a given BGP speaker sends to other internal
@@ -1273,22 +1393,22 @@ each external route based on the locally-configured policy, and
 include the degree of preference when advertising a route to its
 internal peers.  The higher degree of preference MUST be preferred.
 A BGP speaker uses the degree of preference learned via LOCAL_PREF in
-its Decision Process (see Section 9.1.1).
+its Decision Process (see {{phase1}}).
 
 A BGP speaker MUST NOT include this attribute in UPDATE messages it
 sends to external peers, except in the case of BGP Confederations
-{{?RFC3065}}.  If it is contained in an UPDATE message that is received
+{{?RFC5065}}.  If it is contained in an UPDATE message that is received
 from an external peer, then this attribute MUST be ignored by the
 receiving speaker, except in the case of BGP Confederations
-{{RFC3065}}.
+{{RFC5065}}.
 
-### ATOMIC_AGGREGATE
+### ATOMIC_AGGREGATE {#atomic}
 
 ATOMIC_AGGREGATE is a well-known discretionary attribute.
 
 When a BGP speaker aggregates several routes for the purpose of
 advertisement to a particular peer, the AS_PATH of the aggregated
-route normally includes an AS_SET formed from the set of ASes from
+route might include an AS_SET formed from the set of ASes from
 which the aggregate was formed.  In many cases, the network
 administrator can determine if the aggregate can safely be advertised
 without the AS_SET, and without forming route loops.
@@ -1304,7 +1424,7 @@ to other speakers.
 
 A BGP speaker that receives a route with the ATOMIC_AGGREGATE
 attribute MUST NOT make any NLRI of that route more specific (as
-defined in 9.1.4) when advertising this route to other BGP speakers.
+defined in {{overlap}}) when advertising this route to other BGP speakers.
 
 A BGP speaker that receives a route with the ATOMIC_AGGREGATE
 attribute needs to be aware of the fact that the actual path to
@@ -1312,18 +1432,30 @@ destinations, as specified in the NLRI of the route, while having the
 loop-free property, may not be the path specified in the AS_PATH
 attribute of the route.
 
-###  AGGREGATOR
+{{RFC9774}} deprecates the use of AS_SET (and AS_CONFED_SET) and 
+provides further guidance, consistent with this section, on the 
+use of ATOMIC_AGGREGATE.
+
+###  AGGREGATOR {#aggregator}
 
 AGGREGATOR is an optional transitive attribute, which MAY be included
-in updates that are formed by aggregation (see Section 9.2.2.2).  A
+in updates that are formed by aggregation (see {{aggregating}}).  A
 BGP speaker that performs route aggregation MAY add the AGGREGATOR
 attribute, which SHALL contain its own AS number and IP address.  The
 IP address SHOULD be the same as the BGP Identifier of the speaker.
 
-# BGP Error Handling.
+{{RFC6793}}, if used, modifies the format of the AGGREGATOR attribute 
+to support four-octet AS numbers. There is no similar support for
+representation of IP Version 6 addresses in the AGGREGATOR attribute
+currently specified.
+
+# BGP Error Handling {#errorhandling}
+
+<!-- XXX this whole section skipped for now. Return to this later and update to integrate RFC 7606. -->
 
 This section describes actions to be taken when errors are detected
-while processing BGP messages.
+while processing BGP messages. {{RFC7606}}, if used, substantially 
+revises this section. 
 
 When any of the conditions described here are detected, a
 NOTIFICATION message, with the indicated Error Code, Error Subcode,
@@ -1344,7 +1476,7 @@ the routes marked as invalid, or the new best routes.
 Unless specified explicitly, the Data field of the NOTIFICATION
 message that is sent to indicate an error is empty.
 
-## Message Header Error Handling
+## Message Header Error Handling {#msgheadererr}
 
 All errors detected while processing the Message Header MUST be
 indicated by sending the NOTIFICATION message with the Error Code
@@ -1380,7 +1512,7 @@ If the Type field of the message header is not recognized, then the
 Error Subcode MUST be set to Bad Message Type.  The Data field MUST
 contain the erroneous Type field.
 
-## OPEN Message Error Handling
+## OPEN Message Error Handling {#openmsgerr}
 
 All errors detected while processing the OPEN message MUST be
 indicated by sending the NOTIFICATION message with the Error Code
@@ -1421,7 +1553,7 @@ If one of the Optional Parameters in the OPEN message is recognized,
 but is malformed, then the Error Subcode MUST be set to 0
 (Unspecific).
 
-##  UPDATE Message Error Handling
+##  UPDATE Message Error Handling {#updatemsgerr}
 
 All errors detected while processing the UPDATE message MUST be
 indicated by sending the NOTIFICATION message with the Error Code
@@ -1467,9 +1599,11 @@ valid IP host address.
 The IP address in the NEXT_HOP MUST meet the following criteria to be
 considered semantically correct:
 
-a) It MUST NOT be the IP address of the receiving speaker.
+{: style="format %c)"}
 
-b) In the case of an EBGP, where the sender and receiver are one
+* It MUST NOT be the IP address of the receiving speaker.
+
+* In the case of an EBGP, where the sender and receiver are one
    IP hop away from each other, either the IP address in the
    NEXT_HOP MUST be the sender's IP address that is used to
    establish the BGP connection, or the interface associated with
@@ -1521,7 +1655,7 @@ noticed, logged locally, and brought to the attention of the
 administration of the peer.  The means to do this, however, lies
 outside the scope of this document.
 
-##  Hold Timer Expired Error Handling
+##  Hold Timer Expired Error Handling {#holdtimerexperr}
 
 If a system does not receive successive KEEPALIVE, UPDATE, and/or
 NOTIFICATION messages within the period specified in the Hold Time
@@ -1529,13 +1663,13 @@ field of the OPEN message, then the NOTIFICATION message with the
 Hold Timer Expired Error Code is sent and the BGP connection is
 closed.
 
-## Finite State Machine Error Handling
+## Finite State Machine Error Handling {#fsmerr}
 
 Any error detected by the BGP Finite State Machine (e.g., receipt of
 an unexpected event) is indicated by sending the NOTIFICATION message
 with the Error Code Finite State Machine Error.
 
-## Cease
+## Cease {#ceaseerr}
 
 In the absence of any fatal errors (that are indicated in this
 section), a BGP peer MAY choose, at any given time, to close its BGP
@@ -1555,7 +1689,7 @@ received from the neighbor exceeds the locally-configured, upper
 bound, then the speaker MUST send the neighbor a NOTIFICATION message
 with the Error Code Cease.  The speaker MAY also log this locally.
 
-## BGP Connection Collision Detection
+## BGP Connection Collision Detection {#collision}
 
 If a pair of BGP speakers try to establish a BGP connection with each
 other simultaneously, then two parallel connections will be formed.
@@ -1625,7 +1759,9 @@ the highest common version.  In order to support BGP version
 negotiation, future versions of BGP MUST retain the format of the
 OPEN and NOTIFICATION messages.
 
-# BGP Finite State Machine (FSM)
+# BGP Finite State Machine (FSM) {#fsm}
+
+<!-- XXX this section skipped for now -->
 
 The data structures and FSM described in this document are conceptual
 and do not have to be implemented precisely as described here, as
@@ -1635,8 +1771,8 @@ they exhibit the same externally visible behavior.
 This section specifies the BGP operation in terms of a Finite State
 Machine (FSM).  The section falls into two parts:
 
-1. Description of Events for the State machine (Section 8.1)
-2. Description of the FSM (Section 8.2)
+1. Description of Events for the State machine ({{fsmevents}})
+2. Description of the FSM ({{fsmdescr}})
 
 Session attributes required (mandatory) for each connection are:
 
@@ -1653,8 +1789,8 @@ The state session attribute indicates the current state of the BGP
 FSM.  The ConnectRetryCounter indicates the number of times a BGP
 peer has tried to establish a peer session.
 
-The mandatory attributes related to timers are described in Section
-10.  Each timer has a "timer" and a "time" (the initial value).
+The mandatory attributes related to timers are described in {{timers}}
+Each timer has a "timer" and a "time" (the initial value).
 
 The optional Session attributes are listed below.  These optional attributes may be supported, either per connection or per local system:
 
@@ -1684,14 +1820,14 @@ attribute that indicates that the Timer function is active.  The
 (DelayOpenTime, IdleHoldTime).  The "Timer" specifies the actual
 timer.
 
-Please refer to Section 8.1.1 for an explanation of the interaction
+Please refer to {{optionalevents}} for an explanation of the interaction
 between these optional attributes and the events signaled to the
-state machine.  Section 8.2.1.3 also provides a short overview of the
+state machine.  {{optsessattrs}} also provides a short overview of the
 different types of optional attributes (flags or timers).
 
-## Events for the BGP FSM
+## Events for the BGP FSM {#fsmevents}
 
-###  Optional Events Linked to Optional Session Attributes
+###  Optional Events Linked to Optional Session Attributes {#optionalevents}
 
 The Inputs to the BGP FSM are events.  Events can either be mandatory
 or optional.  Some optional events are linked to optional session
@@ -1788,7 +1924,7 @@ Description:
      oscillation.  The IdleHoldTimer is used to keep
      the BGP peer in Idle for a particular duration.
      The IdleHoldTimer_Expires event is described in
-     Section 8.1.3.
+     {{timerevents}}.
 
 Values:      Time in seconds
 
@@ -1874,7 +2010,7 @@ Description:
    : The DelayOpenTimer optional session attribute is
    used to delay the sending of an OPEN message on a
    connection.  The DelayOpenTimer_Expires event
-   (Event 12) is described in Section 8.1.3.
+   (Event 12) is described in {{timerevents}}.
 
 Value:       Time in seconds
 
@@ -1893,7 +2029,7 @@ Value:       True or False
 Option 5:    CollisionDetectEstablishedState
 
 Description: 
-   : Normally, a Detect Collision (see Section 6.8)
+   : Normally, a Detect Collision (see {{collision}})
    will be ignored in the Established state.  This
    optional session attribute indicates that this BGP
    connection processes collisions in the Established
@@ -1934,7 +2070,7 @@ are not satisfied, then the local system should log an FSM error.
 
 The settings of optional session attributes may be implicit in some
 implementations, and therefore may not be set explicitly by an
-external operator action.  Section 8.2.1.5 describes these implicit
+external operator action.  {{fsmimpldep}} describes these implicit
 settings of the optional session attributes.  The administrative
 states described below may also be implicit in some implementations
 and not directly configurable by an external operator.
@@ -2062,7 +2198,7 @@ Status:     Optional, depending on local system
 Optional Attribute Status:
    : 1. The AllowAutomaticStop attribute SHOULD be TRUE.
 
-### Timer Events
+### Timer Events {#timerevents}
 
 #### Event 9: ConnectRetryTimer_Expires
 
@@ -2256,13 +2392,13 @@ Definition:
     connection collision has been detected while
     processing an incoming OPEN message and this
     connection has been selected to be disconnected.
-    See Section 6.8 for more information on collision
+    See {{collision}} for more information on collision
     detection.
 
    : Event 23 is an administrative action generated by
     implementation logic that determines whether this
     connection needs to be dropped per the rules in
-    Section 6.8.  This event may occur if the FSM is
+    {{collision}}.  This event may occur if the FSM is
     implemented as two linked state machines.
 
 Status:     Optional
@@ -2318,7 +2454,7 @@ Definition:
 
 Status:     Mandatory
 
-##  Description of FSM
+##  Description of FSM {#fsmdescr}
 
 ###  FSM Definition
 
@@ -2329,7 +2465,7 @@ to remain passive.  For the purpose of this discussion, the active or
 connecting side of the TCP connection (the side of a TCP connection
 sending the first TCP SYN packet) is called outgoing.  The passive or
 listening side (the sender of the first SYN/ACK) is called an
-incoming connection.  (See Section 8.2.1.1 for information on the
+incoming connection.  (See {{activepassive}} for information on the
 terms active and passive used below.)
 
 A BGP implementation MUST connect to and listen on TCP port 179 for
@@ -2339,7 +2475,7 @@ There exists a period in which the identity of the peer on the other
 end of an incoming connection is known, but the BGP identifier is not
 known.  During this time, both an incoming and outgoing connection
 may exist for the same configured peering.  This is referred to as a
-connection collision (see Section 6.8).
+connection collision (see {{collision}}).
 
 A BGP implementation will have, at most, one FSM for each configured
 peering, plus one FSM for each incoming TCP connection for which the
@@ -2351,7 +2487,7 @@ connections are configured to use a different pair of IP addresses.
 This is referred to as multiple "configured peerings" to the same
 peer.
 
-#### Terms "active" and "passive"
+#### Terms "active" and "passive" {#activepassive}
 
 The terms active and passive have been in the Internet operator's
 vocabulary for almost a decade and have proven useful.  The words
@@ -2370,10 +2506,10 @@ has port number 179.
 There is one FSM per BGP connection.  When the connection collision
 occurs prior to determining what peer a connection is associated
 with, there may be two connections for one peer.  After the
-connection collision is resolved (see Section 6.8), the FSM for the
+connection collision is resolved (see {{collision}}), the FSM for the
 connection that is closed SHOULD be disposed.
 
-####  FSM and Optional Session Attributes
+####  FSM and Optional Session Attributes {#optsessattrs}
 
 Optional Session Attributes specify either attributes that act as
 flags (TRUE or FALSE) or optional timers.  For optional attributes
@@ -2412,7 +2548,7 @@ Implementations MAY use these numbers to provide network management
 information.  The exact form of an FSM or the FSM events are specific
 to each implementation.
 
-#### FSM Actions that are Implementation Dependent
+#### FSM Actions that are Implementation Dependent {#fsmimpldep}
 
 At certain points, the BGP FSM specifies that BGP initialization will
 occur or that BGP resources will be deleted.  The initialization of
@@ -2603,7 +2739,7 @@ If the value of the autonomous system field is the same as the
 local Autonomous System number, set the connection status to an
 internal connection; otherwise it will be "external".
 
-If BGP message header checking (Event 21) or OPEN message checking detects an error (Event 22) (see Section 6.2), the local system:
+If BGP message header checking (Event 21) or OPEN message checking detects an error (Event 22) (see {{openmsgerr}}), the local system:
 
 - (optionally) If the SendNOTIFICATIONwithoutOPEN attribute is
 set to TRUE, then the local system first sends a NOTIFICATION
@@ -2810,7 +2946,7 @@ local Autonomous System number, set the connection status to an
 internal connection; otherwise it will be external.
 
 If BGP message header checking (Event 21) or OPEN message checking
-detects an error (Event 22) (see Section 6.2), the local system:
+detects an error (Event 22) (see {{openmsgerr}}), the local system:
 
    - (optionally) sends a NOTIFICATION message with the appropriate
      error code if the SendNOTIFICATIONwithoutOPEN attribute is set
@@ -2936,7 +3072,7 @@ If the HoldTimer_Expires (Event 10), the local system:
 If a TcpConnection_Valid (Event 14), Tcp_CR_Acked (Event 16), or a
 TcpConnectionConfirmed event (Event 17) is received, a second TCP
 connection may be in progress.  This second TCP connection is
-tracked per Connection Collision processing (Section 6.8) until an
+tracked per Connection Collision processing ({{collision}}) until an
 OPEN message is received.
 
 A TCP Connection Request for an Invalid port (Tcp_CR_Invalid
@@ -2967,7 +3103,7 @@ correctness.  If there are no errors in the OPEN message (Event
 - sets a KeepaliveTimer (via the text below)
 
 - sets the HoldTimer according to the negotiated value (see
-  Section 4.2),
+  {{openfmt}}),
 
 - changes its state to OpenConfirm.
 
@@ -2979,7 +3115,7 @@ an "external" connection.  (This will impact UPDATE processing as
 described below.)
 
 If the BGP message header checking (Event 21) or OPEN message
-checking detects an error (Event 22)(see Section 6.2), the local
+checking detects an error (Event 22)(see {{openmsgerr}}), the local
 system:
 
 - sends a NOTIFICATION message with the appropriate error code,
@@ -2997,9 +3133,9 @@ system:
 
 - changes its state to Idle.
 
-Collision detection mechanisms (Section 6.8) need to be applied
+Collision detection mechanisms ({{collision}}) need to be applied
 when a valid BGP OPEN message is received (Event 19 or Event 20).
-Please refer to Section 6.8 for the details of the comparison.  A
+Please refer to {{collision}} for the details of the comparison.  A
 CollisionDetectDump event occurs when the BGP implementation
 determines, by means outside the scope of this document, that a
 connection collision has occurred.
@@ -3159,7 +3295,7 @@ error (NotifMsgVerErr (Event 24)), the local system:
 - changes its state to Idle.
 
 If the local system receives a valid OPEN message (BGPOpen (Event
-19)), the collision detect function is processed per Section 6.8.
+19)), the collision detect function is processed per {{collision}}.
 If this connection is to be dropped due to connection collision,
 the local system:
 
@@ -3180,8 +3316,8 @@ the local system:
 
 If an OPEN message is received, all fields are checked for
 correctness.  If the BGP message header checking (BGPHeaderErr
-(Event 21)) or OPEN message checking detects an error (see Section
-6.2) (BGPOpenMsgErr (Event 22)), the local system:
+(Event 21)) or OPEN message checking detects an error (see {{openmsgerr}})
+(BGPOpenMsgErr (Event 22)), the local system:
 
 - sends a NOTIFICATION message with the appropriate error code,
 
@@ -3340,8 +3476,8 @@ connection SHALL be tracked until it sends an OPEN message.
 
 If a valid OPEN message (BGPOpen (Event 19)) is received, and if
 the CollisionDetectEstablishedState optional attribute is TRUE,
-the OPEN message will be checked to see if it collides (Section
-6.8) with any other connection.  If the BGP implementation
+the OPEN message will be checked to see if it collides ({{collision}})
+with any other connection.  If the BGP implementation
 determines that this connection needs to be terminated, it will
 process an OpenCollisionDump event (Event 23).  If this connection
 needs to be terminated, the local system:
@@ -3398,7 +3534,7 @@ local system:
 - remains in the Established state.
 
 If the local system receives an UPDATE message, and the UPDATE
-message error handling procedure (see Section 6.3) detects an
+message error handling procedure (see {{updatemsgerr}}) detects an
 error (Event 28), the local system:
 
 - sends a NOTIFICATION message with an Update error,
@@ -3444,10 +3580,10 @@ system:
 An UPDATE message may be received only in the Established state.
 Receiving an UPDATE message in any other state is an error.  When an
 UPDATE message is received, each field is checked for validity, as
-specified in Section 6.3.
+specified in {{updatemsgerr}}.
 
 If an optional non-transitive attribute is unrecognized, it is
-quietly ignored.  If an optional transitive attribute is
+quietly discarded.  If an optional transitive attribute is
 unrecognized, the Partial bit (the third high-order bit) in the
 attribute flags octet is set to 1, and the attribute is retained for
 propagation to other BGP speakers.
@@ -3463,18 +3599,30 @@ prefixes) are contained in this field, SHALL be removed from the
 Adj-RIB-In.  This BGP speaker SHALL run its Decision Process because
 the previously advertised route is no longer available for use.
 
+{:aside}
+> XXX here is where the temptation to roll in RFC 4760 becomes strong. 
+
+{:aside}
+> XXX if we decide to clean up the NLRI vs. IP prefix thing, this would be a place to remove "IP prefixes" (the whole thing in parens). It's unnecessary and makes the text more specific than it needs to be.
+
 If the UPDATE message contains a feasible route, the Adj-RIB-In will
 be updated with this route as follows: if the NLRI of the new route
 is identical to the one the route currently has stored in the Adj-
 RIB-In, then the new route SHALL replace the older route in the Adj-
 RIB-In, thus implicitly withdrawing the older route from service.
 Otherwise, if the Adj-RIB-In has no route with NLRI identical to the
-new route, the new route SHALL be placed in the Adj-RIB-In.
+new route, the new route SHALL be placed in the Adj-RIB-In.j
+
+{:aside}
+> XXX clearly the above has been sufficient for people to implement the protocol so maybe is should just be left alone. But, it's formally not quite right. We've defined a "route" as a pairing of <NLRI, path attribute>, meaning a specific set of path attribute values. So closely construed, the text above says if I get the exact thing advertised twice that's a replacement, anything else is a new route. That's wrong. Probably it needs to say something like, "if the NLRI of the new route is identical to the NLRI of a route associated with the same BGP session that is currently stored in the Adj-RIB-In, ..."
+
+{:aside}
+> XXX this would potentially be a place we'd talk about "keys" if we were going to do that. But perhaps that should be kept for ter.
 
 Once the BGP speaker updates the Adj-RIB-In, the speaker SHALL run
 its Decision Process.
 
-##  Decision Process
+##  Decision Process {#decision}
 
 The Decision Process selects routes for subsequent advertisement by
 applying the policies in the local Policy Information Base (PIB) to
@@ -3489,7 +3637,7 @@ implementations support the described functionality and they exhibit
 the same externally visible behavior.
 
 The selection process is formalized by defining a function that takes
-the attribute of a given route as an argument and returns either (a)
+the attributes of a given route as an argument and returns either (a)
 a non-negative integer denoting the degree of preference for the
 route, or (b) a value denoting that this route is ineligible to be
 installed in Loc-RIB and will be excluded from the next phase of
@@ -3503,6 +3651,9 @@ individual application of the degree of preference function to each
 feasible route, followed by the choice of the one with the highest
 degree of preference.
 
+{:aside}
+> XXX I've needed to reference the first part of the above paragraph so many times in telling people why "no, you can't do that", I almost want to boldface the whole thing. Blink text?
+
 The Decision Process operates on routes contained in the Adj-RIBs-In,
 and is responsible for:
 
@@ -3515,28 +3666,34 @@ and is responsible for:
 The Decision Process takes place in three distinct phases, each
 triggered by a different event:
 
-a) Phase 1 is responsible for calculating the degree of preference
-for each route received from a peer.
+{: style="format %c)"}
 
-b) Phase 2 is invoked on completion of phase 1.  It is responsible
+* Phase 1 is responsible for calculating the degree of preference
+   for each route received from a peer.
+
+* Phase 2 is invoked on completion of phase 1.  It is responsible
    for choosing the best route out of all those available for each
    distinct destination, and for installing each chosen route into
    the Loc-RIB.
+   <!-- XXX or "routes", if we're doing ECMP... -->
 
-c) Phase 3 is invoked after the Loc-RIB has been modified.  It is
+* Phase 3 is invoked after the Loc-RIB has been modified.  It is
    responsible for disseminating routes in the Loc-RIB to each
    peer, according to the policies contained in the PIB.  Route
    aggregation and information reduction can optionally be
    performed within this phase.
 
-### Phase 1: Calculation of Degree of Preference
+### Phase 1: Calculation of Degree of Preference {#phase1}
 
 The Phase 1 decision function is invoked whenever the local BGP
 speaker receives, from a peer, an UPDATE message that advertises a
-new route, a replacement route, or withdrawn routes.
+new route, a replacement route, or a withdrawn route.
 
 The Phase 1 decision function is a separate process, which completes
 when it has no further work to do.
+
+{:aside}
+> XXX In (rejected) Errata 3031, Stewart writes, “It is anticipated that the IDR WG will publish material clarifying mutual exclusion in RFC4271.” Personally, I never found this modeling to be helpful, but all things being equal, I don't think it's wrong, and we should apply the principle of "if it ain't broke, don't fix it". First we should take a second look at that erratum, though.
 
 The Phase 1 decision function locks an Adj-RIB-In prior to operating
 on any route contained within it, and unlocks it after operating on
@@ -3550,17 +3707,20 @@ the local system computes the degree of preference of the route
 based on preconfigured policy information.  Note that the latter
 may result in formation of persistent routing loops.
 
+{:aside}
+> XXX it's tempting to rewrite this as SHOULD use LOCAL_PREF, MAY use local policy. But again, "if it ain't broke..."
+
 > If the route is learned from an external peer, then the local BGP
 speaker computes the degree of preference based on preconfigured
 policy information.  If the return value indicates the route is
 ineligible, the route MUST NOT serve as an input to the next phase
 of route selection; otherwise, the return value MUST be used as
-the LOCAL_PREF value in any IBGP readvertisement.
+the LOCAL_PREF value in any propagation of the route into IBGP.
 
 > The exact nature of this policy information, and the computation
 involved, is a local matter.
 
-###  Phase 2: Route Selection
+###  Phase 2: Route Selection {#phase2}
 
 The Phase 2 decision function is invoked on completion of Phase 1.
 The Phase 2 function is a separate process, which completes when it
@@ -3572,10 +3732,15 @@ The Phase 2 decision function is blocked from running while the Phase
 Adj-RIBs-In prior to commencing its function, and unlocks them on
 completion.
 
+Any route excluded from the Phase 2 decision function is deemed infeasible and is not eligible to be selected for installation or propagation.
+
 If the NEXT_HOP attribute of a BGP route depicts an address that is
 not resolvable, or if it would become unresolvable if the route was
 installed in the routing table, the BGP route MUST be excluded from
-the Phase 2 decision function.
+the Phase 2 decision function. 
+
+{:aside}
+> XXX the "or" part is redundant with the next section, "Mutually recursive routes (routes resolving each other or themselves) also fail the resolvability check." Or rather, it's a superset of that, so the other part is redundant. This is probably OK.
 
 If the AS_PATH attribute of a BGP route contains an AS loop, the BGP
 route should be excluded from the Phase 2 decision function.  AS loop
@@ -3584,21 +3749,27 @@ AS_PATH attribute), and checking that the autonomous system number of
 the local system does not appear in the AS path.  Operations of a BGP
 speaker that is configured to accept routes with its own autonomous
 system number in the AS path are outside the scope of this document.
+{{RFC7705}}, if used, documents variations on this procedure.
 
 It is critical that BGP speakers within an AS do not make conflicting
 decisions regarding route selection that would cause forwarding loops
 to occur.
 
+{:aside}
+> XXX this is still correct as written. In the decades since it was written, the window of risk has gotten considerably smaller since (AFAIK) most ASes don't use hop-by-hop forwarding from edge to edge anymore, as was the case at the time of writing. Still, we probably don't need any change.
+
 For each set of destinations for which a feasible route exists in the
 Adj-RIBs-In, the local BGP speaker identifies the route that has:
 
-a) the highest degree of preference of any route to the same set
+{: style="format %c)"}
+
+* the highest degree of preference of any route to the same set
    of destinations, or
 
-b) is the only route to that destination, or
+* is the only route to that destination, or
 
-c) is selected as a result of the Phase 2 tie breaking rules
-   specified in Section 9.1.2.2.
+* is selected as a result of the Phase 2 tie breaking rules
+   specified in {{phase2tiebreak}}.
 
 The local speaker SHALL then install that route in the Loc-RIB,
 replacing any route to the same destination that is currently being
@@ -3609,8 +3780,11 @@ the Routing Table.  Whether the new BGP route replaces an existing
 non-BGP route in the Routing Table depends on the policy configured
 on the BGP speaker.
 
+{:aside}
+> XXX another place ^ where ECMP, if covered, might apply.
+
 The local speaker MUST determine the immediate next-hop address from
-the NEXT_HOP attribute of the selected route (see Section 5.1.3).  If
+the NEXT_HOP attribute of the selected route (see {{nexthop}}).  If
 either the immediate next-hop or the IGP cost to the NEXT_HOP (where
 the NEXT_HOP is resolved through an IGP route) changes, Phase 2 Route
 Selection MUST be performed again.
@@ -3628,9 +3802,10 @@ the Adj-RIBs-In (in case they become resolvable).
 
 ####  Route Resolvability Condition
 
-As indicated in Section 9.1.2, BGP speakers SHOULD exclude
+As indicated in {{phase2}}, BGP speakers exclude
 unresolvable routes from the Phase 2 decision.  This ensures that
-only valid routes are installed in Loc-RIB and the Routing Table.
+only valid routes are installed in the Loc-RIB and Routing Table.
+<!-- XXX I removed a SHOULD that (a) seems wrong, (b) is unnecessary but worst of all (c) conflicts with a MUST in paragraph 4 of the previous section. -->
 
 The route resolvability condition is defined as follows:
 
@@ -3639,8 +3814,8 @@ The route resolvability condition is defined as follows:
    at least one resolvable route Rte2 that matches Rte1's
    intermediate network address and is not recursively resolved
    (directly or indirectly) through Rte1.  If multiple matching
-   routes are available, only the longest matching route SHOULD be
-   considered.
+   routes are available, only the longest matching route is
+   considered. <!-- XXX I made the "SHOULD be" into an "is". Unless someone can tell me one single case where it makes sense to NOT recurse to the longest match. -->
 
 2. Routes referencing interfaces (with or without intermediate
    addresses) are considered resolvable if the state of the
@@ -3652,12 +3827,15 @@ the routes in the Routing Table that can be of both types (those that
 specify interfaces or those that do not).  IGP routes and routes to
 directly connected networks are expected to specify the outbound
 interface.  Static routes can specify the outbound interface, the
-intermediate address, or both.
+intermediate address, or both. <!-- XXX it's unclear to me what useful work this paragraph is doing, but, "if it ain't broke..." -->
 
 Note that a BGP route is considered unresolvable in a situation where
 the BGP speaker's Routing Table contains no route matching the BGP
 route's NEXT_HOP.  Mutually recursive routes (routes resolving each
 other or themselves) also fail the resolvability check.
+
+{:aside}
+> XXX probably not, but I wonder if there is something to be said about default routes here. 
 
 It is also important that implementations do not consider feasible
 routes that would become unresolvable if they were installed in the
@@ -3673,7 +3851,7 @@ Whenever a BGP speaker identifies a route that fails the
 resolvability check because of mutual recursion, an error message
 SHOULD be logged.
 
-####  Breaking Ties (Phase 2)
+####  Breaking Ties (Phase 2) {#phase2tiebreak}
 
 In its Adj-RIBs-In, a BGP speaker may have several routes to the same
 destination that have the same degree of preference.  The local
@@ -3682,11 +3860,17 @@ associated Loc-RIB.  The local speaker considers all routes with the
 same degrees of preference, both those received from internal peers,
 and those received from external peers.
 
+{:aside}
+> XXX ^ more ECMP
+
 The following tie-breaking procedure assumes that, for each candidate
 route, all the BGP speakers within an autonomous system can ascertain
 the cost of a path (interior distance) to the address depicted by the
 NEXT_HOP attribute of the route, and follow the same route selection
-algorithm.
+algorithm. 
+
+{:aside}
+> XXX in practice this is revised by 4760 because NEXT_HOP is replaced. I'm not sure if 4760 patches this text, though. Possibly a wording change throughout the document to generalize NEXT_HOP to "next hop" with suitable definition would be in order.
 
 The tie-breaking algorithm begins by considering all equally
 preferable routes to the same destination, and then selects routes to
@@ -3694,28 +3878,37 @@ be removed from consideration.  The algorithm terminates as soon as
 only one route remains in consideration.  The criteria MUST be
 applied in the order specified.
 
+{:aside}
+> XXX ECMP again ^ "only one"
+
 Several of the criteria are described using pseudo-code.  Note that
 the pseudo-code shown was chosen for clarity, not efficiency.  It is
 not intended to specify any particular implementation.  BGP
 implementations MAY use any algorithm that produces the same results
 as those described here.
 
-a) Remove from consideration all routes that are not tied for
+{:tiebreak: counter="tiebreak" style="format %c)"}
+
+{: tiebreak}
+
+* Remove from consideration all routes that are not tied for
    having the smallest number of AS numbers present in their
    AS_PATH attributes.  Note that when counting this number, an
    AS_SET counts as 1, no matter how many ASes are in the set.
+   <!-- XXX AS_SET. I guess this is fine, though. -->
 
-b) Remove from consideration all routes that are not tied for
+* Remove from consideration all routes that are not tied for
    having the lowest Origin number in their Origin attribute.
 
-c) Remove from consideration routes with less-preferred
+* Remove from consideration routes with less-preferred
    MULTI_EXIT_DISC attributes.  MULTI_EXIT_DISC is only comparable
    between routes learned from the same neighboring AS (the
    neighboring AS is determined from the AS_PATH attribute).
    Routes that do not have the MULTI_EXIT_DISC attribute are
    considered to have the lowest possible MULTI_EXIT_DISC value.
 
-   This is also described in the following procedure:
+> This is also described in the following procedure:
+<!-- XXX I wasn't sure how to get the indent right for the above. It's part of the previous paragraph, shouldn't get a new bullet, should get the same indent. Same for the later paragraphs that I've crudely indented. -->
 
 ~~~~
     for m = all routes still under consideration
@@ -3724,12 +3917,12 @@ c) Remove from consideration routes with less-preferred
                 remove route m from consideration
 ~~~~
 
-In the pseudo-code above, MED(n) is a function that returns the
+> In the pseudo-code above, MED(n) is a function that returns the
 value of route n's MULTI_EXIT_DISC attribute.  If route n has
 no MULTI_EXIT_DISC attribute, the function returns the lowest
 possible MULTI_EXIT_DISC value (i.e., 0).
 
-Similarly, neighborAS(n) is a function that returns the
+> Similarly, neighborAS(n) is a function that returns the
 neighbor AS from which the route was received.  If the route is
 learned via IBGP, and the other IBGP speaker didn't originate
 the route, it is the neighbor AS from which the other IBGP
@@ -3739,7 +3932,7 @@ and the other IBGP speaker either (a) originated the route, or
 of the aggregate route is either empty or begins with an
 AS_SET, it is the local AS.
 
-If a MULTI_EXIT_DISC attribute is removed before re-advertising
+> If a MULTI_EXIT_DISC attribute is removed <!-- XXX any need to specify "from an EBGP route"? It's implicit, especially considering the later sentences, so... "if it ain't broke..."--> before re-advertising
 a route into IBGP, then comparison based on the received EBGP
 MULTI_EXIT_DISC attribute MAY still be performed.  If an
 implementation chooses to remove MULTI_EXIT_DISC, then the
@@ -3758,18 +3951,33 @@ comparison with an IBGP-learned route, then removing the
 MULTI_EXIT_DISC attribute, and advertising the route has been
 proven to cause route loops.
 
-d) If at least one of the candidate routes was received via EBGP,
+{:aside}
+> XXX I question whether the above paragraph is actually implemented. It's weirdly specific, it feels like the WG working through some deployment problem, that existed prior to 2006, in real time. *If* we think implementations don't do this, we should morph this into operational advice, along the lines of "don't do that, because". We can still document the fix as an optional feature, but it would move out of the main flow of 9.1.2.2.
+
+* If at least one of the candidate routes was received via EBGP,
    remove from consideration all routes that were received via
    IBGP.
+{: tiebreak}
+   
+{:aside}
+> XXX should this be rewritten as "remove from consideration all routes that were not received via EBGP"? The problem being confederations, and for that matter any hypothetical future flavors.
 
-e) Remove from consideration any routes with less-preferred
+* Remove from consideration any routes with less-preferred
    interior cost.  The interior cost of a route is determined by
    calculating the metric to the NEXT_HOP for the route using the
    Routing Table.  If the NEXT_HOP hop for a route is reachable,
-   but no cost can be determined, then this step should be skipped
-   (equivalently, consider all routes to have equal costs).
+   but no cost can be determined, then this step should be skipped.
+   (Equivalently, consider all routes to have equal costs; also, 
+   some implementations may choose to render this consideration 
+   moot by ensuring a cost can always be determined, by applying
+   a default value for routes that otherwise would have no cost. The 
+   details of such a strategy are beyond the scope of this document.)
+{: tiebreak}
 
-   This is also described in the following procedure.
+{:aside}
+> XXX I don't love the "no cost can be determined" language. It could be construed multiple ways, with different possible outcomes. Two of them are, "if any of the candidate routes has an indeterminate metric, don't do step (e) at all" and "if while doing step (e) you encounter a route with an indeterminate metric, bail out". The second version could "remove from consideration" some subset of routes before it encounters the spoiler. One of the eliminated routes could be a potential winner of (f). The first version doesn't do that. So, the outcome at step (f) could be different. In practice this is OK, ish, because (f) is the equivalent of "flip a coin" anyway, but I don't love it and I want to consider it harder. Also this is another case of "do we think this is actually implemented?" I can almost convince myself this is OK but not quite: “a route” is too unspecific, if you try to construe it completely literally it falls apart, therefore the reader has to apply interpretation to decide what “a route” means, and depending on their interpretation you get different outcomes, as discussed.
+
+> This is also described in the following procedure.
 
 ~~~~
       for m = all routes still under consideration
@@ -3778,27 +3986,33 @@ e) Remove from consideration any routes with less-preferred
                   remove m from consideration
 ~~~~
 
-   In the pseudo-code above, cost(n) is a function that returns
+> In the pseudo-code above, cost(n) is a function that returns
    the cost of the path (interior distance) to the address given
    in the NEXT_HOP attribute of the route.
+   
+{:aside}
+> XXX the pseudo-code doesn't cover the "no cost can be determined" case (that's actually what led me to notice the ambiguity).
 
-f) Remove from consideration all routes other than the route that
+* Remove from consideration all routes other than the route that
    was advertised by the BGP speaker with the lowest BGP
-   Identifier value.
+   Identifier value. ({{RFC5004}}, if used, modifies this rule.)
 
-g) Prefer the route received from the lowest peer address.
+* Prefer the route received from the lowest peer address.
+{: tiebreak}
 
 ###  Phase 3: Route Dissemination
 
 The Phase 3 decision function is invoked on completion of Phase 2, or
 when any of the following events occur:
 
-a) when routes in the Loc-RIB to local destinations have changed
+{: style="format %c)"}
 
-b) when locally generated routes learned by means outside of BGP
+* when routes in the Loc-RIB to local destinations have changed
+
+* when locally generated routes learned by means outside of BGP
    have changed
 
-c) when a new BGP speaker connection has been established
+* when a new BGP speaker connection has been established
 
 The Phase 3 function is a separate process that completes when it has
 no further work to do.  The Phase 3 Routing Decision function is
@@ -3810,21 +4024,21 @@ to configured policy.  This policy MAY exclude a route in the Loc-RIB
 from being installed in a particular Adj-RIB-Out.  A route SHALL NOT
 be installed in the Adj-Rib-Out unless the destination, and NEXT_HOP
 described by this route, may be forwarded appropriately by the
-Routing Table.  If a route in Loc-RIB is excluded from a particular
+Routing Table. <!--XXX that << is kind of a funny sentence-->  If a route in the Loc-RIB is excluded from a particular
 Adj-RIB-Out, the previously advertised route in that Adj-RIB-Out MUST
-be withdrawn from service by means of an UPDATE message (see 9.2).
+be withdrawn from service by means of an UPDATE message (see {{updatesend}}). <!--XXX so is that. I guess maybe something like, "If a route to a particular destination is excluded from a particular Adj-RIB-Out, and if a route to that destination had previously been advertised from that Adj-RIB-Out, then etc"-->
 
-Route aggregation and information reduction techniques (see Section
-9.2.2.1) may optionally be applied.
+Route aggregation and information reduction techniques (see {{informreduce}}) 
+may optionally be applied.
 
 Any local policy that results in routes being added to an Adj-RIB-Out
 without also being added to the local BGP speaker's forwarding table
 is outside the scope of this document.
 
 When the updating of the Adj-RIBs-Out and the Routing Table is
-complete, the local BGP speaker runs the Update-Send process of 9.2.
+complete, the local BGP speaker runs the Update-Send process of {{updatesend}}.
 
-### Overlapping Routes
+### Overlapping Routes {#overlap}
 
 A BGP speaker may transmit routes with overlapping Network Layer
 Reachability Information (NLRI) to another BGP speaker.  NLRI overlap
@@ -3860,20 +4074,30 @@ the more specific routes or aggregate the two routes and install, in
 Loc-RIB, the aggregated route, provided that both routes have the
 same value of the NEXT_HOP attribute.
 
-If a BGP speaker chooses to aggregate, then it SHOULD either include
-all ASes used to form the aggregate in an AS_SET, or add the
-ATOMIC_AGGREGATE attribute to the route.  This attribute is now
-primarily informational.  With the elimination of IP routing
+{:aside}
+> XXX there are some problems with the above paragraph. First, "acceptance policy" isn't a defined term, and it's not crystal clear which phase of processing the paragraph is talking about. I interpret it as meaning what we now call "import policy". Probably this should cross-reference {{phase1}}. Second, I really doubt any implementation has ever done the second sentence, as written. To take just one simple example, suppose I receive (and accept) 10/8 and 10.0/16 from peer A, and also 10.0/16 from peer B. Suppose peer B's route beats peer A's in route selection. The text says I have to do the aggregation part described in the second clause, because I'm not installing A's 10.0/16, so I'm supposed to install the aggregate 10/8->A, and 10.0/16->B. As a final gripe, we don't say what we mean by "aggregate the two routes". The most obvious reading is "do what it says in Section 9.2.2.2, Aggregating Routing Information", which is itself a bit on the vague side (notes in that section in more detail) but let's say we work through those and it's basically just "do 'brief' style aggregation". The fact remains: I don't think implementations actually *do* this when presented with a scenario like I've described.
+
+{:aside}
+> XXX that being the case I think we should strike this paragraph.
+
+If a BGP speaker chooses to aggregate, then if it does not support
+{{RFC9774}} it MAY include all ASes used to form the aggregate in an AS_SET.
+Otherwise it SHOULD add the
+ATOMIC_AGGREGATE attribute to the route.  This attribute is
+primarily informational.  <!-- With the elimination of IP routing
 protocols that do not support classless routing, and the elimination
 of router and host implementations that do not support classless
-routing, there is no longer a need to de-aggregate.  Routes SHOULD
+routing, there is no longer a need to de-aggregate.-->  Routes SHOULD
 NOT be de-aggregated.  In particular, a route that carries the
 ATOMIC_AGGREGATE attribute MUST NOT be de-aggregated.  That is, the
 NLRI of this route cannot be more specific.  Forwarding along such a
 route does not guarantee that IP packets will actually traverse only
 ASes listed in the AS_PATH attribute of the route.
 
-##  Update-Send Process
+{:aside}
+> XXX I don't understand the sentence "That is, the NLRI of this route cannot be more specific" and I'm kind of surprised there's never been an erratum against it. Maybe it's supposed to say "cannot be *made* more specific"? Also, what is the "does not guarantee" sentence trying to do? It's not even clear to me what the referent of "such a route" is -- an aggregate? A de-aggregate? I think we should probably just get rid of these two sentences.
+
+##  Update-Send Process {#updatesend}
 
 The Update-Send process is responsible for advertising UPDATE
 messages to all peers.  For example, it distributes the routes chosen
@@ -3881,15 +4105,18 @@ by the Decision Process to other BGP speakers, which may be located
 in either the same autonomous system or a neighboring autonomous
 system.
 
+{:aside}
+> XXX why "for example"? Can we strike those two words? (I wonder if this was an editing error, the ever-popular "e.g." vs. "i.e." mix-up, where the text should have said "i.e.", but said "e.g.", and then the RFCEd expanded that to "for example" when the expansion should really have been "in other words".)
+
 When a BGP speaker receives an UPDATE message from an internal peer,
 the receiving BGP speaker SHALL NOT re-distribute the routing
 information contained in that UPDATE message to other internal peers
-(unless the speaker acts as a BGP Route Reflector {{?RFC2796}}).
+(unless the speaker acts as a BGP Route Reflector {{?RFC4456}}).
 
 As part of Phase 3 of the route selection process, the BGP speaker
 has updated its Adj-RIBs-Out.  All newly installed routes and all
 newly unfeasible routes for which there is no replacement route SHALL
-be advertised to its peers by means of an UPDATE message.
+be advertised to its peers by means of one or more UPDATE messages.
 
 A BGP speaker SHOULD NOT advertise a given feasible BGP route from
 its Adj-RIB-Out if it would produce an UPDATE message containing the
@@ -3899,10 +4126,14 @@ Any routes in the Loc-RIB marked as unfeasible SHALL be removed.
 Changes to the reachable destinations within its own autonomous
 system SHALL also be advertised in an UPDATE message.
 
+{:aside}
+> XXX I don't know what the second sentence is telling me to do. :-( I guess maybe it's saying that if I'm originating a route into BGP, and if that route changes, then update the advertisement? If that's what it means I'm going to attempt a rewrite. If not, I'm all ears.
+
 If, due to the limits on the maximum size of an UPDATE message (see
-Section 4), a single route doesn't fit into the message, the BGP
+{{msgformat}}), a single route doesn't fit into the message, the BGP
 speaker MUST NOT advertise the route to its peers and MAY choose to
-log an error locally.
+log an error locally. If a route for the affected destination has
+previously been advertised, the route MUST be withdrawn.
 
 ###  Controlling Routing Traffic Overhead
 
@@ -3912,7 +4143,10 @@ advertise UPDATE messages and the processing power needed by the
 Decision Process to digest the information contained in the UPDATE
 messages.
 
-#### Frequency of Route Advertisement
+{:aside}
+> XXX "everyone knows" that a competent BGP implementation does state compression. I'm leaving this marker here to remind me that if state compression isn't required or at least suggested somewhere in this spec, we might should add it. At various times misunderstanding of this fact has created actual problems (not so much with the protocol, but with community understanding of it and associated angst).
+
+#### Frequency of Route Advertisement {#mrai}
 
 The parameter MinRouteAdvertisementIntervalTimer determines the
 minimum amount of time that must elapse between an advertisement
@@ -3933,24 +4167,45 @@ routes to some common set of destinations will be at least
 MinRouteAdvertisementIntervalTimer, and will also ensure that a
 constant upper bound on the interval is acceptable.
 
+{:aside}
+> XXX this paragraph has always bugged me. I assume it's the result of mutual exhaustion after going many rounds on this topic. Below is a potential rewrite, only for clarity. I haven't tackled the fact that the text as written delays withdraws as well as UPDATEs, which I'm not at all sure is either a good, or an implemented, practice.
+
+Two UPDATE messages sent by a BGP speaker to a peer that advertise
+feasible routes and/or withdrawal of unfeasible routes to some common
+set of destinations MUST be separated by at least
+MinRouteAdvertisementIntervalTimer.  In addition to providing this
+lower bound on the interval between advertisements for a given set
+of destinations, an implementation SHOULD also provide an upper bound
+on the interval.
+
+{:aside}
+> XXX I really don't love "set of destinations" in 2025. I think we can say "prefix" or even "NLRI" and it will speak more clearly to the reader without loss of precision. Noted to scrub later.
+
 Since fast convergence is needed within an autonomous system, either
 (a) the MinRouteAdvertisementIntervalTimer used for internal peers
 SHOULD be shorter than the MinRouteAdvertisementIntervalTimer used
-for external peers, or (b) the procedure describe in this section
+for external peers, or (b) the procedure described in this section
 SHOULD NOT apply to routes sent to internal peers.
+
+{:aside}
+> XXX the "or" clause is just a degenerate case of the "either" clause. :-( 
 
 This procedure does not limit the rate of route selection, but only
 the rate of route advertisement.  If new routes are selected multiple
 times while awaiting the expiration of
 MinRouteAdvertisementIntervalTimer, the last route selected SHALL be
-advertised at the end of MinRouteAdvertisementIntervalTimer.
+advertised at the end of MinRouteAdvertisementIntervalTimer, and the 
+intermediate selections SHALL NOT be advertised.
 
-####  Frequency of Route Origination
+####  Frequency of Route Origination {#freqoforigination}
 
 The parameter MinASOriginationIntervalTimer determines the minimum
 amount of time that must elapse between successive advertisements of
 UPDATE messages that report changes within the advertising BGP
 speaker's own autonomous systems.
+
+{:aside}
+> XXX does anyone implement this?
 
 ###  Efficient Organization of Routing Information
 
@@ -3958,32 +4213,38 @@ Having selected the routing information it will advertise, a BGP
 speaker may avail itself of several methods to organize this
 information in an efficient manner.
 
-####  Information Reduction
+####  Information Reduction {#informreduce}
 
 Information reduction may imply a reduction in granularity of policy
 control - after information is collapsed, the same policies will
 apply to all destinations and paths in the equivalence class.
 
+{:aside}
+> XXX I don't understand what point (a) below means. As for point (b) I don't think it's implemented, and furthermore it uses AS_SETs, which we're deprecating. I think we should get rid of this subsection.
+
 The Decision Process may optionally reduce the amount of information
-that it will place in the Adj-RIBs-Out by any of the following
+that it will place in the Adj-RIBs-Out by either of the following
 methods:
 
-a) Network Layer Reachability Information (NLRI):
-  : Destination IP addresses can be represented as IP address
+{: style="format %c)"}
+
+* Network Layer Reachability Information (NLRI):
+  Destination IP addresses can be represented as IP address
   prefixes.  In cases where there is a correspondence between the
   address structure and the systems under control of an
   autonomous system administrator, it will be possible to reduce
   the size of the NLRI carried in the UPDATE messages.
 
-b) AS_PATHs:
-  : AS path information can be represented as ordered AS_SEQUENCEs
+* AS_PATHs:
+  AS path information can be represented as ordered AS_SEQUENCEs
   or unordered AS_SETs.  AS_SETs are used in the route
-  aggregation algorithm described in Section 9.2.2.2.  They
+  aggregation algorithm described in {{aggregating}}.  They
   reduce the size of the AS_PATH information by listing each AS
   number only once, regardless of how many times it may have
   appeared in multiple AS_PATHs that were aggregated.
 
-  : An AS_SET implies that the destinations listed in the NLRI can
+<!-- XXX the below should be indented to the same level as the bullet list, it's part of the previous item. I couldn't work out how. Then again if we get rid of this subsection then it doesn't matter. --> 
+  > An AS_SET implies that the destinations listed in the NLRI can
   be reached through paths that traverse at least some of the
   constituent autonomous systems.  AS_SETs provide sufficient
   information to avoid routing information looping; however,
@@ -3995,7 +4256,7 @@ b) AS_PATHs:
   detailed path information and can distinguish individual paths
   from destinations.
 
-#### Aggregating Routing Information
+#### Aggregating Routing Information {#aggregating}
 
 Aggregation is the process of combining the characteristics of
 several different routes in such a way that a single route can be
@@ -4066,7 +4327,13 @@ AS_PATH attribute:
 
      - Multiple tuples of type AS_SEQUENCE with the same value may
        appear in the aggregated AS_PATH only when adjacent to
-       another tuple of the same type and value.
+       another tuple of the same type and value. (XXX it was hard
+       for me to make any sense of this bullet. I guess it's saying
+       that if you're going to insert AS foo into the path more than
+       once, it has to be part of a run of AS foo, and can't be 
+       interleaved. This seems unlikely to be enforced or implemented.
+       If we do want to keep this rule, I want to rewrite it for 
+       clarity -- but I'd prefer to get rid of it.)
 
    : An implementation may choose any algorithm that conforms to
    these rules.  At a minimum, a conformant implementation SHALL
@@ -4090,11 +4357,17 @@ AS_PATH attribute:
      - for each pair of adjacent tuples in the aggregated AS_PATH,
      if both tuples have the same type, merge them together, as
      long as doing so will not cause a segment with a length
-     greater than 255 to be generated.
+     greater than 255 to be generated. (XXX this is saying to
+     minimize the number of segments, but it's not written well, 
+     because the way "tuple" is defined, "merge them together" is
+     meaningless. If we keep this, I want to rewrite it for clarity.)
 
-   : Appendix F, Section F.6 presents another algorithm that
+   : Appendix F, {{complexaggr}} presents another algorithm that
    satisfies the conditions and allows for more complex policy
    configurations.
+   
+{:aside}
+> XXX I think we need to revisit all of the above in light of RFC 9774 (Deprecation of AS_SET and AS_CONFED_SET) and possibly also an implementation survey. While we probably shouldn't/can't eliminate this entirely, I'd like to make the mainline text represent what we think is real (probably what 9774 calls "brief" aggregation) and move the rest of it to an appendix or something ("if you're not doing RFC 9774 you *can* do aggregation this way, if you insist").
 
 ATOMIC_AGGREGATE:
    : If at least one of the routes to be aggregated has
@@ -4105,7 +4378,7 @@ AGGREGATOR:
    : Any AGGREGATOR attributes from the routes to be aggregated MUST
      NOT be included in the aggregated route.  The BGP speaker
      performing the route aggregation MAY attach a new AGGREGATOR
-     attribute (see Section 5.1.7).
+     attribute (see {{aggregator}}).
 
 ##  Route Selection Criteria
 
@@ -4128,28 +4401,31 @@ exceptions:
   that are unstable can be "penalized" (e.g., by using the
   procedures described in {{?RFC2439}}).
 
+{:aside}
+> XXX "will require experience". Having gathered several decades of experience since publication, I think we need to rewrite this to -- at minimum -- get rid of that clause. Probably we should reconsider the whole bullet (I don't currently have a proposal). 
+
 ## Originating BGP routes
 
 A BGP speaker may originate BGP routes by injecting routing
 information acquired by some other means (e.g., via an IGP) into BGP.
 A BGP speaker that originates BGP routes assigns the degree of
 preference (e.g., according to local configuration) to these routes
-by passing them through the Decision Process (see Section 9.1).
+by passing them through the Decision Process (see {{decision}}).
 These routes MAY also be distributed to other BGP speakers within the
-local AS as part of the update process (see Section 9.2).  The
+local AS as part of the update process (see {{updatesend}}).  The
 decision of whether to distribute non-BGP acquired routes within an
 AS via BGP depends on the environment within the AS (e.g., type of
 IGP) and SHOULD be controlled via configuration.
 
-# BGP Timers
+# BGP Timers {#timers}
 
-BGP employs five timers: ConnectRetryTimer (see Section 8), HoldTimer
-(see Section 4.2), KeepaliveTimer (see Section 8),
-MinASOriginationIntervalTimer (see Section 9.2.1.2), and
-MinRouteAdvertisementIntervalTimer (see Section 9.2.1.1).
+BGP employs five timers: ConnectRetryTimer (see {{fsm}}), HoldTimer
+(see {{openfmt}}), KeepaliveTimer (see {{fsm}}),
+MinASOriginationIntervalTimer (see {{freqoforigination}}), and
+MinRouteAdvertisementIntervalTimer (see {{mrai}}).
 
-Two optional timers MAY be supported: DelayOpenTimer, IdleHoldTimer
-by BGP (see Section 8).  Section 8 describes their use.  The full
+Two optional timers MAY be supported: DelayOpenTimer and IdleHoldTimer
+(see {{fsm}}).  {{fsm}} describes their use.  The full
 operation of these optional timers is outside the scope of this
 document.
 
@@ -4161,7 +4437,7 @@ HoldTime is a mandatory FSM attribute that stores the initial value
 for the HoldTimer.  The suggested default value for the HoldTime is
 90 seconds.
 
-During some portions of the state machine (see Section 8), the
+During some portions of the state machine (see {{fsm}}), the
 HoldTimer is set to a large value.  The suggested default for this
 large value is 4 minutes.
 
@@ -4169,8 +4445,14 @@ The KeepaliveTime is a mandatory FSM attribute that stores the
 initial value for the KeepaliveTimer.  The suggested default value
 for the KeepaliveTime is 1/3 of the HoldTime.
 
+{:aside}
+> XXX all of the above are probably still correct.
+
 The suggested default value for the MinASOriginationIntervalTimer is
 15 seconds.
+
+{:aside}
+> XXX I think I questioned elsewhere if MinASOriginationIntervalTimer is a going concern at all.
 
 The suggested default value for the
 MinRouteAdvertisementIntervalTimer on EBGP connections is 30 seconds.
@@ -4178,9 +4460,15 @@ MinRouteAdvertisementIntervalTimer on EBGP connections is 30 seconds.
 The suggested default value for the
 MinRouteAdvertisementIntervalTimer on IBGP connections is 5 seconds.
 
+{:aside}
+> XXX I guess we've never standardized any MRAI updates, but over the years this has been a highly-debated aspect of the design. Is this still accurate vs. current running code?
+
 An implementation of BGP MUST allow the HoldTimer to be configurable
 on a per-peer basis, and MAY allow the other timers to be
 configurable.
+
+{:aside}
+> XXX between "*suggested* default value" and "MAY allow the other timers to be configurable" the standard as written pretty much allows all the timers to be anything at all, including nonexistent. (I can make the default value 0, and decide not to allow configuration, without violating the spec.)
 
 To minimize the likelihood that the distribution of BGP messages by a
 given BGP speaker will contain peaks, jitter SHOULD be applied to the
@@ -4198,7 +4486,61 @@ range of the jitter's random value MAY be configurable.
 
 --- back
 
-# Comparison with RFC 1771
+# Acknowledgements
+
+This document is closely based on RFC 4271. XXX finish me
+
+## Acknowledgements Section of RFC 4271
+
+RFC 4271 contained the following acknowledgements:
+
+This document was originally published as {{?RFC1267}} in October 1991,
+jointly authored by Kirk Lougheed and Yakov Rekhter.
+
+We would like to express our thanks to Guy Almes, Len Bosack, and
+Jeffrey C. Honig for their contributions to the earlier version
+(BGP-1) of this document.
+
+We would like to specially acknowledge numerous contributions by
+Dennis Ferguson to the earlier version of this document.
+
+We would like to explicitly thank Bob Braden for the review of the
+earlier version (BGP-2) of this document, and for his constructive
+and valuable comments.
+
+We would also like to thank Bob Hinden, Director for Routing of the
+Internet Engineering Steering Group, and the team of reviewers he
+assembled to review the earlier version (BGP-2) of this document.
+This team, consisting of Deborah Estrin, Milo Medin, John Moy, Radia
+Perlman, Martha Steenstrup, Mike St. Johns, and Paul Tsuchiya, acted
+with a strong combination of toughness, professionalism, and
+courtesy.
+
+Certain sections of the document borrowed heavily from IDRP
+[IS10747], which is the OSI counterpart of BGP.  For this, credit
+should be given to the ANSI X3S3.3 group chaired by Lyman Chapin and
+to Charles Kunzinger, who was the IDRP editor within that group.
+
+We would also like to thank Benjamin Abarbanel, Enke Chen, Edward
+Crabbe, Mike Craren, Vincent Gillet, Eric Gray, Jeffrey Haas, Dimitry
+Haskin, Stephen Kent, John Krawczyk, David LeRoy, Dan Massey,
+Jonathan Natale, Dan Pei, Mathew Richardson, John Scudder, John
+Stewart III, Dave Thaler, Paul Traina, Russ White, Curtis Villamizar,
+and Alex Zinin for their comments.
+
+We would like to specially acknowledge Andrew Lange for his help in
+preparing the final version of this document.
+
+Finally, we would like to thank all the members of the IDR Working
+Group for their ideas and the support they have given to this
+document.
+
+
+# Comparison of RFC 4271 with RFC 1771 {#compare1771}
+
+RFC 4271 contained the following comparison section: 
+
+XXX consider removing all the old comparisons, and adding a comparison to RFC 4271. Anyone who wants to know the comparisons to RFC 1771 et al can go look at RFC 4271.
 
 There are numerous editorial changes in comparison to {{?RFC1771}} (too
 many to list here).
@@ -4245,9 +4587,9 @@ The following list the technical changes:
 
    Clarification of BGP FSM.
 
-# Comparison with RFC 1267
+# Comparison with RFC 1267 {#compare1267}
 
-All the changes listed in Appendix A, plus the following.
+All the changes listed in {{compare1771}}, plus the following.
 
 BGP-4 is capable of operating in an environment where a set of
 reachable destinations may be expressed via a single IP prefix.  The
@@ -4272,13 +4614,13 @@ To ensure that Hold Timers are symmetric, the Hold Timer is now
 negotiated on a per-connection basis.  Hold Timers of zero are now
 supported.
 
-# Comparison with RFC 1163
+# Comparison with RFC 1163 {#compare1163}
 
-All of the changes listed in Appendices A and B, plus the following.
+All of the changes listed in {{compare1771}} and {{compare1267}}, plus the following.
 
 To detect and recover from BGP connection collision, a new field (BGP
-Identifier) has been added to the OPEN message.  New text (Section
-6.8) has been added to specify the procedure for detecting and
+Identifier) has been added to the OPEN message.  New text ({{collision}})
+has been added to specify the procedure for detecting and
 recovering from collision.
 
 The new document no longer restricts the router that is passed in the
@@ -4290,7 +4632,7 @@ about previously reachable routes.
 
 # Comparison with RFC 1105
 
-All of the changes listed in Appendices A, B, and C, plus the
+All of the changes listed in {{compare1771}}, {{compare1267}} and {{compare1163}}, plus the
 following.
 
 Minor changes to the {{?RFC1105}} Finite State Machine were necessary to
@@ -4324,7 +4666,7 @@ as BGP-1; BGP, as specified in {{?RFC1163}}, is referred to as BGP-2;
 BGP, as specified in RFC 1267 is referred to as BGP-3; and BGP, as
 specified in this document is referred to as BGP-4.
 
-# TCP Options that May Be Used with BGP
+# TCP Options that May Be Used with BGP {#tcpopts}
 
 If a local system TCP user interface supports the TCP PUSH function,
 then each BGP message SHOULD be transmitted with PUSH flag set.
@@ -4335,15 +4677,28 @@ If a local system TCP user interface supports setting the DSCP field
 {{?RFC2474}} for TCP connections, then the TCP connection used by BGP
 SHOULD be opened with bits 0-2 of the DSCP field set to 110 (binary).
 
-An implementation MUST support the TCP MD5 option {{RFC2385}}.
+An implementation MUST support the TCP Authentication Option (TCP-AO, 
+{{RFC5925}}). It SHOULD support the TCP MD5 option {{RFC2385}} for 
+backward compatibility.
+
+{:aside}
+> XXX this is a normative change. I think it is widely enough implemented now, and I think we can't advance this document if we don't make the change.
 
 #  Implementation Recommendations
 
+{:aside}
+> XXX having gone through this whole appendix, I don't think there's a single subsection that should be kept, so the whole thing should be removed, and if someone wants to write a 'best practices for BGP implementations' document with current reccs, awesome.
+
 This section presents some implementation recommendations.
 
-##  Multiple Networks Per Message
+##  Multiple Networks Per Message {#multiplenets}
 
-The BGP protocol allows for multiple address prefixes with the same
+{:aside}
+> XXX I think the previous content of this appendix is no longer needed. Furthermore, I don't know that it's terribly helpful in 2025 to tell people how GateD 3.5 built routing updates. Ish. (Complete with references to "flash updates", sans definition!) Below is my suggested rewrite... although perhaps we should just provide this normatively inline somewhere. For that matter, we could cut it entirely, I'd be OK with that. If we want a 'best practices for implementations' that could be its own document, and could cover things like update groups too. In fact, right now that is my recommendation: we cut this completely (rewrite still shown below in case others disagree).
+
+An implementation of BGP should strive to include as many NLRI as possible in a single UPDATE message. The primary motivation is processing efficiency, especially for the receiver, although there are other benefits, such as reduction of bandwidth consumption (vs. the practice of sending a separate UPDATE message for each NLRI).
+
+<!-- The BGP protocol allows for multiple address prefixes with the same
 path attributes to be specified in one message.  Using this
 capability is highly recommended.  With one address prefix per
 message there is a substantial increase in overhead in the receiver.
@@ -4379,40 +4734,55 @@ disadvantage of this approach is that it increases the propagation
 latency of routing information.  By choosing a minimum flash update
 interval that is not much greater than the time it takes to process
 the multiple messages, this latency should be minimized.  A better
-method would be to read all received messages before sending updates.
+method would be to read all received messages before sending updates. -->
 
 ##  Reducing Route Flapping
 
-To avoid excessive route flapping, a BGP speaker that needs to
+{:aside}
+> XXX this section deleted because it's now illegal (!). RFC 7606, Section 5.1, bullet 2, is the relevant reference.
+
+<!-- To avoid excessive route flapping, a BGP speaker that needs to
 withdraw a destination and send an update about a more specific or
-less specific route should combine them into the same UPDATE message.
+less specific route should combine them into the same UPDATE message. --> 
 
 ##  Path Attribute Ordering
 
-Implementations that combine update messages (as described above in
-Appendix F.1) may prefer to see all path attributes presented in a
+{:aside}
+> XXX this section deleted because it was always wrong; Section 5 mandates (with a SHOULD) ordering path attributes. It was never "entirely optional". Given that it's already a SHOULD, the discussion here seems superfluous.
+
+<!-- Implementations that combine update messages (as described above in
+{{multiplenets}}) may prefer to see all path attributes presented in a
 known order.  This permits them to quickly identify sets of
 attributes from different update messages that are semantically
 identical.  To facilitate this, it is a useful optimization to order
 the path attributes according to type code.  This optimization is
-entirely optional.
+entirely optional. -->
 
 ##  AS_SET Sorting
 
-Another useful optimization that can be done to simplify this
+{:aside}
+> XXX this section deleted because AS_SETs are deprecated so what's the point?
+
+<!-- Another useful optimization that can be done to simplify this
 situation is to sort the AS numbers found in an AS_SET.  This
-optimization is entirely optional.
+optimization is entirely optional. -->
 
 ##  Control Over Version Negotiation
 
-Because BGP-4 is capable of carrying aggregated routes that cannot be
+{:aside}
+> XXX this section deleted because BGP-3 is a dead letter, and we don't know what to say about BGP-5 yet.
+
+<!-- Because BGP-4 is capable of carrying aggregated routes that cannot be
 properly represented in BGP-3, an implementation that supports BGP-4
 and another BGP version should provide the capability to only speak
-BGP-4 on a per-peer basis.
+BGP-4 on a per-peer basis. -->
 
-##  Complex AS_PATH Aggregation
+##  Complex AS_PATH Aggregation {#complexaggr}
 
-An implementation that chooses to provide a path aggregation
+{:aside}
+> XXX this section deleted because (a) AFAIK it's not implemented and (b) AS_SETs are deprecated.
+
+<!-- An implementation that chooses to provide a path aggregation
 algorithm retaining significant amounts of path information may wish
 to use the following procedure:
 
@@ -4455,28 +4825,34 @@ doing so will not cause a segment of a length greater than
 > If, as a result of the above procedure, a given AS number appears
 more than once within the aggregated AS_PATH attribute, all but
 the last instance (rightmost occurrence) of that AS number should
-be removed from the aggregated AS_PATH attribute.
+be removed from the aggregated AS_PATH attribute. -->
 
 # Security Considerations
 
-A BGP implementation MUST support the authentication mechanism
-specified in RFC 2385 {{RFC2385}}.  The authentication provided by this
-mechanism could be done on a per-peer basis.
+{:aside}
+> XXX this probably needs to move to the main body, it's weird to have it in an appendix. Leaving it here now for ease of diffing.
+
+As noted in {{tcpopts}}, support for the TCP Authentication Option (TCP-AO, {{RFC5925}}) is mandatory. Authentication is generally configured on a per-peer basis.
 
 BGP makes use of TCP for reliable transport of its traffic between
 peer routers.  To provide connection-oriented integrity and data
 origin authentication on a point-to-point basis, BGP specifies use of
-the mechanism defined in RFC 2385.  These services are intended to
+the mechanism mentioned above.  <!-- XXX commented out because I have no idea what this sentence is supposed to mean, and it seems superfluous.
+These services are intended to
 detect and reject active wiretapping attacks against the inter-router
-TCP connections.  Absent the use of mechanisms that effect these
-security services, attackers can disrupt these TCP connections and/or
-masquerade as a legitimate peer router.  Because the mechanism
+TCP connections.  --> Absent the use of such protection, 
+an attacker can disrupt a TCP connection and/or
+masquerade as a legitimate peer router.  <!-- XXX I think the following may have been true for MD5 but is definitely not true for AO.
+Because the mechanism
 defined in the RFC does not provide peer-entity authentication, these
 connections may be subject to some forms of replay attacks that will
 not be detected at the TCP layer.  Such attacks might result in
-delivery (from TCP) of "broken" or "spoofed" BGP messages.
+delivery (from TCP) of "broken" or "spoofed" BGP messages. -->
 
-The mechanism defined in RFC 2385 augments the normal TCP checksum
+{:aside}
+> XXX a complete rewrite of this section is needed. The former section was basically a summary of TCP-MD5. I'm not sure this is even needed in this document; we have a set of documents for AO already. Flagged to work on more. 
+
+<!-- The mechanism defined in RFC 2385 augments the normal TCP checksum
 with a 16-byte message authentication code (MAC) that is computed
 over the same data as the TCP checksum.  This MAC is based on a one-
 way hash function (MD5) and use of a secret key.  The key is shared
@@ -4516,11 +4892,17 @@ analogous MAC algorithms, which typically employ keys in the range of
 16 to 20 bytes.  To provide enough random bits at the low end of this
 range, RFC 3562 also observes that a typical ACSII text string would
 have to be close to the upper bound for the key length specified in
-RFC 2385.
+RFC 2385. -->
 
 BGP vulnerabilities analysis is discussed in {{RFC4272}}.
 
-# IANA Considerations
+{:aside}
+> XXX several other cites to consider including deployment reccs BCP
+
+# IANA Considerations {#iana}
+
+{:aside}
+> XXX this probably needs to move to the main body, it's weird to have it in an appendix. Leaving it here now for ease of diffing.
 
 All the BGP messages contain an 8-bit message type, for which IANA
 has created and is maintaining a registry entitled "BGP Message
@@ -4528,14 +4910,15 @@ Types".  This document defines the following message types:
 
 |Name          | Value  |   Definition     |
 |--------------|--------|------------------| 
-|OPEN          |  1     | See Section 4.2  |
-|UPDATE        |  2     | See Section 4.3  | 
-|NOTIFICATION  |  3     | See Section 4.5  | 
-|KEEPALIVE     |  4     | See Section 4.4  | 
+|OPEN          |  1     | See {{openfmt}}  |
+|UPDATE        |  2     | See {{updatefmt}}  | 
+|NOTIFICATION  |  3     | See {{notifyfmt}}  | 
+|KEEPALIVE     |  4     | See {{keepalivefmt}}  | 
 
-Future assignments are to be made using either the Standards Action
-process defined in {{!RFC2434}}, or the Early IANA Allocation process
-defined in {{?RFC4020}}.  Assignments consist of a name and the value.
+Future assignments are to be made using the Standards Action
+process defined in {{RFC8126}}. <!-- XXX removed this here and elsewhere. RFC 7120 doesn't have to be nmed explicitly, it is always available for Standards Action code points. 
+, or the Early IANA Allocation process
+defined in {{?RFC4020}}. Elsewhere, I've just cut it without comment. --> Assignments consist of a name and the value.
 
 The BGP UPDATE messages may carry one or more Path Attributes, where
 each Attribute contains an 8-bit Attribute Type Code.  IANA is
@@ -4544,17 +4927,16 @@ This document defines the following Path Attributes Type Codes:
 
 | Name              | Value   | Definition        |
 |-------------------|---------|--------------------
-| ORIGIN            |  1      | See Section 5.1.1 |
-| AS_PATH           |  2      | See Section 5.1.2 | 
-| NEXT_HOP          |  3      | See Section 5.1.3 | 
-| MULTI_EXIT_DISC   |  4      | See Section 5.1.4 |
-| LOCAL_PREF        |  5      | See Section 5.1.5 |
-| ATOMIC_AGGREGATE  |  6      | See Section 5.1.6 |
-| AGGREGATOR        |  7      | See Section 5.1.7 |
+| ORIGIN            |  1      | See {{origin}} |
+| AS_PATH           |  2      | See {{aspath}} | 
+| NEXT_HOP          |  3      | See {{nexthop}} | 
+| MULTI_EXIT_DISC   |  4      | See {{med}} |
+| LOCAL_PREF        |  5      | See {{localpref}} |
+| ATOMIC_AGGREGATE  |  6      | See {{atomic}} |
+| AGGREGATOR        |  7      | See {{aggregator}} |
 
-Future assignments are to be made using either the Standards Action
-process defined in {{RFC2434}}, or the Early IANA Allocation process
-defined in {{RFC4020}}.  Assignments consist of a name and the value.
+Future assignments are to be made using the Standards Action
+process defined in {{RFC8126}}.  Assignments consist of a name and the value.
 
 The BGP NOTIFICATION message carries an 8-bit Error Code, for which
 IANA has created and is maintaining a registry entitled "BGP Error
@@ -4562,16 +4944,15 @@ Codes".  This document defines the following Error Codes:
 
 | Name                      | Value  | Definition
 |---------------------------|--------|--------------|
-| Message Header Error      | 1      | Section 6.1  |  
-| OPEN Message Error        | 2      | Section 6.2  |
-| UPDATE Message Error      | 3      | Section 6.3  |
-| Hold Timer Expired        | 4      | Section 6.5  |
-| Finite State Machine Error| 5      | Section 6.6  |
-| Cease                     | 6      | Section 6.7  |
+| Message Header Error      | 1      | {{msgheadererr}}  |  
+| OPEN Message Error        | 2      | {{openmsgerr}}  |
+| UPDATE Message Error      | 3      | {{updatemsgerr}}  |
+| Hold Timer Expired        | 4      | {{holdtimerexperr}}  |
+| Finite State Machine Error| 5      | {{fsmerr}}  |
+| Cease                     | 6      | {{ceaseerr}}  |
 
-Future assignments are to be made using either the Standards Action
-process defined in {{RFC2434}}, or the Early IANA Allocation process
-defined in {{RFC4020}}.  Assignments consist of a name and the value.
+Future assignments are to be made using the Standards Action
+process defined in {{RFC8126}}.  Assignments consist of a name and the value.
 
 The BGP NOTIFICATION message carries an 8-bit Error Subcode, where
 each Subcode has to be defined within the context of a particular
@@ -4579,45 +4960,44 @@ Error Code, and thus has to be unique only within that context.
 
 IANA has created and is maintaining a set of registries, "Error
 Subcodes", with a separate registry for each BGP Error Code.  Future
-assignments are to be made using either the Standards Action process
-defined in {{RFC2434}}, or the Early IANA Allocation process defined in
-{{RFC4020}}.  Assignments consist of a name and the value.
+assignments are to be made using the Standards Action process
+defined in {{RFC8126}}.  Assignments consist of a name and the value.
 
 This document defines the following Message Header Error subcodes:
 
 | Name                         | Value | Definition
 |------------------------------|-------|------------------|
-| Unspecific                   | 0     | See Section 6.1  |
-| Connection Not Synchronized  | 1     | See Section 6.1  |
-| Bad Message Length           | 2     | See Section 6.1  |
-| Bad Message Type             | 3     | See Section 6.1  |
+| Unspecific                   | 0     | See {{msgheadererr}}  |
+| Connection Not Synchronized  | 1     | See {{msgheadererr}}  |
+| Bad Message Length           | 2     | See {{msgheadererr}}  |
+| Bad Message Type             | 3     | See {{msgheadererr}}  |
 
 This document defines the following OPEN Message Error subcodes:
 
 | Name                          | Value | Definition      |
 |-------------------------------|-------|-----------------| 
-| Unspecific                    | 0     | See Section 6.2 |
-| Unsupported Version Number    | 1     | See Section 6.2 |
-| Bad Peer AS                   | 2     | See Section 6.2 |
-| Bad BGP Identifier            | 3     | See Section 6.2 |
-| Unsupported Optional Parameter| 4     | See Section 6.2 |
-| [Deprecated]                  | 5     | See Appendix A  |
-| Unacceptable Hold Time        | 6     | See Section 6.2 |
+| Unspecific                    | 0     | See {{openmsgerr}} |
+| Unsupported Version Number    | 1     | See {{openmsgerr}} |
+| Bad Peer AS                   | 2     | See {{openmsgerr}} |
+| Bad BGP Identifier            | 3     | See {{openmsgerr}} |
+| Unsupported Optional Parameter| 4     | See {{openmsgerr}} |
+| [Deprecated]                  | 5     | See {{RFC4271}} Appendix A  |
+| Unacceptable Hold Time        | 6     | See {{openmsgerr}} |
 
 This document defines the following UPDATE Message Error subcodes:
 
 | Name                             |Value | Definition      |
 |----------------------------------|------|-----------------|
-| Unspecific                       |  0   | See Section 6.3 |
-| Malformed Attribute List         |  1   | See Section 6.3 |
-| Unrecognized Well-known Attribute|  2   | See Section 6.3 |
-| Missing Well-known Attribute     |  3   | See Section 6.3 |
-| Attribute Flags Error            |  4   | See Section 6.3 |
-| Attribute Length Error           |  5   | See Section 6.3 |
-| Invalid ORIGIN Attribute         |  6   | See Section 6.3 |
-| [Deprecated]                     |  7   | See Appendix A  |
-| Invalid NEXT_HOP Attribute       |  8   | See Section 6.3 |
-| Optional Attribute Error         |  9   | See Section 6.3 |
-| Invalid Network Field            | 10   | See Section 6.3 |
-| Malformed AS_PATH                | 11   | See Section 6.3 |
+| Unspecific                       |  0   | See {{updatemsgerr}} |
+| Malformed Attribute List         |  1   | See {{updatemsgerr}} |
+| Unrecognized Well-known Attribute|  2   | See {{updatemsgerr}} |
+| Missing Well-known Attribute     |  3   | See {{updatemsgerr}} |
+| Attribute Flags Error            |  4   | See {{updatemsgerr}} |
+| Attribute Length Error           |  5   | See {{updatemsgerr}} |
+| Invalid ORIGIN Attribute         |  6   | See {{updatemsgerr}} |
+| [Deprecated]                     |  7   | See {{RFC4271}} Appendix A  |
+| Invalid NEXT_HOP Attribute       |  8   | See {{updatemsgerr}} |
+| Optional Attribute Error         |  9   | See {{updatemsgerr}} |
+| Invalid Network Field            | 10   | See {{updatemsgerr}} |
+| Malformed AS_PATH                | 11   | See {{updatemsgerr}} |
 
