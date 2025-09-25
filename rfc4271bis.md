@@ -27,6 +27,7 @@ author:
  -
     name: Yakov Rekhter
     organization: Retired
+    email: yakov@juniper.net
  -
     name: Tony Li
     organization: HPE
