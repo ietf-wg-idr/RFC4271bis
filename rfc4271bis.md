@@ -3638,7 +3638,7 @@ the Adj-RIBs-In (in case they become resolvable).
 As indicated in {{phase2}}, BGP speakers SHOULD exclude
 unresolvable routes from the Phase 2 decision.  This ensures that
 only valid routes are installed in the Loc-RIB and Routing Table.
-<!-- XXX I removed a SHOULD that (a) seems wrong, (b) is unnecessary but worst of all (c) conflicts with a MUST in paragraph 4 of the previous section. -->
+<!-- XXX The SHOULD above (a) seems wrong, (b) is unnecessary but worst of all (c) conflicts with a MUST in paragraph 4 of the previous section. -->
 
 The route resolvability condition is defined as follows:
 
@@ -3890,8 +3890,6 @@ ATOMIC_AGGREGATE attribute MUST NOT be de-aggregated.  That is, the
 NLRI of this route cannot be more specific.  Forwarding along such a
 route does not guarantee that IP packets will actually traverse only
 ASes listed in the AS_PATH attribute of the route.
-
-##  Update-Send Process
 
 ##  Update-Send Process {#updatesend}
 
