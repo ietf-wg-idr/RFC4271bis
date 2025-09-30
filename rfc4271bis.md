@@ -1235,8 +1235,6 @@ next-hop address.  If the entry also specifies the next-hop address,
 this address SHOULD be used as the immediate next-hop address for
 packet forwarding.
 
-###  MULTI_EXIT_DISC
-
 ###  MULTI_EXIT_DISC {#med}
 
 The MULTI_EXIT_DISC is an optional non-transitive attribute that is
@@ -3930,8 +3928,6 @@ UPDATE messages), in order to limit both the link bandwidth needed to
 advertise UPDATE messages and the processing power needed by the
 Decision Process to digest the information contained in the UPDATE
 messages.
-
-#### Frequency of Route Advertisement
 
 #### Frequency of Route Advertisement {#mrai}
 
