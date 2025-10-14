@@ -1,7 +1,7 @@
 ---
 title: "A Border Gateway Protocol 4 (BGP-4)"
 abbrev: BGP-4
-docname: draft-scudder-idr-bgp4-rfc4271bis-00
+docname: draft-ietf-idr-bgp4-rfc4271bis-00
 category: std
 date: 2025
 
@@ -22,6 +22,12 @@ wg: idr
 keyword: 
   - BGP-4
   - routing
+venue:
+  group: "IDR"
+  type: "Working Group"
+  mail: "idr@ietf.org"
+  arch: "https://mailarchive.ietf.org/arch/browse/idr/"
+  github: "ietf-wg-idr/RFC4271bis"
 
 author:
  -
