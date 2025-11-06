@@ -81,6 +81,7 @@ informative:
   RFC4272:
   RFC4456:
   RFC4760:
+  RFC5004:
   RFC5065:
 
   IS10747:
@@ -3804,7 +3805,7 @@ proven to cause route loops.
 
 * Remove from consideration all routes other than the route that
    was advertised by the BGP speaker with the lowest BGP
-   Identifier value.
+   Identifier value. ({{RFC5004}}, if used, modifies this rule.)
 
 * Prefer the route received from the lowest peer address.
 {: tiebreak}
