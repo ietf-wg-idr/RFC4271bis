@@ -79,7 +79,7 @@ informative:
   RFC3562:
   RFC4271:
   RFC4272:
-  RFC4020:
+  RFC4456:
   RFC4760:
   RFC5065:
 
@@ -3907,7 +3907,7 @@ system.
 When a BGP speaker receives an UPDATE message from an internal peer,
 the receiving BGP speaker SHALL NOT re-distribute the routing
 information contained in that UPDATE message to other internal peers
-(unless the speaker acts as a BGP Route Reflector {{?RFC4456}}).
+(unless the speaker acts as a BGP Route Reflector {{RFC4456}}).
 
 As part of Phase 3 of the route selection process, the BGP speaker
 has updated its Adj-RIBs-Out.  All newly installed routes and all
