@@ -82,6 +82,7 @@ informative:
   RFC4456:
   RFC4760:
   RFC5065:
+  RFC7964:
 
   IS10747:
     title: "Information Processing Systems - Telecommunications and Information Exchange between Systems - Protocol for Exchange of Inter-domain Routeing Information among Intermediate Systems to Support Forwarding of ISO 8473 PDUs"
@@ -793,7 +794,7 @@ MAY be used by a BGP speaker's Decision Process to
 discriminate among multiple entry points to a neighboring
 autonomous system.
 
-: Usage of this attribute is defined in 5.1.4.
+: Considerations for the deployment of this attribute are given in {{RFC7964}}.
 
 : Usage of this attribute is defined in {{med}}.
 
