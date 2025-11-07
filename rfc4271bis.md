@@ -4602,6 +4602,29 @@ BGP vulnerabilities analysis is discussed in {{RFC4272}}.
 
 # IANA Considerations {#iana}
 
+## Path Attribute Flags
+
+IANA is requested to create a registry called "BGP Path Attribute Flags"
+within the "Border Gateway Protocol (BGP) Parameters" group. The allocation
+policy is Standards Action.
+
+Bit 4, marked deprecated, was proposed in
+draft-ietf-idr-optional-transitive-02 and later removed in
+draft-ietf-idr-optional-transitive-04, but not before at least one known
+implementation had shipped. At the time of writing, it is not considered
+safe to assign.
+
+| Bit Position | Name            | Reference       |
+|--------------|-----------------|-----------------|
+| 0            | Optional        | (this document) |
+| 1            | Transitive      | (this document) |
+| 2            | Partial         | (this document) |
+| 3            | Extended Length | (this document) |
+| 4            | Deprecated      | (this document) |
+| 5-7          | Unassigned                        |
+
+##  Message Types
+
 All the BGP messages contain an 8-bit message type, for which IANA
 has created and is maintaining a registry entitled "BGP Message
 Types".  This document defines the following message types:
@@ -4616,6 +4639,8 @@ Types".  This document defines the following message types:
 Future assignments are to be made using either the Standards Action
 process defined in {{RFC8126}}, or the Early IANA Allocation process
 defined in {{?RFC4020}}.  Assignments consist of a name and the value.
+
+## Path Attribute Types
 
 The BGP UPDATE messages may carry one or more Path Attributes, where
 each Attribute contains an 8-bit Attribute Type Code.  IANA is
@@ -4636,6 +4661,8 @@ Future assignments are to be made using either the Standards Action
 process defined in {{RFC8126}}, or the Early IANA Allocation process
 defined in {{RFC4020}}.  Assignments consist of a name and the value.
 
+## Error Codes
+
 The BGP NOTIFICATION message carries an 8-bit Error Code, for which
 IANA has created and is maintaining a registry entitled "BGP Error
 Codes".  This document defines the following Error Codes:
@@ -4652,6 +4679,8 @@ Codes".  This document defines the following Error Codes:
 Future assignments are to be made using either the Standards Action
 process defined in {{RFC8126}}, or the Early IANA Allocation process
 defined in {{RFC4020}}.  Assignments consist of a name and the value.
+
+## Error Subcodes
 
 The BGP NOTIFICATION message carries an 8-bit Error Subcode, where
 each Subcode has to be defined within the context of a particular
