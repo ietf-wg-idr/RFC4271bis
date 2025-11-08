@@ -4276,133 +4276,13 @@ Group for their ideas and the support they have given to this
 document.
 
 
-# Comparison of RFC 4271 with RFC 1771 {#compare1771}
+# Comparison of CURRENT_SPEC with RFC 4271 {#compare4271}
 
-RFC 4271 contained the following comparison section: 
+This section describes significant technical changes between the present
+specification and RFC 4271. In addition, RFC 4271 contains a comparison
+between that specification and older BGP specifications.
 
-There are numerous editorial changes in comparison to {{?RFC1771}} (too
-many to list here).
-
-The following list the technical changes:
-
-   Changes to reflect the usage of features such as TCP MD5
-   {{!RFC2385}}, BGP Route Reflectors {{?RFC2796}}, BGP Confederations
-   {{?RFC3065}}, and BGP Route Refresh {{?RFC2918}}.
-
-   Clarification of the use of the BGP Identifier in the AGGREGATOR
-   attribute.
-
-   Procedures for imposing an upper bound on the number of prefixes
-   that a BGP speaker would accept from a peer.
-
-   The ability of a BGP speaker to include more than one instance of
-   its own AS in the AS_PATH attribute for the purpose of inter-AS
-   traffic engineering.
-
-   Clarification of the various types of NEXT_HOPs.
-
-   Clarification of the use of the ATOMIC_AGGREGATE attribute.
-
-   The relationship between the immediate next hop, and the next hop
-   as specified in the NEXT_HOP path attribute.
-
-   Clarification of the tie-breaking procedures.
-
-   Clarification of the frequency of route advertisements.
-
-   Optional Parameter Type 1 (Authentication Information) has been
-   deprecated.
-
-   UPDATE Message Error subcode 7 (AS Routing Loop) has been
-   deprecated.
-
-   OPEN Message Error subcode 5 (Authentication Failure) has been
-   deprecated.
-
-   Use of the Marker field for authentication has been deprecated.
-
-   Implementations MUST support TCP MD5 {{!RFC2385}} for authentication.
-
-   Clarification of BGP FSM.
-
-# Comparison with RFC 1267 {#compare1267}
-
-All the changes listed in {{compare1771}}, plus the following.
-
-BGP-4 is capable of operating in an environment where a set of
-reachable destinations may be expressed via a single IP prefix.  The
-concept of network classes, or subnetting, is foreign to BGP-4.  To
-accommodate these capabilities, BGP-4 changes the semantics and
-encoding associated with the AS_PATH attribute.  New text has been
-added to define semantics associated with IP prefixes.  These
-abilities allow BGP-4 to support the proposed supernetting scheme
-{{RFC1518}} {{RFC1519}}.
-
-To simplify configuration, this version introduces a new attribute,
-LOCAL_PREF, that facilitates route selection procedures.
-
-The INTER_AS_METRIC attribute has been renamed MULTI_EXIT_DISC.
-
-A new attribute, ATOMIC_AGGREGATE, has been introduced to insure that
-certain aggregates are not de-aggregated.  Another new attribute,
-AGGREGATOR, can be added to aggregate routes to advertise which AS
-and which BGP speaker within that AS caused the aggregation.
-
-To ensure that Hold Timers are symmetric, the Hold Timer is now
-negotiated on a per-connection basis.  Hold Timers of zero are now
-supported.
-
-# Comparison with RFC 1163 {#compare1163}
-
-All of the changes listed in {{compare1771}} and {{compare1267}}, plus the following.
-
-To detect and recover from BGP connection collision, a new field (BGP
-Identifier) has been added to the OPEN message.  New text ({{collision}})
-has been added to specify the procedure for detecting and
-recovering from collision.
-
-The new document no longer restricts the router that is passed in the
-NEXT_HOP path attribute to be part of the same Autonomous System as
-the BGP Speaker.
-
-The new document optimizes and simplifies the exchange of information
-about previously reachable routes.
-
-# Comparison with RFC 1105
-
-All of the changes listed in {{compare1771}}, {{compare1267}} and {{compare1163}}, plus the
-following.
-
-Minor changes to the {{?RFC1105}} Finite State Machine were necessary to
-accommodate the TCP user interface provided by BSD version 4.3.
-
-The notion of Up/Down/Horizontal relations presented in RFC 1105 has
-been removed from the protocol.
-
-The changes in the message format from RFC 1105 are as follows:
-
-1. The Hold Time field has been removed from the BGP header and
-   added to the OPEN message.
-
-2. The version field has been removed from the BGP header and
-   added to the OPEN message.
-
-3. The Link Type field has been removed from the OPEN message.
-
-4. The OPEN CONFIRM message has been eliminated and replaced with
-   implicit confirmation, provided by the KEEPALIVE message.
-
-5. The format of the UPDATE message has been changed
-   significantly.  New fields were added to the UPDATE message to
-   support multiple path attributes.
-
-6. The Marker field has been expanded and its role broadened to
-   support authentication.
-
-Note that quite often BGP, as specified in RFC 1105, is referred to
-as BGP-1; BGP, as specified in {{?RFC1163}}, is referred to as BGP-2;
-BGP, as specified in RFC 1267 is referred to as BGP-3; and BGP, as
-specified in this document is referred to as BGP-4.
+TBD
 
 # TCP Options that May Be Used with BGP {#tcpopts}
 
