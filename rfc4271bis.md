@@ -60,8 +60,6 @@ informative:
   RFC904:
   RFC1092:
   RFC1093:
-  RFC1105:
-  RFC1163:
   RFC1267:
   RFC1771:
   RFC1772:
@@ -71,11 +69,9 @@ informative:
   RFC1997:
   RFC2439:
   RFC2474:
-  RFC2796:
   RFC2858:
   RFC3392:
   RFC2918:
-  RFC3065:
   RFC3562:
   RFC4271:
   RFC4272:
@@ -4100,10 +4096,6 @@ AS_PATH attribute:
      long as doing so will not cause a segment with a length
      greater than 255 to be generated.
 
-   : Appendix F, {{complexaggr}} presents another algorithm that
-   satisfies the conditions and allows for more complex policy
-   configurations.
-
 ATOMIC_AGGREGATE:
    : If at least one of the routes to be aggregated has
      ATOMIC_AGGREGATE path attribute, then the aggregated route
@@ -4258,133 +4250,13 @@ Group for their ideas and the support they have given to this
 document.
 
 
-# Comparison of RFC 4271 with RFC 1771 {#compare1771}
+# Comparison of CURRENT_SPEC with RFC 4271 {#compare4271}
 
-RFC 4271 contained the following comparison section: 
+This section describes significant technical changes between the present
+specification and RFC 4271. In addition, RFC 4271 contains a comparison
+between that specification and older BGP specifications.
 
-There are numerous editorial changes in comparison to {{?RFC1771}} (too
-many to list here).
-
-The following list the technical changes:
-
-   Changes to reflect the usage of features such as TCP MD5
-   {{!RFC2385}}, BGP Route Reflectors {{?RFC2796}}, BGP Confederations
-   {{?RFC3065}}, and BGP Route Refresh {{?RFC2918}}.
-
-   Clarification of the use of the BGP Identifier in the AGGREGATOR
-   attribute.
-
-   Procedures for imposing an upper bound on the number of prefixes
-   that a BGP speaker would accept from a peer.
-
-   The ability of a BGP speaker to include more than one instance of
-   its own AS in the AS_PATH attribute for the purpose of inter-AS
-   traffic engineering.
-
-   Clarification of the various types of NEXT_HOPs.
-
-   Clarification of the use of the ATOMIC_AGGREGATE attribute.
-
-   The relationship between the immediate next hop, and the next hop
-   as specified in the NEXT_HOP path attribute.
-
-   Clarification of the tie-breaking procedures.
-
-   Clarification of the frequency of route advertisements.
-
-   Optional Parameter Type 1 (Authentication Information) has been
-   deprecated.
-
-   UPDATE Message Error subcode 7 (AS Routing Loop) has been
-   deprecated.
-
-   OPEN Message Error subcode 5 (Authentication Failure) has been
-   deprecated.
-
-   Use of the Marker field for authentication has been deprecated.
-
-   Implementations MUST support TCP MD5 {{!RFC2385}} for authentication.
-
-   Clarification of BGP FSM.
-
-# Comparison with RFC 1267 {#compare1267}
-
-All the changes listed in {{compare1771}}, plus the following.
-
-BGP-4 is capable of operating in an environment where a set of
-reachable destinations may be expressed via a single IP prefix.  The
-concept of network classes, or subnetting, is foreign to BGP-4.  To
-accommodate these capabilities, BGP-4 changes the semantics and
-encoding associated with the AS_PATH attribute.  New text has been
-added to define semantics associated with IP prefixes.  These
-abilities allow BGP-4 to support the proposed supernetting scheme
-{{RFC1518}} {{RFC1519}}.
-
-To simplify configuration, this version introduces a new attribute,
-LOCAL_PREF, that facilitates route selection procedures.
-
-The INTER_AS_METRIC attribute has been renamed MULTI_EXIT_DISC.
-
-A new attribute, ATOMIC_AGGREGATE, has been introduced to insure that
-certain aggregates are not de-aggregated.  Another new attribute,
-AGGREGATOR, can be added to aggregate routes to advertise which AS
-and which BGP speaker within that AS caused the aggregation.
-
-To ensure that Hold Timers are symmetric, the Hold Timer is now
-negotiated on a per-connection basis.  Hold Timers of zero are now
-supported.
-
-# Comparison with RFC 1163 {#compare1163}
-
-All of the changes listed in {{compare1771}} and {{compare1267}}, plus the following.
-
-To detect and recover from BGP connection collision, a new field (BGP
-Identifier) has been added to the OPEN message.  New text ({{collision}})
-has been added to specify the procedure for detecting and
-recovering from collision.
-
-The new document no longer restricts the router that is passed in the
-NEXT_HOP path attribute to be part of the same Autonomous System as
-the BGP Speaker.
-
-The new document optimizes and simplifies the exchange of information
-about previously reachable routes.
-
-# Comparison with RFC 1105
-
-All of the changes listed in {{compare1771}}, {{compare1267}} and {{compare1163}}, plus the
-following.
-
-Minor changes to the {{?RFC1105}} Finite State Machine were necessary to
-accommodate the TCP user interface provided by BSD version 4.3.
-
-The notion of Up/Down/Horizontal relations presented in RFC 1105 has
-been removed from the protocol.
-
-The changes in the message format from RFC 1105 are as follows:
-
-1. The Hold Time field has been removed from the BGP header and
-   added to the OPEN message.
-
-2. The version field has been removed from the BGP header and
-   added to the OPEN message.
-
-3. The Link Type field has been removed from the OPEN message.
-
-4. The OPEN CONFIRM message has been eliminated and replaced with
-   implicit confirmation, provided by the KEEPALIVE message.
-
-5. The format of the UPDATE message has been changed
-   significantly.  New fields were added to the UPDATE message to
-   support multiple path attributes.
-
-6. The Marker field has been expanded and its role broadened to
-   support authentication.
-
-Note that quite often BGP, as specified in RFC 1105, is referred to
-as BGP-1; BGP, as specified in {{?RFC1163}}, is referred to as BGP-2;
-BGP, as specified in RFC 1267 is referred to as BGP-3; and BGP, as
-specified in this document is referred to as BGP-4.
+TBD
 
 # TCP Options that May Be Used with BGP {#tcpopts}
 
@@ -4398,126 +4270,6 @@ If a local system TCP user interface supports setting the DSCP field
 SHOULD be opened with bits 0-2 of the DSCP field set to 110 (binary).
 
 An implementation MUST support the TCP MD5 option {{RFC2385}}.
-
-#  Implementation Recommendations
-
-This section presents some implementation recommendations.
-
-##  Multiple Networks Per Message {#multiplenets}
-
-The BGP protocol allows for multiple address prefixes with the same
-path attributes to be specified in one message.  Using this
-capability is highly recommended.  With one address prefix per
-message there is a substantial increase in overhead in the receiver.
-Not only does the system overhead increase due to the reception of
-multiple messages, but the overhead of scanning the routing table for
-updates to BGP peers and other routing protocols (and sending the
-associated messages) is incurred multiple times as well.
-
-One method of building messages that contain many address prefixes
-per path attribute set from a routing table that is not organized on
-a per path attribute set basis is to build many messages as the
-routing table is scanned.  As each address prefix is processed, a
-message for the associated set of path attributes is allocated, if it
-does not exist, and the new address prefix is added to it.  If such a
-message exists, the new address prefix is appended to it.  If the
-message lacks the space to hold the new address prefix, it is
-transmitted, a new message is allocated, and the new address prefix
-is inserted into the new message.  When the entire routing table has
-been scanned, all allocated messages are sent and their resources are
-released.  Maximum compression is achieved when all destinations
-covered by the address prefixes share a common set of path
-attributes, making it possible to send many address prefixes in one
-4096-byte message.
-
-When peering with a BGP implementation that does not compress
-multiple address prefixes into one message, it may be necessary to
-take steps to reduce the overhead from the flood of data received
-when a peer is acquired or when a significant network topology change
-occurs.  One method of doing this is to limit the rate of updates.
-This will eliminate the redundant scanning of the routing table to
-provide flash updates for BGP peers and other routing protocols.  A
-disadvantage of this approach is that it increases the propagation
-latency of routing information.  By choosing a minimum flash update
-interval that is not much greater than the time it takes to process
-the multiple messages, this latency should be minimized.  A better
-method would be to read all received messages before sending updates.
-
-##  Reducing Route Flapping
-
-To avoid excessive route flapping, a BGP speaker that needs to
-withdraw a destination and send an update about a more specific or
-less specific route should combine them into the same UPDATE message.
-
-##  Path Attribute Ordering
-
-Implementations that combine update messages (as described above in
-{{multiplenets}}) may prefer to see all path attributes presented in a
-known order.  This permits them to quickly identify sets of
-attributes from different update messages that are semantically
-identical.  To facilitate this, it is a useful optimization to order
-the path attributes according to type code.  This optimization is
-entirely optional.
-
-##  AS_SET Sorting
-
-Another useful optimization that can be done to simplify this
-situation is to sort the AS numbers found in an AS_SET.  This
-optimization is entirely optional.
-
-##  Control Over Version Negotiation
-
-Because BGP-4 is capable of carrying aggregated routes that cannot be
-properly represented in BGP-3, an implementation that supports BGP-4
-and another BGP version should provide the capability to only speak
-BGP-4 on a per-peer basis.
-
-##  Complex AS_PATH Aggregation {#complexaggr}
-
-An implementation that chooses to provide a path aggregation
-algorithm retaining significant amounts of path information may wish
-to use the following procedure:
-
-> For the purpose of aggregating AS_PATH attributes of two routes,
-we model each AS as a tuple <type, value>, where "type" identifies
-a type of the path segment the AS belongs to (e.g., AS_SEQUENCE,
-AS_SET), and "value" is the AS number.  Two ASes are said to be
-the same if their corresponding <type, value> tuples are the same.
-
-> The algorithm to aggregate two AS_PATH attributes works as
-follows:
-
-> a) Identify the same ASes (as defined above) within each AS_PATH attribute that are in the same relative order within both AS_PATH attributes.  Two ASes, X and Y, are said to be in the same order if either:
-
-> - X precedes Y in both AS_PATH attributes, or
-- Y precedes X in both AS_PATH attributes.
-
-> b) The aggregated AS_PATH attribute consists of ASes identified
-in (a), in exactly the same order as they appear in the
-AS_PATH attributes to be aggregated.  If two consecutive
-ASes identified in (a) do not immediately follow each other
-in both of the AS_PATH attributes to be aggregated, then the
-intervening ASes (ASes that are between the two consecutive
-ASes that are the same) in both attributes are combined into
-an AS_SET path segment that consists of the intervening ASes
-from both AS_PATH attributes.  This segment is then placed
-between the two consecutive ASes identified in (a) of the
-aggregated attribute.  If two consecutive ASes identified in
-(a) immediately follow each other in one attribute, but do
-not follow in another, then the intervening ASes of the
-latter are combined into an AS_SET path segment.  This
-segment is then placed between the two consecutive ASes
-identified in (a) of the aggregated attribute.
-
-> c) For each pair of adjacent tuples in the aggregated AS_PATH,
-if both tuples have the same type, merge them together if
-doing so will not cause a segment of a length greater than
-255 to be generated.
-
-> If, as a result of the above procedure, a given AS number appears
-more than once within the aggregated AS_PATH attribute, all but
-the last instance (rightmost occurrence) of that AS number should
-be removed from the aggregated AS_PATH attribute.
 
 # Security Considerations
 
@@ -4584,6 +4336,29 @@ BGP vulnerabilities analysis is discussed in {{RFC4272}}.
 
 # IANA Considerations {#iana}
 
+## Path Attribute Flags
+
+IANA is requested to create a registry called "BGP Path Attribute Flags"
+within the "Border Gateway Protocol (BGP) Parameters" group. The allocation
+policy is Standards Action.
+
+Bits 0-3 are defined in {{updatefmt}}. Bit 4, marked deprecated, was
+proposed in draft-ietf-idr-optional-transitive-02 and later removed in
+draft-ietf-idr-optional-transitive-04, but not before at least one known
+implementation had shipped. At the time of writing, it is not considered
+safe to assign.
+
+| Bit Position | Name            | Reference       |
+|--------------|-----------------|-----------------|
+| 0            | Optional        | (this document) |
+| 1            | Transitive      | (this document) |
+| 2            | Partial         | (this document) |
+| 3            | Extended Length | (this document) |
+| 4            | Deprecated      | (this document) |
+| 5-7          | Unassigned                        |
+
+##  Message Types
+
 All the BGP messages contain an 8-bit message type, for which IANA
 has created and is maintaining a registry entitled "BGP Message
 Types".  This document defines the following message types:
@@ -4598,6 +4373,8 @@ Types".  This document defines the following message types:
 Future assignments are to be made using either the Standards Action
 process defined in {{RFC8126}}, or the Early IANA Allocation process
 defined in {{?RFC4020}}.  Assignments consist of a name and the value.
+
+## Path Attribute Types
 
 The BGP UPDATE messages may carry one or more Path Attributes, where
 each Attribute contains an 8-bit Attribute Type Code.  IANA is
@@ -4618,6 +4395,8 @@ Future assignments are to be made using either the Standards Action
 process defined in {{RFC8126}}, or the Early IANA Allocation process
 defined in {{RFC4020}}.  Assignments consist of a name and the value.
 
+## Error Codes
+
 The BGP NOTIFICATION message carries an 8-bit Error Code, for which
 IANA has created and is maintaining a registry entitled "BGP Error
 Codes".  This document defines the following Error Codes:
@@ -4634,6 +4413,8 @@ Codes".  This document defines the following Error Codes:
 Future assignments are to be made using either the Standards Action
 process defined in {{RFC8126}}, or the Early IANA Allocation process
 defined in {{RFC4020}}.  Assignments consist of a name and the value.
+
+## Error Subcodes
 
 The BGP NOTIFICATION message carries an 8-bit Error Subcode, where
 each Subcode has to be defined within the context of a particular
