@@ -4118,10 +4118,6 @@ AS_PATH attribute:
      long as doing so will not cause a segment with a length
      greater than 255 to be generated.
 
-   : Appendix F, {{complexaggr}} presents another algorithm that
-   satisfies the conditions and allows for more complex policy
-   configurations.
-
 ATOMIC_AGGREGATE:
    : If at least one of the routes to be aggregated has
      ATOMIC_AGGREGATE path attribute, then the aggregated route
@@ -4416,126 +4412,6 @@ If a local system TCP user interface supports setting the DSCP field
 SHOULD be opened with bits 0-2 of the DSCP field set to 110 (binary).
 
 An implementation MUST support the TCP MD5 option {{RFC2385}}.
-
-#  Implementation Recommendations
-
-This section presents some implementation recommendations.
-
-##  Multiple Networks Per Message {#multiplenets}
-
-The BGP protocol allows for multiple address prefixes with the same
-path attributes to be specified in one message.  Using this
-capability is highly recommended.  With one address prefix per
-message there is a substantial increase in overhead in the receiver.
-Not only does the system overhead increase due to the reception of
-multiple messages, but the overhead of scanning the routing table for
-updates to BGP peers and other routing protocols (and sending the
-associated messages) is incurred multiple times as well.
-
-One method of building messages that contain many address prefixes
-per path attribute set from a routing table that is not organized on
-a per path attribute set basis is to build many messages as the
-routing table is scanned.  As each address prefix is processed, a
-message for the associated set of path attributes is allocated, if it
-does not exist, and the new address prefix is added to it.  If such a
-message exists, the new address prefix is appended to it.  If the
-message lacks the space to hold the new address prefix, it is
-transmitted, a new message is allocated, and the new address prefix
-is inserted into the new message.  When the entire routing table has
-been scanned, all allocated messages are sent and their resources are
-released.  Maximum compression is achieved when all destinations
-covered by the address prefixes share a common set of path
-attributes, making it possible to send many address prefixes in one
-4096-byte message.
-
-When peering with a BGP implementation that does not compress
-multiple address prefixes into one message, it may be necessary to
-take steps to reduce the overhead from the flood of data received
-when a peer is acquired or when a significant network topology change
-occurs.  One method of doing this is to limit the rate of updates.
-This will eliminate the redundant scanning of the routing table to
-provide flash updates for BGP peers and other routing protocols.  A
-disadvantage of this approach is that it increases the propagation
-latency of routing information.  By choosing a minimum flash update
-interval that is not much greater than the time it takes to process
-the multiple messages, this latency should be minimized.  A better
-method would be to read all received messages before sending updates.
-
-##  Reducing Route Flapping
-
-To avoid excessive route flapping, a BGP speaker that needs to
-withdraw a destination and send an update about a more specific or
-less specific route should combine them into the same UPDATE message.
-
-##  Path Attribute Ordering
-
-Implementations that combine update messages (as described above in
-{{multiplenets}}) may prefer to see all path attributes presented in a
-known order.  This permits them to quickly identify sets of
-attributes from different update messages that are semantically
-identical.  To facilitate this, it is a useful optimization to order
-the path attributes according to type code.  This optimization is
-entirely optional.
-
-##  AS_SET Sorting
-
-Another useful optimization that can be done to simplify this
-situation is to sort the AS numbers found in an AS_SET.  This
-optimization is entirely optional.
-
-##  Control Over Version Negotiation
-
-Because BGP-4 is capable of carrying aggregated routes that cannot be
-properly represented in BGP-3, an implementation that supports BGP-4
-and another BGP version should provide the capability to only speak
-BGP-4 on a per-peer basis.
-
-##  Complex AS_PATH Aggregation {#complexaggr}
-
-An implementation that chooses to provide a path aggregation
-algorithm retaining significant amounts of path information may wish
-to use the following procedure:
-
-> For the purpose of aggregating AS_PATH attributes of two routes,
-we model each AS as a tuple <type, value>, where "type" identifies
-a type of the path segment the AS belongs to (e.g., AS_SEQUENCE,
-AS_SET), and "value" is the AS number.  Two ASes are said to be
-the same if their corresponding <type, value> tuples are the same.
-
-> The algorithm to aggregate two AS_PATH attributes works as
-follows:
-
-> a) Identify the same ASes (as defined above) within each AS_PATH attribute that are in the same relative order within both AS_PATH attributes.  Two ASes, X and Y, are said to be in the same order if either:
-
-> - X precedes Y in both AS_PATH attributes, or
-- Y precedes X in both AS_PATH attributes.
-
-> b) The aggregated AS_PATH attribute consists of ASes identified
-in (a), in exactly the same order as they appear in the
-AS_PATH attributes to be aggregated.  If two consecutive
-ASes identified in (a) do not immediately follow each other
-in both of the AS_PATH attributes to be aggregated, then the
-intervening ASes (ASes that are between the two consecutive
-ASes that are the same) in both attributes are combined into
-an AS_SET path segment that consists of the intervening ASes
-from both AS_PATH attributes.  This segment is then placed
-between the two consecutive ASes identified in (a) of the
-aggregated attribute.  If two consecutive ASes identified in
-(a) immediately follow each other in one attribute, but do
-not follow in another, then the intervening ASes of the
-latter are combined into an AS_SET path segment.  This
-segment is then placed between the two consecutive ASes
-identified in (a) of the aggregated attribute.
-
-> c) For each pair of adjacent tuples in the aggregated AS_PATH,
-if both tuples have the same type, merge them together if
-doing so will not cause a segment of a length greater than
-255 to be generated.
-
-> If, as a result of the above procedure, a given AS number appears
-more than once within the aggregated AS_PATH attribute, all but
-the last instance (rightmost occurrence) of that AS number should
-be removed from the aggregated AS_PATH attribute.
 
 # Security Considerations
 
