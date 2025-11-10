@@ -60,8 +60,6 @@ informative:
   RFC904:
   RFC1092:
   RFC1093:
-  RFC1105:
-  RFC1163:
   RFC1267:
   RFC1771:
   RFC1772:
@@ -71,11 +69,9 @@ informative:
   RFC1997:
   RFC2439:
   RFC2474:
-  RFC2796:
   RFC2858:
   RFC3392:
   RFC2918:
-  RFC3065:
   RFC3562:
   RFC4271:
   RFC4272:
