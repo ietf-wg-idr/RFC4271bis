@@ -659,7 +659,8 @@ The use and the meaning of these fields are as follows:
    The Prefix field contains an IP address prefix, followed by
    the minimum number of trailing bits needed to make the end
    of the field fall on an octet boundary.  Note that the value
-   of trailing bits is irrelevant.
+   of trailing bits is irrelevant. Trailing bits MUST be set
+   to zero on transmission and MUST be disregarded on receipt.
 
 Total Path Attribute Length:
    : This 2-octet unsigned integer indicates the total length of the
@@ -836,30 +837,11 @@ the UPDATE message, and 23 is a combined length of the fixed-size
 BGP header, the Total Path Attribute Length field, and the
 Withdrawn Routes Length field.
 
-   > Reachability information is encoded as one or more 2-tuples of
-the form <length, prefix>, whose fields are described below:
-
-~~~~ aasvg
-    +---------------------------+
-    |   Length (1 octet)        |
-    +---------------------------+
-    |   Prefix (variable)       |
-    +---------------------------+
-~~~~
-
-> The use and the meaning of these fields are as follows:
-
-> a) Length:
-   : The Length field indicates the length in bits of the IP
-   address prefix.  A length of zero indicates a prefix that
-   matches all IP addresses (with prefix, itself, of zero
-   octets).
-
-> b) Prefix:
-   : The Prefix field contains an IP address prefix, followed by
-   enough trailing bits to make the end of the field fall on an
-   octet boundary.  Note that the value of the trailing bits is
-   irrelevant.
+   > Reachability information is encoded as a list of IP
+address prefixes for the routes that are being made available for
+service.  Each IP address prefix is encoded as described above
+under {{ipaddressprefix}}.
+<!-- not really the right xref but there isn't a standalone subsection-->
 
 The minimum length of the UPDATE message is 23 octets -- 19 octets
 for the fixed header + 2 octets for the Withdrawn Routes Length + 2
