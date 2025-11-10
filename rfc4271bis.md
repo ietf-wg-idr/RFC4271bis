@@ -78,6 +78,7 @@ informative:
   RFC4456:
   RFC4760:
   RFC5065:
+  RFC7705:
   RFC7964:
 
   IS10747:
@@ -3573,6 +3574,7 @@ AS_PATH attribute), and checking that the autonomous system number of
 the local system does not appear in the AS path.  Operations of a BGP
 speaker that is configured to accept routes with its own autonomous
 system number in the AS path are outside the scope of this document.
+{{RFC7705}}, if used, documents variations on this procedure.
 
 It is critical that BGP speakers within an AS do not make conflicting
 decisions regarding route selection that would cause forwarding loops
