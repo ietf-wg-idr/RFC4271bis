@@ -4484,8 +4484,8 @@ IANA is requested to create a registry called "BGP Path Attribute Flags"
 within the "Border Gateway Protocol (BGP) Parameters" group. The allocation
 policy is Standards Action.
 
-Bit 4, marked deprecated, was proposed in
-draft-ietf-idr-optional-transitive-02 and later removed in
+Bits 0-3 are defined in {{updatefmt}}. Bit 4, marked deprecated, was
+proposed in draft-ietf-idr-optional-transitive-02 and later removed in
 draft-ietf-idr-optional-transitive-04, but not before at least one known
 implementation had shipped. At the time of writing, it is not considered
 safe to assign.
