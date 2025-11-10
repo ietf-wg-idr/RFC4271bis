@@ -843,7 +843,7 @@ Withdrawn Routes Length field.
    > Reachability information is encoded as one or more 2-tuples of
 the form <length, prefix>, whose fields are described below:
 
-~~~~
+~~~~ aasvg
     +---------------------------+
     |   Length (1 octet)        |
     +---------------------------+
