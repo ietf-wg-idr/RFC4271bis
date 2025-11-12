@@ -5,7 +5,7 @@ docname: draft-ietf-idr-bgp4-rfc4271bis-00
 category: std
 date: 2025
 
-obsoletes: 4271
+obsoletes: 4271, 8212
 
 stand_alone: yes
 pi: 
@@ -81,6 +81,7 @@ informative:
   RFC5065:
   RFC7705:
   RFC7964:
+  RFC8212:
 
   IS10747:
     title: "Information Processing Systems - Telecommunications and Information Exchange between Systems - Protocol for Exchange of Inter-domain Routeing Information among Intermediate Systems to Support Forwarding of ISO 8473 PDUs"
@@ -181,6 +182,12 @@ BGP speaker:
 EBGP: 
   : External BGP (BGP connection between external peers).
 
+Export Policy:
+  : A local policy to be applied in selecting the information contained
+    in the Adj-RIBs-Out. As described in {{rib}}, the Adj-RIBs-Out
+    contain information that has been selected for advertisement to other
+    BGP speakers.
+
 External peer:
   : Peer that is in a different Autonomous System than the local
     system.
@@ -198,6 +205,13 @@ IGP:
   : Interior Gateway Protocol - a routing protocol used to exchange
     routing information among routers within a single Autonomous
     System.
+
+Import Policy:
+  : A local policy to be applied to the information contained in the
+    Adj-RIBs-In. As described in {{rib}}, the Adj-RIBs-In contain
+    information learned from other BGP speakers, and the application of
+    the Import Policy results in the routes that will be considered in
+    the Decision Process by the local BGP speaker.
 
 Loc-RIB:
   : The Loc-RIB contains the routes that have been selected by the
@@ -3501,6 +3515,10 @@ and is responsible for:
 
 - route aggregation and route information reduction
 
+Routes contained in an Adj-RIB-In associated with an EBGP peer
+SHALL NOT be considered eligible in the Decision Process if no
+explicit Import Policy has been applied.
+
 The Decision Process takes place in three distinct phases, each
 triggered by a different event:
 
@@ -3818,6 +3836,9 @@ described by this route, may be forwarded appropriately by the
 Routing Table.  If a route in Loc-RIB is excluded from a particular
 Adj-RIB-Out, the previously advertised route in that Adj-RIB-Out MUST
 be withdrawn from service by means of an UPDATE message (see {{updatesend}}).
+
+Routes SHALL NOT be added to an Adj-RIB-Out associated with an EBGP peer
+if no explicit Export Policy has been applied.
 
 Route aggregation and information reduction techniques (see {{informreduce}}) 
 may optionally be applied.
@@ -4253,6 +4274,21 @@ Finally, we would like to thank all the members of the IDR Working
 Group for their ideas and the support they have given to this
 document.
 
+## Acknowledgements in relationship to RFC 8212
+
+{{?RFC8212}} was authored by Jared Mauch, Job Snijders, and Greg Hankins.
+Its content were subsumed in this document.
+
+RFC 8212 contained the following acknowledgements:
+
+The following people contributed to successful deployment of the
+solution described in RFC8212: Jakob Heitz & Ondrej Filip.
+
+The authors would like to thank the following people for their
+comments, support and review: Shane Amante, Christopher Morrow,
+Robert Raszuk, Greg Skinner, Adam Chappell, Sriram Kotikalapudi,
+Brian Dickson, Jeffrey Haas, John Heasley, Ignas Bagdonas, Donald
+Smith, Alvaro Retana, John Scudder, and Dale Worley.
 
 # Comparison of CURRENT_SPEC with RFC 4271 {#compare4271}
 
