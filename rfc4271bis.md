@@ -5,7 +5,7 @@ docname: draft-ietf-idr-bgp4-rfc4271bis-00
 category: std
 date: 2025
 
-obsoletes: 4271, 8212
+obsoletes: 4271, 8212, 9687
 
 stand_alone: yes
 pi: 
@@ -82,6 +82,7 @@ informative:
   RFC7705:
   RFC7964:
   RFC8212:
+  RFC9687:
 
   IS10747:
     title: "Information Processing Systems - Telecommunications and Information Exchange between Systems - Protocol for Exchange of Inter-domain Routeing Information among Intermediate Systems to Support Forwarding of ISO 8473 PDUs"
@@ -1541,6 +1542,18 @@ field of the OPEN message, then the NOTIFICATION message with the
 Hold Timer Expired Error Code is sent and the BGP connection is
 closed.
 
+## Send Hold Timer Expired Error Handling {#sendholdtimerexperr}
+
+If a system does not send any BGP messages within the period specified
+in SendHoldTime, then a NOTIFICATION message with the "Send Hold Timer
+Expired" Error Code MAY be sent and the BGP connection MUST be closed.
+Additionally, an error MUST be logged in the local system, indicating
+the "Send Hold Timer Expired" Error Code.
+
+The subcode for NOTIFICATION message "Send Hold Timer Expired" is set
+to 0 and is not used; no additional data is to be appended to the end
+of a "Send Hold Timer Expired" NOTIFICATION message.
+
 ## Finite State Machine Error Handling {#fsmerr}
 
 Any error detected by the BGP Finite State Machine (e.g., receipt of
@@ -1683,6 +1696,8 @@ The optional Session attributes are listed below.  These optional attributes may
 11. PassiveTcpEstablishment
 12. SendNOTIFICATIONwithoutOPEN
 13. TrackTcpState
+14. SendHoldTimer
+15. SendHoldTime
 
 The optional session attributes support different features of the BGP functionality that have implications for the BGP FSM state transitions.  Two groups of the attributes which relate to timers are:
 
@@ -2329,6 +2344,15 @@ Definition:
     message is received.
 
 Status:     Mandatory
+
+
+#### Event 29: SendHoldTimer_Expires
+  
+Definition:
+  : An event generated when the SendHoldTimer
+    expires.
+  
+Status: Optional
 
 ##  Description of FSM {#fsmdescr}
 
@@ -3235,7 +3259,10 @@ receives an OpenCollisionDump event (Event 23), the local system:
 If the local system receives a KEEPALIVE message (KeepAliveMsg
 (Event 26)), the local system:
 
-- restarts the HoldTimer and
+- restarts the HoldTimer,
+ 
+- starts the SendHoldTimer if the SendHoldTime is non-zero,
+  and
 
 - changes its state to Established.
 
@@ -3339,6 +3366,38 @@ system:
 Each time the local system sends a KEEPALIVE or UPDATE message, it
 restarts its KeepaliveTimer, unless the negotiated HoldTime value
 is zero.
+
+If the SendHoldTimer_Expires (Event 29) occurs, the local system:
+  
+-  (optionally) sends a NOTIFICATION message with the BGP Error
+   Code "Send Hold Timer Expired" if the local system can
+   determine that doing so will not delay the following actions
+   in this paragraph,
+  
+-  logs an error message in the local system with the BGP Error
+   Code "Send Hold Timer Expired",
+  
+-  releases all BGP resources,
+  
+-  sets the ConnectRetryTimer to zero,
+  
+-  drops the TCP connection,
+  
+-  increments the ConnectRetryCounter by 1,
+  
+-  (optionally) performs peer oscillation damping if the
+   DampPeerOscillations attribute is set to TRUE, and
+  
+-  changes its state to Idle.
+  
+Each time the local system sends a BGP message, it restarts the
+SendHoldTimer unless the SendHoldTime value is zero or the
+negotiated HoldTime value is zero, in which case the
+SendHoldTimer is stopped.
+  
+The SendHoldTimer is stopped following any transition out of
+the Established state as part of the "release all BGP
+resources" action.
 
 A TcpConnection_Valid (Event 14), received for a valid port, will
 cause the second connection to be tracked.
@@ -4181,10 +4240,8 @@ BGP employs five timers: ConnectRetryTimer (see {{fsm}}), HoldTimer
 MinASOriginationIntervalTimer (see {{freqoforigination}}), and
 MinRouteAdvertisementIntervalTimer (see {{mrai}}).
 
-Two optional timers MAY be supported: DelayOpenTimer and IdleHoldTimer
-(see {{fsm}}).  {{fsm}} describes their use.  The full
-operation of these optional timers is outside the scope of this
-document.
+Three optional timers MAY be supported: DelayOpenTimer, IdleHoldTimer
+and SendHoldTimer (see {{fsm}}).  {{fsm}} describes their use.
 
 ConnectRetryTime is a mandatory FSM attribute that stores the initial
 value for the ConnectRetryTimer.  The suggested default value for the
@@ -4197,6 +4254,15 @@ for the HoldTimer.  The suggested default value for the HoldTime is
 During some portions of the state machine (see {{fsm}}), the
 HoldTimer is set to a large value.  The suggested default for this
 large value is 4 minutes.
+
+SendHoldTime is an FSM attribute that stores the initial value for
+the SendHoldTimer.  If SendHoldTime is non-zero, then it MUST be
+greater than the value of HoldTime. The default value of SendHoldTime
+SHOULD be the greater of:
+
+   *  8 minutes or
+
+   *  2 times the negotiated HoldTime
 
 The KeepaliveTime is a mandatory FSM attribute that stores the
 initial value for the KeepaliveTimer.  The suggested default value
@@ -4297,6 +4363,19 @@ comments, support and review: Shane Amante, Christopher Morrow,
 Robert Raszuk, Greg Skinner, Adam Chappell, Sriram Kotikalapudi,
 Brian Dickson, Jeffrey Haas, John Heasley, Ignas Bagdonas, Donald
 Smith, Alvaro Retana, John Scudder, and Dale Worley.
+
+
+## Acknowledgements in relationship to RFC 9687
+
+{{?RFC9687}} was authored by Job Snijders, Ben Cartwright-Cox, and Yingzhen Qu.
+Its content were subsumed in this document.
+
+RFC 9687 contained the following acknowledgements:
+
+The authors would like to thank William McCall, Theo de Raadt, John
+Heasley, Nick Hilliard, Jeffrey Haas, Tom Petch, Susan Hares, Keyur
+Patel, Ben Maddison, Claudio Jeker, and John Scudder for their
+helpful review of this document.
 
 # Comparison of CURRENT_SPEC with RFC 4271 {#compare4271}
 
