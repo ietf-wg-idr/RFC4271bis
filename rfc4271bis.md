@@ -3235,7 +3235,8 @@ receives an OpenCollisionDump event (Event 23), the local system:
 If the local system receives a KEEPALIVE message (KeepAliveMsg
 (Event 26)), the local system:
 
-- restarts the HoldTimer and
+- restarts its HoldTimer, if the negotiated HoldTime value is
+  non-zero, and
 
 - changes its state to Established.
 
