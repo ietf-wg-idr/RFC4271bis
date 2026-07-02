@@ -45,7 +45,7 @@ author:
  -
     name: John Scudder
     organization: HPE
-    email: jgs@bgp.nu
+    email: jgs@hpe.com
     role: editor
 
 normative: 
