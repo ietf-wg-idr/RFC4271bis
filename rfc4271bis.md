@@ -1544,11 +1544,11 @@ closed.
 
 ## Send Hold Timer Expired Error Handling {#sendholdtimerexperr}
 
-If a system does not send any BGP messages within the period specified
-in SendHoldTime, then a NOTIFICATION message with the "Send Hold Timer
-Expired" Error Code MAY be sent and the BGP connection MUST be closed.
-Additionally, an error MUST be logged in the local system, indicating
-the "Send Hold Timer Expired" Error Code.
+If the SendHoldTimer expires, then a NOTIFICATION message with the 
+"Send Hold Timer Expired" Error Code MAY be sent and the BGP 
+connection MUST be closed. Additionally, an error MUST be logged
+in the local system, indicating the "Send Hold Timer Expired" Error 
+Code.
 
 The subcode for NOTIFICATION message "Send Hold Timer Expired" is set
 to 0 and is not used; no additional data is to be appended to the end
@@ -3262,8 +3262,8 @@ If the local system receives a KEEPALIVE message (KeepAliveMsg
 - restarts its HoldTimer, if the negotiated HoldTime value is
   non-zero, and
  
-- starts the SendHoldTimer if the SendHoldTime is non-zero,
-  and
+- starts the SendHoldTimer if the SendHoldTime and the
+  negotiated HoldTime are both non-zero, and
 
 - changes its state to Established.
 
