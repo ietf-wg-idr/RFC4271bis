@@ -1124,7 +1124,7 @@ sent:
    position with respect to the position of octets in the
    protocol message).  If the act of prepending will cause an
    overflow in the AS_PATH segment (i.e., more than 255 ASes),
-   it SHOULD prepend a new segment of type AS_SEQUENCE and
+   it MUST prepend a new segment of type AS_SEQUENCE and
    prepend its own AS number to this new segment.
   2. if the first path segment of the AS_PATH is of type AS_SET,
    the local system prepends a new path segment of type
