@@ -5,7 +5,7 @@ docname: draft-ietf-idr-bgp4-rfc4271bis-01
 category: std
 date: 2025
 
-obsoletes: 4271, 8212, 9687
+obsoletes: 4271, 6608, 8212, 9687
 
 stand_alone: yes
 pi: 
@@ -998,6 +998,16 @@ UPDATE Message Error subcodes:
 | 11    | Malformed AS_PATH               |
 {: title="UPDATE Message Error subcodes"}
 
+Finite State Machine Error Subcodes:
+
+| Value | Name                                            |
+|-------|-------------------------------------------------|
+| 0     | Unspecified Error                               |
+| 1     | Receive Unexpected Message in OpenSent State    |
+| 2     | Receive Unexpected Message in OpenConfirm State |
+| 3     | Receive Unexpected Message in Established State |
+{: title="Finite State Machine Error Subcodes"}
+
 Data:
   : This variable-length field is used to diagnose the reason for
    the NOTIFICATION.  The contents of the Data field depend upon
@@ -1555,9 +1565,31 @@ of a "Send Hold Timer Expired" NOTIFICATION message.
 
 ## Finite State Machine Error Handling {#fsmerr}
 
-Any error detected by the BGP Finite State Machine (e.g., receipt of
+If a BGP speaker receives an unexpected message (e.g., 
+KEEPALIVE/UPDATE/ROUTE-REFRESH message) on a session in OpenSent state,
+it MUST send to the neighbor a NOTIFICATION message with the Error Code
+Finite State Machine Error and the Error Subcode "Receive Unexpected
+Message in OpenSent State".  The Data field is a 1-octet, unsigned
+integer that indicates the type of the unexpected message.
+
+If a BGP speaker receives an unexpected message (e.g., 
+OPEN/UPDATE/ROUTE-REFRESH message) on a session in OpenConfirm state, it
+MUST send a NOTIFICATION message with the Error Code Finite State
+Machine Error and the Error Subcode "Receive Unexpected Message in
+OpenConfirm State" to the neighbor.  The Data field is a 1-octet,
+unsigned integer that indicates the type of the unexpected message.
+
+If a BGP speaker receives an unexpected message (e.g., OPEN message)
+on a session in Established State, it MUST send to the neighbor a
+NOTIFICATION message with the Error Code Finite State Machine Error
+and the Error Subcode "Receive Unexpected Message in Established
+State".  The Data field is a 1-octet, unsigned integer that indicates
+the type of the unexpected message.
+
+Any other error detected by the BGP Finite State Machine (e.g., receipt of
 an unexpected event) is indicated by sending the NOTIFICATION message
-with the Error Code Finite State Machine Error.
+with the Error Code Finite State Machine Error and the Error Subcode 
+"Unspecified Error". 
 
 ## Cease {#ceaseerr}
 
@@ -4392,6 +4424,9 @@ between that specification and older BGP specifications.
 
 - Integrated RFC 6286, "Autonomous-System-Wide Unique BGP Identifier 
   for BGP-4". (Issue #16)
+
+- Integrated RFC 6608, "Subcodes for BGP Finite State Machine Error".
+  (Issue #17)
   
 - Removed the requirement that Partial must be set if an attribute 
   is added to a route in flight. This was found to not be universally
@@ -4606,3 +4641,6 @@ This document defines the following UPDATE Message Error subcodes:
 | Invalid Network Field            | 10   | See {{updatemsgerr}} |
 | Malformed AS_PATH                | 11   | See {{updatemsgerr}} |
 
+RFC 6608 created the registry "BGP Finite State Machine Error Subcodes".
+IANA is requested to update the reference in that registry (both overall,
+and individual code points) to this document.
