@@ -4401,6 +4401,8 @@ between that specification and older BGP specifications.
 - Clarify that detection of an AS loop is a semantic error, not a 
   syntax error in the AS_PATH, despite use of an error code that 
   includes the word "malformed". (Issue #110)
+  
+- Remove mentions of RFC 4020 from IANA section. (Issue #114)
 
 # TCP Options that May Be Used with BGP {#tcpopts}
 
@@ -4514,9 +4516,8 @@ Types".  This document defines the following message types:
 |NOTIFICATION  |  3     | See {{notifyfmt}}  | 
 |KEEPALIVE     |  4     | See {{keepalivefmt}}  | 
 
-Future assignments are to be made using either the Standards Action
-process defined in {{RFC8126}}, or the Early IANA Allocation process
-defined in {{?RFC4020}}.  Assignments consist of a name and the value.
+Future assignments are to be made using the Standards Action process
+defined in {{RFC8126}}.  Assignments consist of a name and the value.
 
 ## Path Attribute Types
 
@@ -4535,9 +4536,8 @@ This document defines the following Path Attributes Type Codes:
 | ATOMIC_AGGREGATE  |  6      | See {{atomic}} |
 | AGGREGATOR        |  7      | See {{aggregator}} |
 
-Future assignments are to be made using either the Standards Action
-process defined in {{RFC8126}}, or the Early IANA Allocation process
-defined in {{RFC4020}}.  Assignments consist of a name and the value.
+Future assignments are to be made using the Standards Action process
+defined in {{RFC8126}}.  Assignments consist of a name and the value.
 
 ## Error Codes
 
@@ -4554,9 +4554,8 @@ Codes".  This document defines the following Error Codes:
 | Finite State Machine Error| 5      | {{fsmerr}}  |
 | Cease                     | 6      | {{ceaseerr}}  |
 
-Future assignments are to be made using either the Standards Action
-process defined in {{RFC8126}}, or the Early IANA Allocation process
-defined in {{RFC4020}}.  Assignments consist of a name and the value.
+Future assignments are to be made using the Standards Action process
+defined in {{RFC8126}}.  Assignments consist of a name and the value.
 
 ## Error Subcodes
 
@@ -4566,9 +4565,8 @@ Error Code, and thus has to be unique only within that context.
 
 IANA has created and is maintaining a set of registries, "Error
 Subcodes", with a separate registry for each BGP Error Code.  Future
-assignments are to be made using either the Standards Action process
-defined in {{RFC8126}}, or the Early IANA Allocation process defined in
-{{RFC4020}}.  Assignments consist of a name and the value.
+assignments are to be made using the Standards Action process defined in
+{{RFC8126}}.  Assignments consist of a name and the value.
 
 This document defines the following Message Header Error subcodes:
 
