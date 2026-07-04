@@ -1503,7 +1503,9 @@ system MAY check whether the leftmost (with respect to the position
 of octets in the protocol message) AS in the AS_PATH attribute is
 equal to the autonomous system number of the peer that sent the
 message.  If the check determines this is not the case, the Error
-Subcode MUST be set to Malformed AS_PATH.
+Subcode MUST be set to Malformed AS_PATH.  We note that despite the
+use of a Subcode that includes the word "malformed", this is a case
+of semantic, not syntactic, invalidity.
 
 If an optional attribute is recognized, then the value of this
 attribute MUST be checked.  If an error is detected, the Error Subcode
