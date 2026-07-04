@@ -1052,15 +1052,13 @@ non-transitive attributes MUST be quietly ignored and not passed along to
 other BGP peers.
 
 New, optional transitive attributes MAY be attached to the path by
-the originator or by any other BGP speaker in the path.  If they are
-not attached by the originator, the Partial bit in the Attribute
-Flags octet is set to 1.  The rules for attaching new optional 
-non-transitive attributes will depend on the nature of the specific
-attribute.  The documentation of each new optional non-transitive
-attribute will be expected to include such rules (the description of
-the MULTI_EXIT_DISC attribute gives an example).  All optional
-attributes (both transitive and non-transitive), MAY be updated (if
-appropriate) by BGP speakers in the path.
+the originator or by any other BGP speaker in the path.  The rules 
+for attaching new optional non-transitive attributes will depend on the
+nature of the specific attribute.  The documentation of each new
+optional non-transitive attribute will be expected to include such rules
+(the description of the MULTI_EXIT_DISC attribute gives an example). 
+All optional attributes (both transitive and non-transitive), MAY be
+updated (if appropriate) by BGP speakers in the path.
 
 The sender of an UPDATE message SHOULD order path attributes within
 the UPDATE message in ascending order of attribute type.  The
@@ -4385,6 +4383,11 @@ helpful review of this document.
 This section describes significant technical changes between the present
 specification and RFC 4271. In addition, RFC 4271 contains a comparison
 between that specification and older BGP specifications.
+
+- Removed the requirement that Partial must be set if an attribute 
+  is added to a route in flight. This was found to not be universally
+  implemented in practice, and its removal poses no interoperability
+  concerns. (Issue #83)
 
 - Clarify that detection of an AS loop is a semantic error, not a 
   syntax error in the AS_PATH, despite use of an error code that 
