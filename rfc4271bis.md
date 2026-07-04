@@ -4386,7 +4386,9 @@ This section describes significant technical changes between the present
 specification and RFC 4271. In addition, RFC 4271 contains a comparison
 between that specification and older BGP specifications.
 
-TBD
+- Clarify that detection of an AS loop is a semantic error, not a 
+  syntax error in the AS_PATH, despite use of an error code that 
+  includes the word "malformed". (Issue #110)
 
 # TCP Options that May Be Used with BGP {#tcpopts}
 
