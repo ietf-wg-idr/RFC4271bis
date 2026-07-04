@@ -177,11 +177,10 @@ Autonomous System (AS):
     destinations that are reachable through it.
 
 BGP Identifier:
-  : A 4-octet unsigned integer that indicates the BGP Identifier of
-    the sender of BGP messages.  A given BGP speaker sets the value of
-    its BGP Identifier to an IP address assigned to that BGP speaker.
-    The value of the BGP Identifier is determined upon startup and is
-    the same for every local interface and BGP peer.
+  : A 4-octet, unsigned, non-zero integer that should be unique within 
+    an AS.  The value of the BGP Identifier for a BGP speaker is
+    determined on startup and is the same for every local interface and
+    every BGP peer.
 
 BGP speaker:
   : A router that implements BGP.
@@ -1417,10 +1416,10 @@ An implementation MAY reject any proposed Hold Time.  An
 implementation that accepts a Hold Time MUST use the negotiated value
 for the Hold Time.
 
-If the BGP Identifier field of the OPEN message is syntactically
-incorrect, then the Error Subcode MUST be set to Bad BGP Identifier.
-Syntactic correctness means that the BGP Identifier field represents
-a valid unicast IP host address.
+If the BGP Identifier field of the OPEN message is zero, or if it
+is the same as the BGP Identifier of the local BGP speaker and the
+message is from an internal peer, then the Error Subcode is set to
+"Bad BGP Identifier".
 
 If one of the Optional Parameters in the OPEN message is not
 recognized, then the Error Subcode MUST be set to Unsupported
@@ -1618,8 +1617,15 @@ resolution procedure:
    already exists (the one that is already in the OpenConfirm
    state), and accepts the BGP connection initiated by the remote
    system.
+   
+3. In the case of an external BGP connection, if the BGP Identifiers 
+   of the peers involved in the connection collision are identical, 
+   then the connection initiated by the BGP speaker with the larger 
+   AS number is preserved. (If {{RFC5065}} is in use, a session 
+   between one member autonomous system and another member autonomous
+   system is not considered "external" for this purpose.)
 
-3. Otherwise, the local system closes the newly created BGP
+4. Otherwise, the local system closes the newly created BGP
    connection (the one associated with the newly received OPEN
    message), and continues to use the existing one (the one that
    is already in the OpenConfirm state).
@@ -4384,6 +4390,9 @@ This section describes significant technical changes between the present
 specification and RFC 4271. In addition, RFC 4271 contains a comparison
 between that specification and older BGP specifications.
 
+- Integrated RFC 6286, "Autonomous-System-Wide Unique BGP Identifier 
+  for BGP-4". (Issue #16)
+  
 - Removed the requirement that Partial must be set if an attribute 
   is added to a route in flight. This was found to not be universally
   implemented in practice, and its removal poses no interoperability
