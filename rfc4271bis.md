@@ -1716,10 +1716,10 @@ The state session attribute indicates the current state of the BGP
 FSM.  The ConnectRetryCounter indicates the number of times a BGP
 peer has tried to establish a peer session.
 
-The mandatory attributes related to timers are described in {{timers}}
+The mandatory session attributes related to timers are described in {{timers}}
 Each timer has a "timer" and a "time" (the initial value).
 
-The optional Session attributes are listed below.  These optional attributes may be supported, either per connection or per local system:
+The optional Session attributes are listed below.  These optional session attributes may be supported, either per connection or per local system:
 
  1. AcceptConnectionsUnconfiguredPeers
  2. AllowAutomaticStart
@@ -1737,22 +1737,22 @@ The optional Session attributes are listed below.  These optional attributes may
 14. SendHoldTimer
 15. SendHoldTime
 
-The optional session attributes support different features of the BGP functionality that have implications for the BGP FSM state transitions.  Two groups of the attributes which relate to timers are:
+The optional session attributes support different features of the BGP functionality that have implications for the BGP FSM state transitions.  Two groups of the session attributes which relate to timers are:
 
    > group 1: DelayOpen, DelayOpenTime, DelayOpenTimer
 
    > group 2: DampPeerOscillations, IdleHoldTime, IdleHoldTimer
 
 The first parameter (DelayOpen, DampPeerOscillations) is an optional
-attribute that indicates that the Timer function is active.  The
+session attribute that indicates that the Timer function is active.  The
 "Time" value specifies the initial value for the "Timer"
 (DelayOpenTime, IdleHoldTime).  The "Timer" specifies the actual
 timer.
 
 Please refer to {{optionalevents}} for an explanation of the interaction
-between these optional attributes and the events signaled to the
+between these optional session attributes and the events signaled to the
 state machine.  {{optsessattrs}} also provides a short overview of the
-different types of optional attributes (flags or timers).
+different types of optional session attributes (flags or timers).
 
 ## Events for the BGP FSM {#fsmevents}
 
@@ -1785,7 +1785,7 @@ Description:
    "automatic" refers to a start being issued to the
    BGP peer connection FSM when such logic determines
    that the BGP peer connection should be restarted.
-   The AllowAutomaticStart attribute specifies that
+   The AllowAutomaticStart session attribute specifies that
    this BGP connection supports automatic starting of
    the BGP connection.
 
@@ -1818,7 +1818,7 @@ Values:      TRUE or FALSE
 Option 2:    AllowAutomaticStop
 
 Description: 
-   : This BGP peer session optional attribute indicates
+   : This BGP peer session optional session attribute indicates
     that the BGP connection allows "automatic"
     stopping of the BGP connection.  An "automatic"
     stop is defined as a stop under the control of
@@ -1979,7 +1979,7 @@ accessible via a management interface.
 An administrative event is an event in which the operator interface
 and BGP Policy engine signal the BGP-finite state machine to start or
 stop the BGP state machine.  The basic start and stop indications are
-augmented by optional connection attributes that signal a certain
+augmented by optional session attributes that signal a certain
 type of start or stop mechanism to the BGP FSM.  An example of this
 combination is Event 5, AutomaticStart_with_PassiveTcpEstablishment.
 With this event, the BGP implementation signals to the BGP FSM that
@@ -2012,8 +2012,8 @@ Definition:
 
 Status:     Mandatory
 
-Optional Attribute Status:     
-   : The PassiveTcpEstablishment attribute SHOULD be set to FALSE.
+Optional Session Attribute Status:     
+   : The PassiveTcpEstablishment session attribute SHOULD be set to FALSE.
 
 #### Event 2: ManualStop
 
@@ -2022,8 +2022,8 @@ Definition:
 
 Status:     Mandatory
 
-Optional Attribute Status:     
-  : No interaction with any optional attributes.
+Optional Session Attribute Status:     
+  : No interaction with any optional session attributes.
 
 #### Event 3: AutomaticStart
 
@@ -2032,8 +2032,8 @@ Definition:
 
 Status:     Optional, depending on local system
 
-Optional Attribute Status:     
-  : 1. The AllowAutomaticStart attribute SHOULD be set to TRUE if this event occurs.
+Optional Session Attribute Status:     
+  : 1. The AllowAutomaticStart session attribute SHOULD be set to TRUE if this event occurs.
     2. If the PassiveTcpEstablishment optional session attribute is supported, it SHOULD be set to FALSE.
     3. If the DampPeerOscillations is supported, it SHOULD be set to FALSE when this event occurs.
 
@@ -2042,16 +2042,16 @@ Optional Attribute Status:
 Definition: 
    : Local system administrator manually starts the peer
     connection, but has PassiveTcpEstablishment
-    enabled.  The PassiveTcpEstablishment optional
+    enabled.  The PassiveTcpEstablishment optional session 
     attribute indicates that the peer will listen prior
     to establishing the connection.
 
 Status:     Optional, depending on local system
 
-Optional Attribute Status:     
- : 1. The PassiveTcpEstablishment attribute SHOULD be
+Optional Session Attribute Status:     
+ : 1. The PassiveTcpEstablishment session attribute SHOULD be
       set to TRUE if this event occurs.
-   2. The DampPeerOscillations attribute SHOULD be set
+   2. The DampPeerOscillations session attribute SHOULD be set
       to FALSE when this event occurs.
 
 #### Event 5: AutomaticStart_with_PassiveTcpEstablishment
@@ -2059,18 +2059,18 @@ Optional Attribute Status:
 Definition: 
    : Local system automatically starts the BGP
     connection with the PassiveTcpEstablishment
-    enabled.  The PassiveTcpEstablishment optional
+    enabled.  The PassiveTcpEstablishment optional session
     attribute indicates that the peer will listen prior
     to establishing a connection.
 
 Status:     Optional, depending on local system
 
-Optional Attribute Status:     
-   : 1. The AllowAutomaticStart attribute SHOULD be set
+Optional Session Attribute Status:     
+   : 1. The AllowAutomaticStart session attribute SHOULD be set
       to TRUE.
-     2. The PassiveTcpEstablishment attribute SHOULD be
+     2. The PassiveTcpEstablishment session attribute SHOULD be
       set to TRUE.
-     3. If the DampPeerOscillations attribute is
+     3. If the DampPeerOscillations session attribute is
       supported, the DampPeerOscillations SHOULD be
       set to FALSE.
 
@@ -2085,12 +2085,12 @@ Definition:
 
 Status:     Optional, depending on local system.
 
-Optional Attribute Status:
-   : 1. The AllowAutomaticStart attribute SHOULD be set
+Optional Session Attribute Status:
+   : 1. The AllowAutomaticStart session attribute SHOULD be set
       to TRUE.
-     2. The DampPeerOscillations attribute SHOULD be set
+     2. The DampPeerOscillations session attribute SHOULD be set
       to TRUE.
-     3. The PassiveTcpEstablishment attribute SHOULD be
+     3. The PassiveTcpEstablishment session attribute SHOULD be
       set to FALSE.
 
 #### Event 7: AutomaticStart_with_DampPeerOscillations_and_PassiveTcpEstablishment
@@ -2105,12 +2105,12 @@ Definition:
 
 Status:     Optional, depending on local system
 
-Optional Attributes Status:
-   : 1. The AllowAutomaticStart attribute SHOULD be set
+Optional Session Attributes Status:
+   : 1. The AllowAutomaticStart session attribute SHOULD be set
       to TRUE.
-     2. The DampPeerOscillations attribute SHOULD be set
+     2. The DampPeerOscillations session attribute SHOULD be set
       to TRUE.
-     3. The PassiveTcpEstablishment attribute SHOULD be
+     3. The PassiveTcpEstablishment session attribute SHOULD be
       set to TRUE.
 
 #### Event 8: AutomaticStop
@@ -2124,8 +2124,8 @@ Definition:
 
 Status:     Optional, depending on local system
 
-Optional Attribute Status:
-   : 1. The AllowAutomaticStop attribute SHOULD be TRUE.
+Optional Session Attribute Status:
+   : 1. The AllowAutomaticStop session attribute SHOULD be TRUE.
 
 ### Timer Events {#timerevents}
 
@@ -2157,10 +2157,10 @@ Definition:
 
 Status:     Optional
 
-Optional Attribute Status:
+Optional Session Attribute Status:
  : If this event occurs,
- : 1. DelayOpen attribute SHOULD be set to TRUE,
-   2. DelayOpenTime attribute SHOULD be supported,
+ : 1. DelayOpen session attribute SHOULD be set to TRUE,
+   2. DelayOpenTime session attribute SHOULD be supported,
    3. DelayOpenTimer SHOULD be supported.
 
 #### Event 13: IdleHoldTimer_Expires
@@ -2173,7 +2173,7 @@ Definition:
 
    : The IdleHoldTimer is only used when the persistent
     peer oscillation damping function is enabled by
-    setting the DampPeerOscillations optional attribute
+    setting the DampPeerOscillations optional session attribute
     to TRUE.
 
    : Implementations not implementing the persistent
@@ -2182,9 +2182,9 @@ Definition:
 
 Status:     Optional
 
-Optional Attribute Status:
+Optional Session Attribute Status:
    : If this event occurs:
-   : 1. DampPeerOscillations attribute SHOULD be set to
+   : 1. DampPeerOscillations session attribute SHOULD be set to
        TRUE.
      2. IdleHoldTimer SHOULD have just expired.
 
@@ -2208,8 +2208,8 @@ Definition:
 
 Status:     Optional
 
-Optional Attribute Status:
-   : 1. The TrackTcpState attribute SHOULD be set to
+Optional Session Attribute Status:
+   : 1. The TrackTcpState session attribute SHOULD be set to
        TRUE if this event occurs.
 
 #### Event 15: Tcp_CR_Invalid
@@ -2228,8 +2228,8 @@ Definition:
 
 Status:     Optional
 
-Optional Attribute Status:
-   : 1. The TrackTcpState attribute should be set to
+Optional Session Attribute Status:
+   : 1. The TrackTcpState session attribute should be set to
        TRUE if this event occurs.
 
 #### Event 16: Tcp_CR_Acked
@@ -2279,8 +2279,8 @@ Definition:
 
 Status:     Mandatory
 
-Optional Attribute Status:
-   : 1. The DelayOpen optional attribute SHOULD be set
+Optional Session Attribute Status:
+   : 1. The DelayOpen optional session attribute SHOULD be set
        to FALSE.
      2. The DelayOpenTimer SHOULD not be running.
 
@@ -2294,8 +2294,8 @@ Definition:
 
 Status:     Optional
 
-Optional Attribute Status:
-   : 1. The DelayOpen attribute SHOULD be set to TRUE.
+Optional Session Attribute Status:
+   : 1. The DelayOpen session attribute SHOULD be set to TRUE.
      2. The DelayOpenTimer SHOULD be running.
 
 #### Event 21: BGPHeaderErr
@@ -2332,15 +2332,15 @@ Definition:
 
 Status:     Optional
 
-Optional Attribute Status:
+Optional Session Attribute Status:
    : If the state machine is to process this event in
     the Established state,
-   : 1. CollisionDetectEstablishedState optional
+   : 1. CollisionDetectEstablishedState optional session 
        attribute SHOULD be set to TRUE.
 
    : Please note: The OpenCollisionDump event can occur
     in Idle, Connect, Active, OpenSent, and OpenConfirm
-    without any optional attributes being set.
+    without any optional session attributes being set.
 
 #### Event 24: NotifMsgVerErr
 
@@ -2450,7 +2450,7 @@ connection that is closed SHOULD be disposed.
 ####  FSM and Optional Session Attributes {#optsessattrs}
 
 Optional Session Attributes specify either attributes that act as
-flags (TRUE or FALSE) or optional timers.  For optional attributes
+flags (TRUE or FALSE) or optional timers.  For optional session attributes
 that act as flags, if the optional session attribute can be set to
 TRUE on the system, the corresponding BGP FSM actions must be
 supported.  For example, if the following options can be set in a BGP
@@ -2460,7 +2460,7 @@ be set to TRUE, the events supporting that set of options do not have
 to be supported.
 
 Each of the optional timers (DelayOpenTimer and IdleHoldTimer) has a
-group of attributes that are:
+group of session attributes that are:
 
 - flag indicating support,
 - Time set in Timer
@@ -2535,7 +2535,7 @@ In response to a ManualStart_with_PassiveTcpEstablishment event (Event 4) or Aut
 The exact value of the ConnectRetryTimer is a local matter, but it
 SHOULD be sufficiently large to allow TCP initialization.
 
-If the DampPeerOscillations attribute is set to TRUE, the following three additional events may occur within the Idle state:
+If the DampPeerOscillations session attribute is set to TRUE, the following three additional events may occur within the Idle state:
 
 - AutomaticStart_with_DampPeerOscillations (Event 6),
 
@@ -2601,7 +2601,7 @@ If the BGP FSM receives a Tcp_CR_Invalid event (Event 15), the
 local system rejects the TCP connection, and the connection
 remains in the Connect state.
 
-If the TCP connection succeeds (Event 16 or Event 17), the local system checks the DelayOpen attribute prior to processing.  If the DelayOpen attribute is set to TRUE, the local system:
+If the TCP connection succeeds (Event 16 or Event 17), the local system checks the DelayOpen session attribute prior to processing.  If the DelayOpen session attribute is set to TRUE, the local system:
 
 - stops the ConnectRetryTimer (if running) and sets the
   ConnectRetryTimer to zero,
@@ -2610,7 +2610,7 @@ If the TCP connection succeeds (Event 16 or Event 17), the local system checks t
 
 - stays in the Connect state.
 
-If the DelayOpen attribute is set to FALSE, the local system:
+If the DelayOpen session attribute is set to FALSE, the local system:
 
 - stops the ConnectRetryTimer (if running) and sets the
 ConnectRetryTimer to zero,
@@ -2679,7 +2679,7 @@ internal connection; otherwise it will be "external".
 
 If BGP message header checking (Event 21) or OPEN message checking detects an error (Event 22) (see {{openmsgerr}}), the local system:
 
-- (optionally) If the SendNOTIFICATIONwithoutOPEN attribute is
+- (optionally) If the SendNOTIFICATIONwithoutOPEN session attribute is
 set to TRUE, then the local system first sends a NOTIFICATION
 message with the appropriate error code, and then
 
@@ -2693,7 +2693,7 @@ ConnectRetryTimer to zero,
 - increments the ConnectRetryCounter by 1,
 
 - (optionally) performs peer oscillation damping if the
-DampPeerOscillations attribute is set to TRUE, and
+DampPeerOscillations session attribute is set to TRUE, and
 
 - changes its state to Idle.
 
@@ -2722,7 +2722,7 @@ zero,
 - increments the ConnectRetryCounter by 1,
 
 - performs peer oscillation damping if the DampPeerOscillations
-attribute is set to True, and
+session attribute is set to True, and
 
 - changes its state to Idle.
 
@@ -2741,7 +2741,7 @@ DelayOpenTimer (sets to zero),
 - increments the ConnectRetryCounter by 1,
 
 - performs peer oscillation damping if the DampPeerOscillations
-attribute is set to True, and
+session attribute is set to True, and
 
 - changes its state to Idle.
 
@@ -2809,10 +2809,10 @@ the local system rejects the TCP connection and stays in the
 Active State.
 
 In response to the success of a TCP connection (Event 16 or Event
-17), the local system checks the DelayOpen optional attribute
+17), the local system checks the DelayOpen optional session attribute
 prior to processing.
 
-If the DelayOpen attribute is set to TRUE, the local system:
+If the DelayOpen session attribute is set to TRUE, the local system:
 
 - stops the ConnectRetryTimer and sets the ConnectRetryTimer
  to zero,
@@ -2822,7 +2822,7 @@ If the DelayOpen attribute is set to TRUE, the local system:
 
 - stays in the Active state.
 
-If the DelayOpen attribute is set to FALSE, the local system:
+If the DelayOpen session attribute is set to FALSE, the local system:
 
 - sets the ConnectRetryTimer to zero,
 
@@ -2848,7 +2848,7 @@ If the local system receives a TcpConnectionFails event (Event 18), the local sy
 - increments the ConnectRetryCounter by 1,
 
 - optionally performs peer oscillation damping if the
-  DampPeerOscillations attribute is set to TRUE, and
+  DampPeerOscillations session attribute is set to TRUE, and
 
 - changes its state to Idle.
 
@@ -2887,7 +2887,7 @@ If BGP message header checking (Event 21) or OPEN message checking
 detects an error (Event 22) (see {{openmsgerr}}), the local system:
 
    - (optionally) sends a NOTIFICATION message with the appropriate
-     error code if the SendNOTIFICATIONwithoutOPEN attribute is set
+     error code if the SendNOTIFICATIONwithoutOPEN session attribute is set
      to TRUE,
 
   - sets the ConnectRetryTimer to zero,
@@ -2899,7 +2899,7 @@ detects an error (Event 22) (see {{openmsgerr}}), the local system:
   - increments the ConnectRetryCounter by 1,
 
   - (optionally) performs peer oscillation damping if the
-    DampPeerOscillations attribute is set to TRUE, and
+    DampPeerOscillations session attribute is set to TRUE, and
 
   - changes its state to Idle.
 
@@ -2929,7 +2929,7 @@ If the DelayOpenTimer is not running, the local system:
   - increments the ConnectRetryCounter by 1,
 
   - (optionally) performs peer oscillation damping if the
-    DampPeerOscillations attribute is set to TRUE, and
+    DampPeerOscillations session attribute is set to TRUE, and
 
   - changes its state to Idle.
 
@@ -2945,7 +2945,7 @@ In response to any other event (Events 8, 10-11, 13, 19, 23,
   - increments the ConnectRetryCounter by one,
 
   - (optionally) performs peer oscillation damping if the
-    DampPeerOscillations attribute is set to TRUE, and
+    DampPeerOscillations session attribute is set to TRUE, and
 
   - changes its state to Idle.
 
@@ -2985,7 +2985,7 @@ state, the local system:
 - increments the ConnectRetryCounter by 1,
 
 - (optionally) performs peer oscillation damping if the
-  DampPeerOscillations attribute is set to TRUE, and
+  DampPeerOscillations session attribute is set to TRUE, and
 
 - changes its state to Idle.
 
@@ -3003,7 +3003,7 @@ If the HoldTimer_Expires (Event 10), the local system:
 - increments the ConnectRetryCounter,
 
 - (optionally) performs peer oscillation damping if the
-  DampPeerOscillations attribute is set to TRUE, and
+  DampPeerOscillations session attribute is set to TRUE, and
 
 - changes its state to Idle.
 
@@ -3067,7 +3067,7 @@ system:
 - increments the ConnectRetryCounter by 1,
 
 - (optionally) performs peer oscillation damping if the
-  DampPeerOscillations attribute is TRUE, and
+  DampPeerOscillations session attribute is TRUE, and
 
 - changes its state to Idle.
 
@@ -3094,7 +3094,7 @@ the OpenSent state, the local system:
 - increments the ConnectRetryCounter by 1,
 
 - (optionally) performs peer oscillation damping if the
-  DampPeerOscillations attribute is set to TRUE, and
+  DampPeerOscillations session attribute is set to TRUE, and
 
 - changes its state to Idle.
 
@@ -3124,7 +3124,7 @@ local system:
 - increments the ConnectRetryCounter by 1,
 
 - (optionally) performs peer oscillation damping if the
-  DampPeerOscillations attribute is set to TRUE, and
+  DampPeerOscillations session attribute is set to TRUE, and
 
 - changes its state to Idle.
 
@@ -3164,7 +3164,7 @@ In response to the AutomaticStop event initiated by the system
 - increments the ConnectRetryCounter by 1,
 
 - (optionally) performs peer oscillation damping if the
-  DampPeerOscillations attribute is set to TRUE, and
+  DampPeerOscillations session attribute is set to TRUE, and
 
 - changes its state to Idle.
 
@@ -3183,7 +3183,7 @@ KEEPALIVE message is received, the local system:
 - increments the ConnectRetryCounter by 1,
 
 - (optionally) performs peer oscillation damping if the
-  DampPeerOscillations attribute is set to TRUE, and
+  DampPeerOscillations session attribute is set to TRUE, and
 
 - changes its state to Idle.
 
@@ -3217,7 +3217,7 @@ local system:
 - increments the ConnectRetryCounter by 1,
 
 - (optionally) performs peer oscillation damping if the
-  DampPeerOscillations attribute is set to TRUE, and
+  DampPeerOscillations session attribute is set to TRUE, and
 
 - changes its state to Idle.
 
@@ -3248,7 +3248,7 @@ the local system:
 - increments the ConnectRetryCounter by 1,
 
 - (optionally) performs peer oscillation damping if the
-  DampPeerOscillations attribute is set to TRUE, and
+  DampPeerOscillations session attribute is set to TRUE, and
 
 - changes its state to Idle.
 
@@ -3268,7 +3268,7 @@ correctness.  If the BGP message header checking (BGPHeaderErr
 - increments the ConnectRetryCounter by 1,
 
 - (optionally) performs peer oscillation damping if the
-  DampPeerOscillations attribute is set to TRUE, and
+  DampPeerOscillations session attribute is set to TRUE, and
 
 - changes its state to Idle.
 
@@ -3290,7 +3290,7 @@ receives an OpenCollisionDump event (Event 23), the local system:
 - increments the ConnectRetryCounter by 1,
 
 - (optionally) performs peer oscillation damping if the
-  DampPeerOscillations attribute is set to TRUE, and
+  DampPeerOscillations session attribute is set to TRUE, and
 
 - changes its state to Idle.
 
@@ -3320,7 +3320,7 @@ local system:
 - increments the ConnectRetryCounter by 1,
 
 - (optionally) performs peer oscillation damping if the
-  DampPeerOscillations attribute is set to TRUE, and
+  DampPeerOscillations session attribute is set to TRUE, and
 
 - changes its state to Idle.
 
@@ -3364,7 +3364,7 @@ In response to an AutomaticStop event (Event 8), the local system:
 - increments the ConnectRetryCounter by 1,
 
 - (optionally) performs peer oscillation damping if the
-  DampPeerOscillations attribute is set to TRUE, and
+  DampPeerOscillations session attribute is set to TRUE, and
 
 - changes its state to Idle.
 
@@ -3390,7 +3390,7 @@ system:
 - increments the ConnectRetryCounter by 1,
 
 - (optionally) performs peer oscillation damping if the
-  DampPeerOscillations attribute is set to TRUE, and
+  DampPeerOscillations session attribute is set to TRUE, and
 
 - changes its state to Idle.
 
@@ -3425,7 +3425,7 @@ If the SendHoldTimer_Expires (Event 29) occurs, the local system:
 -  increments the ConnectRetryCounter by 1,
   
 -  (optionally) performs peer oscillation damping if the
-   DampPeerOscillations attribute is set to TRUE, and
+   DampPeerOscillations session attribute is set to TRUE, and
   
 -  changes its state to Idle.
   
@@ -3449,7 +3449,7 @@ successfully established (Event 16 or Event 17), the second
 connection SHALL be tracked until it sends an OPEN message.
 
 If a valid OPEN message (BGPOpen (Event 19)) is received, and if
-the CollisionDetectEstablishedState optional attribute is TRUE,
+the CollisionDetectEstablishedState optional session attribute is TRUE,
 the OPEN message will be checked to see if it collides ({{collision}})
 with any other connection.  If the BGP implementation
 determines that this connection needs to be terminated, it will
@@ -3524,7 +3524,7 @@ error (Event 28), the local system:
 - increments the ConnectRetryCounter by 1,
 
 - (optionally) performs peer oscillation damping if the
-  DampPeerOscillations attribute is set to TRUE, and
+  DampPeerOscillations session attribute is set to TRUE, and
 
 - changes its state to Idle.
 
@@ -3545,7 +3545,7 @@ system:
 - increments the ConnectRetryCounter by 1,
 
 - (optionally) performs peer oscillation damping if the
-  DampPeerOscillations attribute is set to TRUE, and
+  DampPeerOscillations session attribute is set to TRUE, and
 
 - changes its state to Idle.
 
