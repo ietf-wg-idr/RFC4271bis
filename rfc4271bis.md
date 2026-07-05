@@ -249,15 +249,41 @@ Unfeasible route:
 
 {::boilerplate bcp14-tagged}
 
-# Placeholder
+# Roadmap
 
-Editor's note: This section is here because I moved the Acknowledgements to
-the end, which is the more normal place -- but that results in all the
+TODO: This section is a work in progress. It's intended to become the
+roadmap mentioned in GitHub issue #58.
+
+This document is the keystone in the Internet Standard TBD_STD_NUMBER,
+but that Internet Standard includes other documents as well. The reader
+should consider all documents that are part of that standard to be
+required parts of a useful BGP implementation.
+
+Beyond that, the BGP protocol is made up of both this base
+specification, and a multitude of other specifications that extend and
+modify it. In the nature of things, the set of documents the reader
+needs to consult to have a complete picture of the protocol will change
+over time, but at time of writing the documents mentioned here were 
+important to be aware of.
+
+The reader should also consult the "updated by" metadata, available at
+time of writing at this document's IETF Datatracker page.
+
+## Core Extensions
+
+{{RFC4760}}: 
+  : This document extends BGP to provide multiprotocol support.
+    The original BGP protocol, documented in the present specification,
+    supports only IPv4 routing. Support for RFC 4760 is required in
+    order to support IPv6 routing, and other useful features as well.
+
+<!-- Editor's note: This section is here because I moved the Acknowledgements to
+the end, which is the more normal place - but that results in all the
 sections being renumbered, and I would prefer that Section 9 remain Section
 9, it's stuck in my head that way. Perhaps we can put something up front
 here that's relevant, like a short discussion of what's changed since 4271
 (not a changelog though... an overview?) and/or a discussion of why it
-should be an Internet Standard.
+should be an Internet Standard. -->
 
 # Summary of Operation
 
@@ -4437,6 +4463,10 @@ Verson 01:
   
 - Say "session attribute" in FSM section, to disambiguate from path 
   attribute. (Issue #56)
+  
+- Created a "roadmap" section, which replaces the "placeholder" section.
+  The roadmap section is a work in progress, but there's something
+  there now, at least. (Issue #58, still in progress)
   
 - Removed the requirement that Partial must be set if an attribute 
   is added to a route in flight. This was found to not be universally
