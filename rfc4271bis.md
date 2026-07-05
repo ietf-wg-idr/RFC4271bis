@@ -4422,11 +4422,16 @@ This section describes significant technical changes between the present
 specification and RFC 4271. In addition, RFC 4271 contains a comparison
 between that specification and older BGP specifications.
 
+Verson 01:
+
 - Integrated RFC 6286, "Autonomous-System-Wide Unique BGP Identifier 
   for BGP-4". (Issue #16)
 
 - Integrated RFC 6608, "Subcodes for BGP Finite State Machine Error".
   (Issue #17)
+
+- Address IANA review comments related to IANA Considerations section.
+  (Issue #54)
   
 - Removed the requirement that Partial must be set if an attribute 
   is added to a route in flight. This was found to not be universally
@@ -4542,7 +4547,8 @@ safe to assign.
 
 All the BGP messages contain an 8-bit message type, for which IANA
 has created and is maintaining a registry entitled "BGP Message
-Types".  This document defines the following message types:
+Types".  IANA is requested to update its reference to this document.
+This document defines the following message types:
 
 |Name          | Value  |   Definition     |
 |--------------|--------|------------------| 
@@ -4578,7 +4584,7 @@ defined in {{RFC8126}}.  Assignments consist of a name and the value.
 
 The BGP NOTIFICATION message carries an 8-bit Error Code, for which
 IANA has created and is maintaining a registry entitled "BGP Error
-Codes".  This document defines the following Error Codes:
+(Notification) Codes".  This document defines the following Error Codes:
 
 | Name                      | Value  | Definition
 |---------------------------|--------|--------------|
@@ -4598,12 +4604,15 @@ The BGP NOTIFICATION message carries an 8-bit Error Subcode, where
 each Subcode has to be defined within the context of a particular
 Error Code, and thus has to be unique only within that context.
 
-IANA has created and is maintaining a set of registries, "Error
+IANA has created and is maintaining a set of registries, "BGP Error
 Subcodes", with a separate registry for each BGP Error Code.  Future
 assignments are to be made using the Standards Action process defined in
 {{RFC8126}}.  Assignments consist of a name and the value.
 
-This document defines the following Message Header Error subcodes:
+IANA maintains a subregistry below the BGP Error Subcodes registry
+called "Message Header Error subcodes". IANA is requested to rename this
+subregistry "BGP Message Header Error subcodes". This document defines
+the following BGP Message Header Error subcodes:
 
 | Name                         | Value | Definition
 |------------------------------|-------|------------------|
@@ -4612,7 +4621,10 @@ This document defines the following Message Header Error subcodes:
 | Bad Message Length           | 2     | See {{msgheadererr}}  |
 | Bad Message Type             | 3     | See {{msgheadererr}}  |
 
-This document defines the following OPEN Message Error subcodes:
+IANA maintains a subregistry below the BGP Error Subcodes registry
+called "OPEN Message Error subcodes". IANA is requested to rename this
+subregistry "BGP OPEN Message Error subcodes". This document defines 
+the following OPEN Message Error subcodes:
 
 | Name                          | Value | Definition      |
 |-------------------------------|-------|-----------------| 
@@ -4624,7 +4636,10 @@ This document defines the following OPEN Message Error subcodes:
 | [Deprecated]                  | 5     | See {{RFC4271}} Appendix A  |
 | Unacceptable Hold Time        | 6     | See {{openmsgerr}} |
 
-This document defines the following UPDATE Message Error subcodes:
+IANA maintains a subregistry below the BGP Error Subcodes registry
+called "UPDATE Message Error subcodes". IANA is requested to rename this
+subregistry "BGP UPDATE Message Error subcodes". This document defines 
+the following UPDATE Message Error subcodes:
 
 | Name                             |Value | Definition      |
 |----------------------------------|------|-----------------|
@@ -4644,3 +4659,13 @@ This document defines the following UPDATE Message Error subcodes:
 RFC 6608 created the registry "BGP Finite State Machine Error Subcodes".
 IANA is requested to update the reference in that registry (both overall,
 and individual code points) to this document.
+
+## References to BGP Specification
+
+IANA is requested to update all references to RFC4271 in the "Border
+Gateway Protocol (BGP) Parameters" registry group to refer to this
+document.
+
+IANA is requested to replace all references to RFC 4271 in the IP Flow
+Information Export (IPFIX) Entities registry group at
+https://www.iana.org/assignments/ipfix with references to this document.
