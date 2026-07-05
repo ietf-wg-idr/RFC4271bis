@@ -1990,12 +1990,14 @@ establishment.
 
 Note that only Event 1 (ManualStart) and Event 2 (ManualStop) are
 mandatory administrative events.  All other administrative events are
-optional (Events 3-8).  Each event below has a name, definition,
-status (mandatory or optional), and the optional session attributes
-that SHOULD be set at each stage.  When generating Event 1 through
-Event 8 for the BGP FSM, the conditions specified in the "Optional
-Attribute Status" section are verified.  If any of these conditions
-are not satisfied, then the local system should log an FSM error.
+optional (Events 3-8).  Each event below has a name, definition, status
+(mandatory or optional), and an "Optional Session Attribute Status"
+field that lists the optional session attributes required to be set for
+that event to occur.  When generating Event 1 through Event 8 for the
+BGP FSM, an implementation MUST verify the conditions listed in that
+event's Optional Session Attribute Status field before generating the
+event.  If any of these conditions are not satisfied, then the local
+system should log an FSM error.
 
 The settings of optional session attributes may be implicit in some
 implementations, and therefore may not be set explicitly by an
@@ -4446,6 +4448,11 @@ Verson 01:
   includes the word "malformed". (Issue #110)
   
 - Remove mentions of RFC 4020 from IANA section. (Issue #114)
+
+- Clarify apparent (but not actual) bad cross-reference in 
+  Administrative Events section. The old text said "section" where
+  it really meant "field". Cleaned up the surrounding words a bit, too.
+  (Issue #118)
 
 # TCP Options that May Be Used with BGP {#tcpopts}
 
