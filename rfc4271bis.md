@@ -4433,6 +4433,9 @@ Verson 01:
 - Address IANA review comments related to IANA Considerations section.
   (Issue #54)
   
+- Say "session attribute" in FSM section, to disambiguate from path 
+  attribute. (Issue #56)
+  
 - Removed the requirement that Partial must be set if an attribute 
   is added to a route in flight. This was found to not be universally
   implemented in practice, and its removal poses no interoperability
