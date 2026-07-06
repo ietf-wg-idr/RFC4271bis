@@ -794,6 +794,7 @@ Type Codes, and their attribute values and uses are as follows:
 |  0    |  IGP - Network Layer Reachability Information is interior to the originating AS                  |
 |  1    |  EGP - Network Layer Reachability Information learned via the EGP protocol {{RFC904}}              |
 |  2    |  INCOMPLETE - Network Layer Reachability Information learned by some other means            |
+| 3-255 |  MUST NOT be sent |
 {: title="ORIGIN Values"}
 
  > Usage of this attribute is defined in {{origin}}.
@@ -4465,6 +4466,9 @@ Verson 01:
   related to use of AS_SETs. (Issue #95, partial, issue remains open)
   
 - Add an informative reference to I-D.ietf-idr-bgp-issues. (Issue #101)
+
+- Mandate that ORIGIN values 3-255 must never be sent. RFC 7606 already
+  says what to do if they are received (treat-as-withdraw). (Issue #102)
 
 - Clarify that detection of an AS loop is a semantic error, not a 
   syntax error in the AS_PATH, despite use of an error code that 
