@@ -4129,8 +4129,7 @@ control - after information is collapsed, the same policies will
 apply to all destinations and paths in the equivalence class.
 
 The Decision Process may optionally reduce the amount of information
-that it will place in the Adj-RIBs-Out by either of the following
-methods:
+that it will place in the Adj-RIBs-Out as follows:
 
 {: style="format %c)"}
 
@@ -4140,27 +4139,6 @@ methods:
   address structure and the systems under control of an
   autonomous system administrator, it will be possible to reduce
   the size of the NLRI carried in the UPDATE messages.
-
-* AS_PATHs:
-  AS path information can be represented as ordered AS_SEQUENCEs
-  or unordered AS_SETs.  AS_SETs are used in the route
-  aggregation algorithm described in {{aggregating}}.  They
-  reduce the size of the AS_PATH information by listing each AS
-  number only once, regardless of how many times it may have
-  appeared in multiple AS_PATHs that were aggregated.
-
-<!-- XXX the below should be indented to the same level as the bullet list, it's part of the previous item. I couldn't work out how. Then again if we get rid of this subsection then it doesn't matter. --> 
-  > An AS_SET implies that the destinations listed in the NLRI can
-  be reached through paths that traverse at least some of the
-  constituent autonomous systems.  AS_SETs provide sufficient
-  information to avoid routing information looping; however,
-  their use may prune potentially feasible paths because such
-  paths are no longer listed individually in the form of
-  AS_SEQUENCEs.  In practice, this is not likely to be a problem
-  because once an IP packet arrives at the edge of a group of
-  autonomous systems, the BGP speaker is likely to have more
-  detailed path information and can distinguish individual paths
-  from destinations.
 
 #### Aggregating Routing Information {#aggregating}
 
@@ -4478,6 +4456,9 @@ Verson 01:
   concerns. (Issue #83)
   
 - Tighten up "no cost can be determined" rule in tie-breakers. (Issue #90)
+
+- Removed a bullet from "information reduction" subsection that 
+  related to use of AS_SETs. (Issue #95, partial, issue remains open)
 
 - Clarify that detection of an AS loop is a semantic error, not a 
   syntax error in the AS_PATH, despite use of an error code that 
