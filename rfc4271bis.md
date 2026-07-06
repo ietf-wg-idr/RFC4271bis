@@ -3921,8 +3921,12 @@ proven to cause route loops.
    interior cost.  The interior cost of a route is determined by
    calculating the metric to the NEXT_HOP for the route using the
    Routing Table.  If the NEXT_HOP hop for a route is reachable,
-   but no cost can be determined, then this step should be skipped
-   (equivalently, consider all routes to have equal costs).
+   but no cost can be determined, that route should remain in
+   consideration, i.e. it is not considered to be less-preferred.
+   (Some implementations may choose to render this issue 
+   moot by ensuring a cost can always be determined, by applying
+   a default value for routes that otherwise would have no cost. The 
+   details of such a strategy are beyond the scope of this document.)
 {: tiebreak}
 
 > This is also described in the following procedure.
@@ -4472,6 +4476,8 @@ Verson 01:
   is added to a route in flight. This was found to not be universally
   implemented in practice, and its removal poses no interoperability
   concerns. (Issue #83)
+  
+- Tighten up "no cost can be determined" rule in tie-breakers. (Issue #90)
 
 - Clarify that detection of an AS loop is a semantic error, not a 
   syntax error in the AS_PATH, despite use of an error code that 
