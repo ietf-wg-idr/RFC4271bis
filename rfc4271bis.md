@@ -3,7 +3,7 @@ title: "A Border Gateway Protocol 4 (BGP-4)"
 abbrev: BGP-4
 docname: draft-ietf-idr-bgp4-rfc4271bis-01
 category: std
-date: 2025
+date: 2026
 
 obsoletes: 4271, 6608, 8212, 9687
 
