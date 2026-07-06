@@ -83,6 +83,7 @@ informative:
   RFC7964:
   RFC8212:
   RFC9687:
+  I-D.ietf-idr-bgp-issues:
 
   IS10747:
     title: "Information Processing Systems - Telecommunications and Information Exchange between Systems - Protocol for Exchange of Inter-domain Routeing Information among Intermediate Systems to Support Forwarding of ISO 8473 PDUs"
@@ -4430,7 +4431,10 @@ helpful review of this document.
 
 This section describes significant technical changes between the present
 specification and RFC 4271. In addition, RFC 4271 contains a comparison
-between that specification and older BGP specifications.
+between that specification and older BGP specifications. Readers
+interested in details about the evolution of RFC 4271 should also
+consider consulting {{I-D.ietf-idr-bgp-issues}}, which "records the
+issues discussed and the consensus reached" during development. 
 
 Verson 01:
 
@@ -4459,6 +4463,8 @@ Verson 01:
 
 - Removed a bullet from "information reduction" subsection that 
   related to use of AS_SETs. (Issue #95, partial, issue remains open)
+  
+- Add an informative reference to I-D.ietf-idr-bgp-issues. (Issue #101)
 
 - Clarify that detection of an AS loop is a semantic error, not a 
   syntax error in the AS_PATH, despite use of an error code that 
