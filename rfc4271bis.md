@@ -811,7 +811,7 @@ following values defined:
 |-------|-----------------------------------------------------|
 | 1     |    AS_SET: unordered set of ASes a route in the UPDATE message has traversed                     |
 | 2     |    AS_SEQUENCE: ordered set of ASes a route in the UPDATE message has traversed                 |
-{: title="AS_PATH Segment Type Values"}
+{: #aspath_segtypes title="AS_PATH Segment Type Values"}
 
 > The path segment length is a 1-octet length field,
   containing the number of ASes (not the number of octets) in
@@ -4466,6 +4466,11 @@ Verson 01:
   
 - Add an informative reference to I-D.ietf-idr-bgp-issues. (Issue #101)
 
+- Mandate that ORIGIN values 3-255 must never be sent. RFC 7606 already
+  says what to do if they are received (treat-as-withdraw). (Issue #102)
+  
+- Add IANA registry for AS_PATH segment types. (Issue #103)
+
 - Clarify that detection of an AS loop is a semantic error, not a 
   syntax error in the AS_PATH, despite use of an error code that 
   includes the word "malformed". (Issue #110)
@@ -4692,6 +4697,24 @@ the following UPDATE Message Error subcodes:
 RFC 6608 created the registry "BGP Finite State Machine Error Subcodes".
 IANA is requested to update the reference in that registry (both overall,
 and individual code points) to this document.
+
+## AS_PATH Segment Types
+
+IANA is requested to create a registry called "BGP AS_PATH Segment Types"
+within the "Border Gateway Protocol (BGP) Parameters" group. The allocation
+policy is Standards Action.
+
+Values 1 and 2 are defined in {{aspath_segtypes}}. The values 3 and 4,
+defined in {{RFC5065}} are also included. (Note that it is not an error
+that the order of SET and SEQUENCE are reversed between the respective
+types.)
+
+| Name  |  Value | Reference | 
+|-------|-----------------------------------------------------|
+| AS_SET  | 1 |  This Document |
+| AS_SEQUENCE | 2 | This Document |
+| AS_CONFED_SEQUENCE | 3 | {{RFC5065}} |
+| AS_CONFED_SET | 4 | {{RFC5065}} |
 
 ## References to BGP Specification
 
