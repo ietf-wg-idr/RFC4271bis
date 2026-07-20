@@ -1088,10 +1088,10 @@ NOT be set back to 0 by the current AS.  Unrecognized optional
 non-transitive attributes MUST be quietly ignored and not passed along to
 other BGP peers.
 
-New, optional transitive attributes MAY be attached to the path by
+Optional transitive attributes MAY be attached to the path by
 the originator or by any other BGP speaker in the path.  The rules 
-for attaching new optional non-transitive attributes will depend on the
-nature of the specific attribute.  The documentation of each new
+for attaching optional non-transitive attributes will depend on the
+nature of the specific attribute.  The documentation of each
 optional non-transitive attribute will be expected to include such rules
 (the description of the MULTI_EXIT_DISC attribute gives an example). 
 All optional attributes (both transitive and non-transitive), MAY be
