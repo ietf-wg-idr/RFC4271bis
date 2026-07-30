@@ -1,58 +1,32 @@
 # Welcome!
 
-This repo contains our effort to produce a Full Standard document for BGP, replacing RFC4271.
+This repo contains the IDR working group's effort to produce a Full Standard document for BGP, replacing RFC4271. [John Scudder](mailto:jgs@hpe.com) is the current editor for the project.
 
-Here is our to-do list, plus the people working on each item. 
-There are topics that we've agreed to include (Committed), in discussion, 
-and topics that we've agreed should not be included (but could be referenced).
+## Goals, Background, WG Discussion
 
-We've agreed that we do not want to try to boil the ocean and want the smallest change that gets us to a full standard.
+- [Presentation at IETF-123](https://datatracker.ietf.org/meeting/123/materials/slides-123-idr-making-bgp-an-internet-standard-rfc4271bis-00)
+- [Presentation at IETF-124](https://datatracker.ietf.org/meeting/124/materials/slides-124-idr-rfc4271bis-update-00)
+- [Presentation at IETF-126](https://datatracker.ietf.org/meeting/126/materials/slides-126-idr-revised-slides-for-rfc4271bis-01-00)
 
-# Committed
-## Errata
-These are listed by errata ID.  Please use one pull request per errata.
-- 150 (tli)
-- 1633 (tli)
-- 2838 (tli)
-- 3264 (tli)
-- 3459 (tli)
-- 3464 (tli)
-- 3809 (tli)
-- 4493 (tli)
-- 4496 (tli)
-- 5000 (tli)
-- 5001 (tli)
-- 5369 (tli)
-- 5421 (tli)
-- 5766 (tli)
-- 6256 (tli)
-- 6498 (tli)
-- 8406 (jgs)
+The slides and other WG materials provide full context, but at a high level our goal is to meet the requirements from BCP 9 for Full Standard (see the IETF-123 slides), with as little scope creep as we can manage. That having been said, some creep has been hard to avoid. Major factors include:
 
+- It's not possible to get approval for a Full Standard that doesn't include IPv6 support. This means either advancing (at minimum) RFCs 2545, 4760, and 5492 as independent documents too, or merging them into the base spec. 
+- It's at least highly desirable, if not mandatory, to update the finite state machine to incorporate the various state machine updates that have been done in other RFCs, such as 4724.
 
-# In discussion
-- RFC 4724 – Graceful restart
-- RFC 6286 – BGP identifier
-- RFC 6608 – New FSM error codes
-- RFC 6793 – 4 Octet AS
-- RFC 7606 – Error handling
-- RFC 7607 – AS 0 handling
-- RFC 7705 - Autonomous System Migration Mechanisms and Their Effects on the BGP AS_PATH Attribute
-- RFC 8212 – Default External BGP (EBGP) Route Propagation Behavior without Policies
-- RFC 8654 – Change to allow Extended BGP message size (65,535) for all messages except OPEN and KEEPALIVE
-- RFC 9072 – Extended option
-- RFC 9687 – Send Hold timer
-- RFC4724
-- RFC6793
-- RFC7606
-- RFC9072
-- RFC9687
-- capabilities
-- add paths
-- multiprotocol? (needed for ipv6)
-- deprecate as-set/confed-set.
-- reflection
-- confederations? 
-- timer updates for mrai/maoi?
+## How to Help
 
-# Rejected
+We are currently managing our work through the Issues. Ways to contribute:
+
+### Contribute 
+
+- Claim an issue to work on. Use the "assign yourself" link to claim it. Please also add a comment indicating you're claiming it. If possible, include a guesstimate for your timeline.
+- Please use one pull request per issue.
+
+### Review
+
+- Review the issues and comment as needed. Some of the issues need more WG input to move forward.
+- If you aren't able to contribute a PR, but are willing to be a reviewer, add a comment volunteering as a reviewer. 
+
+### Advise
+
+- If you have suggestions about how I can manage our GitHub based workflow better, contact me at [jgs@hpe.com](mailto:jgs@hpe.com).
