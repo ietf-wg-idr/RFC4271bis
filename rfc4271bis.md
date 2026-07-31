@@ -1,11 +1,11 @@
 ---
 title: "A Border Gateway Protocol 4 (BGP-4)"
 abbrev: BGP-4
-docname: draft-ietf-idr-bgp4-rfc4271bis-01
+docname: draft-ietf-idr-bgp4-rfc4271bis-02
 category: std
 date: 2026
 
-obsoletes: 4271, 6608, 8212, 9687
+obsoletes: 4271, 6286, 6608, 8212, 9687
 
 stand_alone: yes
 pi: 
@@ -4436,17 +4436,32 @@ helpful review of this document.
 This section describes significant technical changes between the present
 specification and RFC 4271. In addition, RFC 4271 contains a comparison
 between that specification and older BGP specifications. Readers
-interested in details about the evolution of RFC 4271 should also
+interested in the evolution of RFC 4271 should also
 consider consulting {{I-D.ietf-idr-bgp-issues}}, which "records the
 issues discussed and the consensus reached" during development. 
 
-Verson 01:
+## Version 00: 
+
+- Integrated all verified errata.
+
+- Converted source to Markdown format.
+
+## Version 01:
 
 - Integrated RFC 6286, "Autonomous-System-Wide Unique BGP Identifier 
-  for BGP-4". (Issue #16)
+  for BGP-4". This also obsoletes RFC 6286. (Issue #16)
 
 - Integrated RFC 6608, "Subcodes for BGP Finite State Machine Error".
-  (Issue #17)
+  This also obsoletes RFC 6608. (Issue #17)
+  
+- Added a pointer to RFC 7705 ("Autonomous System Migration Mechanisms 
+  and Their Effects on the BGP AS_PATH Attribute"). (Issue #21)
+  
+- Merge RFC 8212 ("Default EBGP Route Propagation Behavior without 
+  Policies"). This also obsoletes RFC 8212. (Issue #22)
+  
+- Merge RFC 9687 ("Border Gateway Protocol 4 (BGP-4) Send Hold Timer")
+  This also obsoletes RFC 9687. (Issue #25)
 
 - Address IANA review comments related to IANA Considerations section.
   (Issue #54)
@@ -4458,10 +4473,15 @@ Verson 01:
   The roadmap section is a work in progress, but there's something
   there now, at least. (Issue #58, still in progress)
   
+- Change from "trailing bits are irrelevant" to "trailing bits MUST be
+  zero". (Issue #63)
+  
 - Removed the requirement that Partial must be set if an attribute 
   is added to a route in flight. This was found to not be universally
   implemented in practice, and its removal poses no interoperability
   concerns. (Issue #83)
+  
+- SHOULD prepend -> MUST prepend. (Issue #84)
   
 - Tighten up "no cost can be determined" rule in tie-breakers. (Issue #90)
 
@@ -4474,6 +4494,8 @@ Verson 01:
   says what to do if they are received (treat-as-withdraw). (Issue #102)
 
 - Add IANA registry for AS_PATH segment types. (Issue #103)
+
+- Fix HoldTimer description in OpenConfirm Event 26. (Issue #109)
 
 - Clarify that detection of an AS loop is a semantic error, not a 
   syntax error in the AS_PATH, despite use of an error code that 
