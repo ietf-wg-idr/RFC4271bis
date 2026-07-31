@@ -17,6 +17,10 @@ The slides and other WG materials provide full context, but at a high level our 
 
 We are currently managing our work through the Issues. Ways to contribute:
 
+### Suggest
+
+- Is something missing? Open an issue!
+  
 ### Contribute 
 
 - Claim an issue to work on. Use the "assign yourself" link to claim it. Please also add a comment indicating you're claiming it. If possible, include a guesstimate for your timeline.
