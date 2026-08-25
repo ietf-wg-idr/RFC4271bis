@@ -82,6 +82,7 @@ informative:
   RFC7705:
   RFC7964:
   RFC8212:
+  RFC8654:
   RFC9687:
   I-D.ietf-idr-bgp-issues:
 
@@ -272,6 +273,11 @@ time of writing at this document's IETF Datatracker page.
 
 ## Core Extensions
 
+Extensions listed in this section form part of the base BGP protocol at time
+of writing. Because the document set that is considered core will change over
+time, readers should consult TBD_STD_NUMBER for the current list of those 
+documents that form part of the standard.
+
 {{RFC4760}}: 
   : This document extends BGP to provide multiprotocol support.
     The original BGP protocol, documented in the present specification,
@@ -285,6 +291,20 @@ sections being renumbered, and I would prefer that Section 9 remain Section
 here that's relevant, like a short discussion of what's changed since 4271
 (not a changelog though... an overview?) and/or a discussion of why it
 should be an Internet Standard. -->
+
+## Other Extensions
+
+Many other extensions have been standardized. Some are referenced from 
+this document, where they interact with this specification in ways that
+the reader should be alerted of. This is not a complete listing of BGP
+extensions even at time of writing.
+
+{{RFC8654}}:
+  : This document extends BGP to provides message sizes of up to
+    65,535 bytes, increased from the 4,096 bytes specified here. 
+    Although it is considered optional for purposes of the core 
+    protocol, some other extensions either strongly advise, or require,
+    its use.
 
 # Summary of Operation
 
@@ -490,11 +510,12 @@ specified in BGP updates (see {{nexthop}}).
 
 This section describes message formats used by BGP.
 
-BGP messages are sent over TCP connections.  A message is processed
-only after it is entirely received.  The maximum message size is 4096
-octets.  All implementations are required to support this maximum
-message size.  The smallest message that may be sent consists of a
-BGP header without a data portion (19 octets).
+BGP messages are sent over TCP connections.  A message is processed only
+after it is entirely received.  The maximum message size is 4096 octets
+(although {{RFC8654}}, if used, modifies the maximum for message types
+other than OPEN and KEEPALIVE).  All implementations are required to
+support this maximum message size.  The smallest message that may be
+sent consists of a BGP header without a data portion (19 octets).
 
 All multi-octet fields are in network byte order.
 
@@ -534,7 +555,8 @@ Length:
     depending on the message type.  "padding" of extra data after
     the message is not allowed.  Therefore, the Length field MUST
     have the smallest value required, given the rest of the
-    message.
+    message. ({{RFC8654}}, if used, modifies the maximum for 
+    message types other than OPEN and KEEPALIVE.)
 
 Type:
   : This 1-octet unsigned integer indicates the type code of the
@@ -1408,7 +1430,8 @@ be set to Connection Not Synchronized.
 If at least one of the following is true:
 
 - if the Length field of the message header is less than 19 or
-  greater than 4096, or
+  greater than 4096 (the upper limit is modified by {{RFC8654}}, if
+  used), or
 
 - if the Length field of an OPEN message is less than the minimum
   length of the OPEN message, or
@@ -4507,6 +4530,15 @@ issues discussed and the consensus reached" during development.
   Administrative Events section. The old text said "section" where
   it really meant "field". Cleaned up the surrounding words a bit, too.
   (Issue #118)
+  
+## Version 02
+
+- Add references to RFC 6793 ("BGP Support for Four-Octet Autonomous 
+  System (AS) Number Space") from all the parts of the spec that it
+  touches. (Issue #18)
+  
+- Add references to RFC 8654 ("Extended Message Support for BGP") from
+  all parts of the spec that it touches. (Issue #23)
 
 # TCP Options that May Be Used with BGP {#tcpopts}
 
