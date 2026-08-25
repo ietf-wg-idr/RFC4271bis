@@ -79,6 +79,7 @@ informative:
   RFC4760:
   RFC5004:
   RFC5065:
+  RFC6793:
   RFC7705:
   RFC7964:
   RFC8212:
@@ -277,6 +278,14 @@ time of writing at this document's IETF Datatracker page.
     The original BGP protocol, documented in the present specification,
     supports only IPv4 routing. Support for RFC 4760 is required in
     order to support IPv6 routing, and other useful features as well.
+    
+{{RFC6793}}:
+  : This document extends BGP to provide support for four octet 
+    autonomous system numbers. The present specification documents
+    only the original two octet format, but references RFC 6793 
+    where relevant. Implementors should be aware that four octet
+    support is considered the preferred mode of operation, while the
+    two octet mode documented here is for backward compatibility.
 
 <!-- Editor's note: This section is here because I moved the Acknowledgements to
 the end, which is the more normal place - but that results in all the
@@ -584,7 +593,7 @@ Version:
 
 My Autonomous System:
   : This 2-octet unsigned integer indicates the Autonomous System
-    number of the sender.
+    number of the sender. (This is modified by {{RFC6793}}.)
  
 Hold Time:
   : This 2-octet unsigned integer indicates the number of seconds
@@ -820,6 +829,7 @@ following values defined:
 
 > The path segment value field contains one or more AS
   numbers, each encoded as a 2-octet length field. 
+  (This is modified by {{RFC6793}}.)
 
 > Usage of this attribute is defined in {{aspath}}.
 
@@ -864,6 +874,7 @@ g) AGGREGATOR (Type Code 7):
    address of the BGP speaker that formed the aggregate route
    (encoded as 4 octets).  This SHOULD be the same address as
    the one used for the BGP Identifier of the speaker.
+   (This is modified by {{RFC6793}}.)
 
    : Usage of this attribute is defined in {{aggregator}}.
 
@@ -1368,6 +1379,11 @@ in updates that are formed by aggregation (see {{aggregating}}).  A
 BGP speaker that performs route aggregation MAY add the AGGREGATOR
 attribute, which SHALL contain its own AS number and IP address.  The
 IP address SHOULD be the same as the BGP Identifier of the speaker.
+
+{{RFC6793}} modifies the format of the AGGREGATOR attribute 
+to support four-octet AS numbers. There is no similar support for
+representation of IP Version 6 addresses in the AGGREGATOR attribute
+currently specified.
 
 # BGP Error Handling {#errorhandling}
 
@@ -4507,6 +4523,12 @@ issues discussed and the consensus reached" during development.
   Administrative Events section. The old text said "section" where
   it really meant "field". Cleaned up the surrounding words a bit, too.
   (Issue #118)
+  
+## Version 02
+
+- Add references to RFC 6793 ("BGP Support for Four-Octet Autonomous 
+  System (AS) Number Space") from all the parts of the spec that it
+  touches. (Issue #18)
 
 # TCP Options that May Be Used with BGP {#tcpopts}
 
