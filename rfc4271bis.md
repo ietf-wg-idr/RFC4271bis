@@ -4533,6 +4533,8 @@ issues discussed and the consensus reached" during development.
   
 ## Version 02
 
+- Bring changelog up to date, including for earlier versions.
+
 - Add references to RFC 6793 ("BGP Support for Four-Octet Autonomous 
   System (AS) Number Space") from all the parts of the spec that it
   touches. (Issue #18)
