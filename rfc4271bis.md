@@ -4535,10 +4535,6 @@ issues discussed and the consensus reached" during development.
 
 - Bring changelog up to date, including for earlier versions.
 
-- Add references to RFC 6793 ("BGP Support for Four-Octet Autonomous 
-  System (AS) Number Space") from all the parts of the spec that it
-  touches. (Issue #18)
-  
 - Add references to RFC 8654 ("Extended Message Support for BGP") from
   all parts of the spec that it touches. (Issue #23)
 
