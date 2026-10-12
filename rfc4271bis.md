@@ -3962,8 +3962,9 @@ proven to cause route loops.
 ~~~~
       for m = all routes still under consideration
           for n = all routes in still under consideration
-              if (cost(n) is lower than cost(m))
-                  remove m from consideration
+              if (cost(n) can be determined and cost(m) can be determined)
+                  if (cost(n) is lower than cost(m))
+                      remove m from consideration
 ~~~~
 
 > In the pseudo-code above, cost(n) is a function that returns
