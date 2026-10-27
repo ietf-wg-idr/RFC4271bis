@@ -1,11 +1,12 @@
 ---
 title: "A Border Gateway Protocol 4 (BGP-4)"
 abbrev: BGP-4
-docname: draft-ietf-idr-bgp4-rfc4271bis-02
+docname: draft-ietf-idr-bgp4-rfc4271bis-03
 category: std
 date: 2026
 
 obsoletes: 4271, 6286, 6608, 8212, 9687
+updates: 7606
 
 stand_alone: yes
 pi: 
@@ -76,13 +77,19 @@ informative:
   RFC4271:
   RFC4272:
   RFC4456:
+  RFC4724:
   RFC4760:
   RFC5004:
   RFC5065:
+  RFC6514:
   RFC6793:
+  RFC7117:
+  RFC7432:
+  RFC7606:
   RFC7705:
   RFC7964:
   RFC8212:
+  RFC8654:
   RFC9687:
   I-D.ietf-idr-bgp-issues:
 
@@ -112,7 +119,8 @@ the concept of network "class" within BGP.  BGP-4 also introduces
 mechanisms that allow aggregation of routes, including aggregation of
 AS paths.
 
-This document obsoletes RFC 4271.
+This document obsoletes RFC 4271 and many other RFCs. It updates
+RFC 7606 by subsuming its core functionality.
 
 --- middle
 
@@ -151,7 +159,7 @@ BGP-4 to allow support for advertising routing information of address
 families beyond IP Version 4 as documented in the present specification, and
 IP Version 6 in particular.
 
-## Definition of Commonly Used Terms
+## Definition of Commonly Used Terms {#definitions}
 
 This section provides definitions for terms that have a specific
 meaning to the BGP protocol and that are used throughout the text.
@@ -163,6 +171,12 @@ Adj-RIB-In:
 Adj-RIB-Out: 
   : The Adj-RIBs-Out contain the routes for advertisement to specific 
     peers by means of the local speaker's UPDATE messages.
+    
+AFI:
+  : Address Family Identifier, as defined in {{RFC4760}}. Often used
+    in conjunction with SAFI (q.v.) as "AFI/SAFI", which collectively
+    are, in effect, the type code that defines an NLRI encoding in 
+    RFC 4760.
 
 Autonomous System (AS): 
   : The classic definition of an Autonomous System is a set of routers
@@ -221,16 +235,36 @@ Import Policy:
     the Import Policy results in the routes that will be considered in
     the Decision Process by the local BGP speaker.
 
+Legacy IPv4 Encoding:
+  : Although this protocol can encode information about many different
+    address families, IPv4 (uniquely among all address families) has two
+    encodings available. The encoding specified in this document, which
+    places IPv4 prefixes in the Withdrawn Routes or Network Layer 
+    Reachability Information fields of the UPDATE message, is referred
+    to as the "legacy IPv4 encoding". Its use is discouraged; 
+    the preferred encoding is that specified in {{RFC4760}}.
+   
 Loc-RIB:
   : The Loc-RIB contains the routes that have been selected by the
     local BGP speaker's Decision Process.
 
+MP_REACH_NLRI:
+MP_UNREACH_NLRI:
+  : Path attributes defined in {{RFC4760}} to allow NLRI of any 
+    AFI/SAFI (q.v.) to be announced and withdrawn, as well as 
+    next hops of any AFI/SAFI.
+    
 NLRI:
   : Network Layer Reachability Information. When used without 
     modification, one of the IP address prefixes carried in the NLRI 
     field of an UPDATE message. When the NLRI field itself is intended, 
     it is written as such.
 
+Recognized:
+  : A path attribute, or other message type or part identified by a type
+    code, is said to be "recognized" if the local implementation
+    contains support for processing it according to its type code.
+    
 Route:
   : A unit of information that pairs a set of destinations with the
     attributes of a path to those destinations.  The set of
@@ -242,10 +276,24 @@ Route:
 
 RIB:
   : Routing Information Base.
+  
+SAFI:
+  : Subsequent Address Family Identifier, as defined in {{RFC4760}}. 
+    Often used in conjunction with AFI (q.v.) as "AFI/SAFI", which
+    collectively are, in effect, the type code that defines an NLRI
+    encoding in RFC 4760.
 
 Unfeasible route:
   : A previously advertised feasible route that is no longer available
     for use.
+    
+Unrecognized:
+  : See Recognized.
+    
+Well-known:
+  : A path attribute is called "well-known" if its Optional bit is set
+    to 0, as discussed in {{updatefmt}}. There are 5 such attributes,
+    ORIGIN, AS_PATH, NEXT_HOP, LOCAL_PREF, and ATOMIC_AGGREGATE.
 
 ##  Specification of Requirements
 
@@ -273,11 +321,20 @@ time of writing at this document's IETF Datatracker page.
 
 ## Core Extensions
 
+Extensions listed in this section form part of the base BGP protocol at time
+of writing. Because the document set that is considered core will change over
+time, readers should consult TBD_STD_NUMBER for the current list of those 
+documents that form part of the standard.
+
 {{RFC4760}}: 
   : This document extends BGP to provide multiprotocol support.
     The original BGP protocol, documented in the present specification,
     supports only IPv4 routing. Support for RFC 4760 is required in
     order to support IPv6 routing, and other useful features as well.
+    Even though RFC 4760 remains a separate document, AFI, SAFI, and
+    the MP_REACH_NLRI and MP_UNREACH_NLRI attributes are discussed 
+    herein because they are integral to the error handling procedures
+    in {{errorhandling}}.
     
 {{RFC6793}}:
   : This document extends BGP to provide support for four octet 
@@ -294,6 +351,20 @@ sections being renumbered, and I would prefer that Section 9 remain Section
 here that's relevant, like a short discussion of what's changed since 4271
 (not a changelog though... an overview?) and/or a discussion of why it
 should be an Internet Standard. -->
+
+## Other Extensions
+
+Many other extensions have been standardized. Some are referenced from 
+this document, where they interact with this specification in ways that
+the reader should be alerted of. This is not a complete listing of BGP
+extensions even at time of writing.
+
+{{RFC8654}}:
+  : This document extends BGP to provides message sizes of up to
+    65,535 bytes, increased from the 4,096 bytes specified here. 
+    Although it is considered optional for purposes of the core 
+    protocol, some other extensions either strongly advise, or require,
+    its use.
 
 # Summary of Operation
 
@@ -371,10 +442,11 @@ duration of the connection, or (b) make use of the Route Refresh
 extension {{?RFC2918}}.
 
 KEEPALIVE messages are normally sent periodically to ensure that the
-connection is live.  NOTIFICATION messages are sent in response to
-errors or special conditions.  If a connection encounters an error
-condition, a NOTIFICATION message is sent, and the connection is
-closed.
+connection is live.  NOTIFICATION messages are sent in response to fatal
+errors or special conditions.  If a connection encounters a fatal error
+condition, a NOTIFICATION message is sent, and the connection is closed.
+For error conditions classified as non-fatal, less extreme mitigations
+are applied.
 
 A peer in a different AS is referred to as an external peer, while a
 peer in the same AS is referred to as an internal peer.  Internal BGP
@@ -424,7 +496,7 @@ that a route has been withdrawn from service:
 {: style="format %c)"}
 
 * the IP prefix that expresses the destination for a previously
-   advertised route can be advertised in the WITHDRAWN ROUTES
+   advertised route can be advertised in the Withdrawn Routes
    field in the UPDATE message, thus marking the associated route
    as being no longer available for use,
 
@@ -499,11 +571,12 @@ specified in BGP updates (see {{nexthop}}).
 
 This section describes message formats used by BGP.
 
-BGP messages are sent over TCP connections.  A message is processed
-only after it is entirely received.  The maximum message size is 4096
-octets.  All implementations are required to support this maximum
-message size.  The smallest message that may be sent consists of a
-BGP header without a data portion (19 octets).
+BGP messages are sent over TCP connections.  A message is processed only
+after it is entirely received.  The maximum message size is 4096 octets
+(although {{RFC8654}}, if used, modifies the maximum for message types
+other than OPEN and KEEPALIVE).  All implementations are required to
+support this maximum message size.  The smallest message that may be
+sent consists of a BGP header without a data portion (19 octets).
 
 All multi-octet fields are in network byte order.
 
@@ -543,7 +616,8 @@ Length:
     depending on the message type.  "padding" of extra data after
     the message is not allowed.  Therefore, the Length field MUST
     have the smallest value required, given the rest of the
-    message.
+    message. ({{RFC8654}}, if used, modifies the maximum for 
+    message types other than OPEN and KEEPALIVE.)
 
 Type:
   : This 1-octet unsigned integer indicates the type code of the
@@ -649,13 +723,15 @@ Autonomous Systems.  By applying rules discussed below, routing
 information loops and some other anomalies may be detected and
 removed from inter-AS routing.
 
-An UPDATE message is used to advertise feasible routes that share
-common path attributes to a peer, or to withdraw multiple unfeasible
-routes from service (see {{routes_adv_store}}).  An UPDATE message MAY simultaneously
-advertise a feasible route and withdraw multiple unfeasible routes
-from service. ({{RFC4760}} specifies an alternate encoding to advertise
-and withdraw routes, and can be used to support address families other than
-IP Version 4.)
+An UPDATE message is used to advertise feasible routes that share common
+path attributes to a peer, or to withdraw multiple unfeasible routes
+from service (see {{routes_adv_store}}).  An UPDATE message MUST NOT
+simultaneously advertise a feasible route and withdraw unfeasible routes
+from service.  However, in order to preserve backward compatibility, an
+implementation SHOULD still be prepared to receive an UPDATE message
+that simultaneously advertises and withdraws routes. ({{RFC4760}}
+specifies an alternate encoding to advertise and withdraw routes, and
+can be used to support address families other than IP Version 4.)
 
 The UPDATE message always includes the fixed-size BGP
 header, and also includes the other fields, as shown below (note,
@@ -683,7 +759,7 @@ Withdrawn Routes Length:
    be determined, as specified below.
 
   : A value of 0 indicates that no routes are being withdrawn from
-   service, and that the WITHDRAWN ROUTES field is not present in
+   service, and that the Withdrawn Routes field is not present in
    this UPDATE message.
 
 Withdrawn Routes:
@@ -915,25 +991,23 @@ attributes.  All path attributes contained in a given UPDATE message
 apply to all destinations carried in the NLRI field of the UPDATE
 message.
 
-
 An UPDATE message can list multiple routes that are to be withdrawn
 from service.  Each such route is identified by its destination
 (expressed as an IP prefix), which unambiguously identifies the route
 in the context of the BGP speaker - BGP speaker connection to which
 it has been previously advertised.
 
+When an UPDATE message advertises only routes that are to be
+withdrawn from service, the message will not include path attributes or
+Network Layer Reachability Information. Conversely, when an UPDATE
+message advertises only a feasible route, the Withdrawn Routes field
+will not be present (Withdrawn Routes Length will be equal to 0).
 
-An UPDATE message might advertise only routes that are to be
-withdrawn from service, in which case the message will not include
-path attributes or Network Layer Reachability Information.
-Conversely, it may advertise only a feasible route, in which case the
-WITHDRAWN ROUTES field need not be present.
-
-An UPDATE message SHOULD NOT include the same address prefix in the
-WITHDRAWN ROUTES and Network Layer Reachability Information fields.
-However, a BGP speaker MUST be able to process UPDATE messages in
-this form.  A BGP speaker SHOULD treat an UPDATE message of this form
-as though the WITHDRAWN ROUTES do not contain the address prefix.
+For backward compatibility, a BGP speaker MUST be able to process UPDATE
+messages that include the same address prefix in the Withdrawn Routes
+and Network Layer Reachability Information fields.  A BGP speaker MUST
+treat an UPDATE message of this form as though the Withdrawn Routes do
+not contain the address prefix.
 
 ## KEEPALIVE Message Format {#keepalivefmt}
 
@@ -954,7 +1028,7 @@ length of 19 octets.
 
 ## NOTIFICATION Message Format {#notifyfmt}
 
-A NOTIFICATION message is sent when an error condition is detected.
+A NOTIFICATION message is sent when a fatal error condition is detected.
 The BGP connection is closed immediately after it is sent.
 
 In addition to the fixed-size BGP header, the NOTIFICATION message
@@ -1025,17 +1099,20 @@ UPDATE Message Error subcodes:
 |-------|---------------------------------|
 | 0     | Unspecific                      |
 | 1     | Malformed Attribute List        |
-| 2     | Unrecognized Well-known Attribute |
-| 3     | Missing Well-known Attribute    |
-| 4     | Attribute Flags Error           |
-| 5     | Attribute Length Error          |
-| 6     | Invalid ORIGIN Attribute        |
+| 2     | Unrecognized Well-known Attribute (deprecated)|
+| 3     | Missing Well-known Attribute (deprecated)     |
+| 4     | Attribute Flags Error (deprecated)            |
+| 5     | Attribute Length Error (deprecated)           |
+| 6     | Invalid ORIGIN Attribute (deprecated)         |
 | 7     | [Deprecated - see Appendix A]   |
-| 8     | Invalid NEXT_HOP Attribute      |
-| 9     | Optional Attribute Error        |
+| 8     | Invalid NEXT_HOP Attribute (deprecated)       |
+| 9     | Optional Attribute Error (deprecated)         |
 | 10    | Invalid Network Field           |
-| 11    | Malformed AS_PATH               |
+| 11    | Malformed AS_PATH (deprecated)                |
 {: title="UPDATE Message Error subcodes"}
+
+Subcodes 2-6, 8, 9, and 11 were defined by RFC 4271 but are no longer
+generated by the error handling procedures specified in this document.
 
 Finite State Machine Error Subcodes:
 
@@ -1115,7 +1192,7 @@ attributes within UPDATE messages that are out of order.
 
 The same attribute (attribute with the same type) cannot appear more
 than once within the Path Attributes field of a particular UPDATE
-message.
+message. <!-- xxx possibly make the weak 'cannot' into a MUST NOT -->
 
 The mandatory category refers to an attribute that MUST be present in
 both IBGP and EBGP exchanges if NLRI are contained in the UPDATE
@@ -1137,7 +1214,8 @@ discretionary, required, or disallowed in certain contexts.
 ## Path Attribute Usage
 
 The usage of each BGP path attribute is described in the following
-clauses.
+clauses. Refer to {{paerrs}} for details regarding error handling
+when processing path attributes.
 
 ### ORIGIN {#origin}
 
@@ -1337,10 +1415,7 @@ its Decision Process (see {{phase1}}).
 
 A BGP speaker MUST NOT include this attribute in UPDATE messages it
 sends to external peers, except in the case of BGP Confederations
-{{?RFC5065}}.  If it is contained in an UPDATE message that is received
-from an external peer, then this attribute MUST be ignored by the
-receiving speaker, except in the case of BGP Confederations
-{{RFC5065}}.
+{{?RFC5065}}.  
 
 ### ATOMIC_AGGREGATE {#atomic}
 
@@ -1388,14 +1463,22 @@ currently specified.
 # BGP Error Handling {#errorhandling}
 
 This section describes actions to be taken when errors are detected
-while processing BGP messages.
+while processing BGP messages. In states other than Established,
+any error is treated as fatal. In Established state, some errors 
+are treated as non-fatal; this is discussed in more detail in
+{{updatemsgerr}}.
 
-When any of the conditions described here are detected, a
+## Fatal Error Handling {#fatalerrors}
+
+When any of the conditions described here are detected, for any
+Message Header error, or an error in any message type other than the 
+UPDATE message, a
 NOTIFICATION message, with the indicated Error Code, Error Subcode,
 and Data fields, is sent, and the BGP connection is closed (unless it
 is explicitly stated that no NOTIFICATION message is to be sent and
 the BGP connection is not to be closed).  If no Error Subcode is
-specified, then a zero MUST be used.
+specified, then a zero MUST be used. For errors affecting the UPDATE
+message, see further details in {{updatemsgerr}}.
 
 The phrase "the BGP connection is closed" means the TCP connection
 has been closed, the associated Adj-RIB-In has been cleared, and all
@@ -1424,7 +1507,8 @@ be set to Connection Not Synchronized.
 If at least one of the following is true:
 
 - if the Length field of the message header is less than 19 or
-  greater than 4096, or
+  greater than 4096 (the upper limit is modified by {{RFC8654}}, if
+  used), or
 
 - if the Length field of an OPEN message is less than the minimum
   length of the OPEN message, or
@@ -1488,46 +1572,288 @@ but is malformed, then the Error Subcode MUST be set to 0
 
 ##  UPDATE Message Error Handling {#updatemsgerr}
 
-All errors detected while processing the UPDATE message MUST be
-indicated by sending the NOTIFICATION message with the Error Code
-UPDATE Message Error.  The error subcode elaborates on the specific
-nature of the error.
+Because resets of sessions that have reached Established state and
+exchanged many routes can be costly to recover from and have far-reaching
+impact, other error-handling approaches are used when feasible; these are
+detailed below.
+
+An implementation MAY offer a configuration option to disable this more
+lenient error-handling and revert to the reset behavior that was
+specified in {{RFC4271}}. If such a configuration option is offered, it
+MUST be disabled by default (i.e. the behavior specified below must be
+enabled by default). Furthermore, if offered, it is suggested that its
+scope be limited (for example, to a given AFI/SAFI or a given session)
+by default.
+
+In the procedures below, reference is made to AFI, SAFI, MP_REACH_NLRI,
+and MP_UNREACH_NLRI. These are specified in {{RFC4760}}; additionally,
+brief definitions can be found in {{definitions}}. Although they are
+defined outside this specification, they are discussed here because 
+they are integral to the procedures defined in this section.
+
+### Error-Handling Approaches {#errapproaches}
+
+In this document, we refer to four different approaches to handle path
+attribute errors.  They are as follows (listed in order, from the one with
+the "strongest" action to the one with the "weakest" action). Actions
+other than "session reset" apply only to errors found in an UPDATE
+message.
+
+- Session reset: A fatal error. A NOTIFICATION is sent and the session
+terminated, as described in {{fatalerrors}}.
+
+- AFI/SAFI disable: Section 7 of {{RFC4760}} allows a BGP speaker that
+detects an error in a message for a given AFI/SAFI to optionally "ignore
+all the subsequent routes with that AFI/SAFI received over that
+session".  We refer to this as "disabling a particular AFI/SAFI" or
+"AFI/SAFI disable".
+   <!-- XXX but we haven't introduced the concept of afi/safi -->
+   <!-- XXX revise this -->
+
+- Treat-as-withdraw: In this approach, the UPDATE message containing the
+path attribute in question MUST be treated as though all contained
+routes had been withdrawn just as if they had been listed in the
+Withdrawn Routes field (or in the MP_UNREACH_NLRI attribute if
+appropriate) of the UPDATE message, thus causing them to be removed from
+the Adj-RIB-In according to the procedures of {{updatemsg}}. For this
+approach to be used, the NLRI need to be successfully parsed; this is
+discussed in more detail in {{nlrisyntax}}.
+
+- Attribute discard: In this approach, the malformed path attribute MUST
+be discarded and the UPDATE message continues to be processed. This
+approach MUST NOT be used except in the case of an attribute that has no
+effect on route selection or installation.
+
+### Path Attribute Length Fields
+
+There are two error cases in which the Total Attribute Length value can
+conflict with the enclosed path attributes, which themselves carry
+length values:
+
+- In the first case, the length of the last encountered path attribute
+would cause the Total Attribute Length to be exceeded when parsing the
+enclosed path attributes.
+
+- In the second case, fewer than three octets remain (or fewer than four
+octets, if the Attribute Flags field has the Extended Length bit set)
+when beginning to parse the attribute.  That is, this case exists if
+there remains unconsumed data in the path attributes but yet
+insufficient data to encode a single minimum- sized path attribute.
+
+In either of these cases, an error condition exists and the "treat-
+as-withdraw" approach MUST be used (unless some other, more severe error
+is encountered dictating a stronger approach), and the Total Attribute
+Length MUST be relied upon to enable the beginning of the NLRI field to
+be located.
+
+For all path attributes other than those specified as having an
+attribute length that may be zero, it SHALL be considered a syntax error <!-- xxx is this needed? as clear as possible? -->
+for the attribute to have a length of zero.  Of the path attributes
+considered in this specification, only AS_PATH and ATOMIC_AGGREGATE can
+validly have an attribute length of zero.
+
+### Parsing of Network Layer Reachability Information (NLRI) Fields {#nlrisyntax}
+
+#### Encoding NLRI
+
+To facilitate the determination of the NLRI field in an UPDATE message
+with a malformed attribute:
+
+- The MP_REACH_NLRI or MP_UNREACH_NLRI attribute (if present) SHALL be
+encoded as the very first path attribute in an UPDATE message.
+
+- An UPDATE message MUST NOT contain more than one of the following:
+non-empty Withdrawn Routes field, non-empty Network Layer Reachability
+Information field, MP_REACH_NLRI attribute, and MP_UNREACH_NLRI
+attribute. <!-- xxx make sure that the field restrictions are reflected
+in the relevant field definitions. -->
+
+Since older BGP speakers might not implement these restrictions, an
+implementation MUST still be prepared to receive these fields in any
+position or combination.
+
+If the legacy IPv4 encoding is used, the NLRI field for the IPv4
+unicast address family is carried immediately following all the
+attributes in an UPDATE message.  When such an UPDATE message is
+received, the location of the NLRI field can be determined using the
+Message Length, Withdrawn Route Length, and Total Attribute Length (when
+they are consistent) carried in the message instead of relying on the
+length of individual attributes in the message.
+
+#### Missing NLRI
+
+{{RFC4724}} specifies an End-of-RIB message (EoR) that can be encoded as
+an UPDATE message that contains only an MP_UNREACH_NLRI attribute that
+encodes no NLRI (it can also be a completely empty UPDATE message in the
+case of the legacy IPv4 encoding).  In all other well-specified cases, an
+UPDATE message either carries only withdrawn routes (either in the
+Withdrawn Routes field or the MP_UNREACH_NLRI attribute) or it
+advertises reachable routes (either in the Network Layer Reachability
+Information field or the MP_REACH_NLRI attribute).
+
+Thus, if an UPDATE message is encountered that does contain path
+attributes other than MP_UNREACH_NLRI and doesn't encode any reachable
+NLRI, we cannot be confident that the NLRI have been successfully
+parsed. For this reason, if any path attribute errors are encountered in
+such an UPDATE message and if any encountered error specifies an
+error-handling approach other than "attribute discard", then the
+"session reset" approach MUST be used.
+
+#### Syntactic Correctness of NLRI Fields
+
+The NLRI field or Withdrawn Routes field SHALL be considered
+"syntactically incorrect" if either of the following is true:
+
+- The length of any of the included NLRI is greater than 32.
+
+- When parsing NLRI contained in the field, the length of the last NLRI
+found exceeds the amount of unconsumed data remaining in the field.
+
+Similarly, an MP_REACH_NLRI or MP_UNREACH_NLRI attribute 
+SHALL be considered to be incorrect if any of the following are true:
+
+- The length of any of the included NLRI is inconsistent with the given
+AFI/SAFI (for example, if an IPv4 NLRI has a length greater than 32 or
+an IPv6 NLRI has a length greater than 128).
+
+- When parsing NLRI contained in the attribute, the length of the last
+NLRI found exceeds the amount of unconsumed data remaining in the
+attribute.
+
+- The attribute flags of the attribute are inconsistent with those
+specified in {{RFC4760}}.
+
+- The length of the MP_UNREACH_NLRI attribute is less than 3, or the
+length of the MP_REACH_NLRI attribute is less than 5.
+
+#### Typed NLRI
+
+Certain address families, for example, MCAST-VPN {{RFC6514}}, MCAST-VPLS
+{{RFC7117}}, and EVPN {{RFC7432}} have NLRI that are typed.  Since
+supported type values within the address family are not expressed in the
+Multiprotocol BGP (MP-BGP) capability {{RFC4760}}, it is possible for a
+BGP speaker to advertise support for the given address family and
+subaddress family while still not supporting a particular type of NLRI
+within that AFI/SAFI.
+
+A BGP speaker advertising support for such a typed address family MUST
+handle routes with unrecognized NLRI types within that address family by
+discarding them, unless the relevant specification for that address
+family specifies otherwise. 
+
+### Rules for Processing UPDATE Messages
+
+An error for which a session reset is specified MUST be indicated by
+sending the NOTIFICATION message with the Error Code UPDATE Message
+Error.  The error subcode elaborates on the specific nature of the
+error.
 
 Error checking of an UPDATE message begins by examining the path
 attributes.  If the Withdrawn Routes Length or Total Attribute Length
 is too large (i.e., if Withdrawn Routes Length + Total Attribute
-Length + 23 exceeds the message Length), then the Error Subcode MUST
-be set to Malformed Attribute List.
+Length + 23 exceeds the message Length), the "session reset" approach
+is used. The Error Subcode MUST be set to Malformed Attribute List.
 
-If any recognized attribute has Attribute Flags that conflict with
-the Attribute Type Code, then the Error Subcode MUST be set to
-Attribute Flags Error.  The Data field MUST contain the erroneous
-attribute (type, length, and value).
+If the value of either the Optional or Transitive bits in the Attribute
+Flags conflicts with their specified values, then the attribute MUST be
+treated as malformed and the "treat-as-withdraw" approach used, unless
+the specification for the attribute mandates different handling for
+incorrect Attribute Flags.
 
-If any recognized attribute has an Attribute Length that conflicts
-with the expected length (based on the attribute type code), then the
-Error Subcode MUST be set to Attribute Length Error.  The Data field
-MUST contain the erroneous attribute (type, length, and value).
+If any attribute is received with its Optional bit clear (i.e., with
+its value set to "well-known"), but is not recognized, the 
+"treat-as-withdraw" approach MUST be used. 
 
-If any of the well-known mandatory attributes are not present, then
-the Error Subcode MUST be set to Missing Well-known Attribute.  The
-Data field MUST contain the Attribute Type Code of the missing,
-well-known attribute.
+Type-specific error handling procedures for attributes specified in this
+document are given in {{paerrs}}. If an optional attribute is
+recognized, then the error handling specified for that attribute must be
+performed.
 
-If any of the well-known mandatory attributes are not recognized,
-then the Error Subcode MUST be set to Unrecognized Well-known
-Attribute.  The Data field MUST contain the unrecognized attribute
-(type, length, and value).
+If the MP_REACH_NLRI attribute or the MP_UNREACH_NLRI {{RFC4760}}
+attribute appears more than once in the UPDATE message, then a
+NOTIFICATION message MUST be sent with the Error Subcode "Malformed
+Attribute List".  If any other attribute (whether recognized or
+unrecognized) appears more than once in an UPDATE message, then all the
+occurrences of the attribute other than the first one SHALL be discarded
+and the UPDATE message will continue to be processed.
 
-If the ORIGIN attribute has an undefined value, then the Error Sub-
-code MUST be set to Invalid Origin Attribute.  The Data field MUST
-contain the unrecognized attribute (type, length, and value).
+The NLRI and Withdrawn Routes fields in the UPDATE message are checked
+for syntactic validity per {{nlrisyntax}}.  If either field is syntactically
+incorrect, then a NOTIFICATION message MUST be sent with the Error
+Subcode Invalid Network Field.  <!-- could cover MP_ _NLRI here too -->
 
-If the NEXT_HOP attribute field is syntactically incorrect, then the
-Error Subcode MUST be set to Invalid NEXT_HOP Attribute.  The Data
-field MUST contain the incorrect attribute (type, length, and value).
-Syntactic correctness means that the NEXT_HOP attribute represents a
-valid IP host address.
+If a prefix in the NLRI field is semantically incorrect (e.g., an
+unexpected multicast IP address), an error SHOULD be logged locally,
+and the prefix SHOULD be ignored. <!-- this is ok as written because it's the *prefix* that's 
+being ignored, so it could never have been accepted to begin with, so
+there's nothing to t-a-w -->
+
+An UPDATE message that contains correct path attributes, but no NLRI,
+SHALL be treated as a valid UPDATE message.
+
+### Error-Handling Procedures for Path Attributes {#paerrs}
+
+The following subsections elaborate on the conditions for error-checking
+various path attributes and specify what approach(es) should be used to
+handle malformations.  It is possible that implementations may apply
+other error checks not contemplated here. If so, the error handling
+approach given here should generally be applied.
+
+#### ORIGIN Error Handling
+<!-- I wanted to just call this subsection "ORIGIN", similarly for
+ the following subsections. But that appeared to give the tooling 
+ fits; apparently it doesn't like duplicate section titles? It's OK
+ to leave it as it is now, but it would be nicer (IMO) if there were
+ a way to revert to the terser title. It's contextualized by the 
+ parent section, after all. -->
+
+The attribute is considered malformed if its length is not 1 or if it
+has an undefined value.
+
+An UPDATE message with a malformed ORIGIN attribute, or with a missing
+ORIGIN attribute, SHALL be handled using the approach of
+"treat-as-withdraw".
+
+#### AS_PATH Error Handling
+
+An AS_PATH is considered malformed if an unrecognized segment type is
+encountered or if it contains a malformed segment.  A segment is
+considered malformed if any of the following are true:
+
+- There is an overrun where the Path Segment Length field of the last
+segment encountered would cause the Attribute Length to be exceeded.
+
+- There is an underrun where after the last successfully parsed segment
+there is only a single octet remaining (that is, there is not enough
+unconsumed data to provide even an empty segment header).
+
+- It has a Path Segment Length field of zero.
+
+An UPDATE message with a malformed AS_PATH attribute, or with a missing
+AS_PATH attribute, SHALL be handled using the approach of 
+"treat-as-withdraw". <!-- but bgpsec changes this -->
+
+If the UPDATE message is received from an external peer, the local
+system MAY check whether the leftmost (with respect to the position of
+octets in the protocol message) AS in the AS_PATH attribute is equal to
+the autonomous system number of the peer that sent the message.  If the
+check determines this is not the case, the attribute MUST be treated as
+malformed and the "treat-as-withdraw" approach used (unless this default
+is overridden by configuration).  This is a case of semantic, not
+syntactic, invalidity.
+
+#### NEXT_HOP Error Handling
+
+The attribute is considered malformed if its length is not 4.
+
+If the NEXT_HOP attribute field is syntactically incorrect (does not
+represent a valid IP host address), the attribute MUST be treated as
+malformed.
+
+An UPDATE message with a malformed NEXT_HOP attribute SHALL be handled
+using the approach of "treat-as-withdraw". If the NEXT_HOP attribute
+is missing, and if the UPDATE message uses the IPv4 legacy encoding, then
+the update SHALL use the "treat-as-withdraw" approach.
 
 The IP address in the NEXT_HOP MUST meet the following criteria to be
 considered semantically correct:
@@ -1536,49 +1862,53 @@ considered semantically correct:
 
 * It MUST NOT be the IP address of the receiving speaker.
 
-* In the case of an EBGP, where the sender and receiver are one
+* In the case of EBGP, where the sender and receiver are one
    IP hop away from each other, either the IP address in the
    NEXT_HOP MUST be the sender's IP address that is used to
    establish the BGP connection, or the interface associated with
    the NEXT_HOP IP address MUST share a common subnet with the
    receiving BGP speaker.
 
-If the NEXT_HOP attribute is semantically incorrect, the error SHOULD
-be logged, and the route SHOULD be ignored.  In this case, a
-NOTIFICATION message SHOULD NOT be sent, and the connection SHOULD
-NOT be closed.
+If the NEXT_HOP attribute is semantically incorrect, the error SHOULD be
+logged, and the "treat-as-withdraw" approach used.
 
-The AS_PATH attribute is checked for syntactic correctness.  If the
-path is syntactically incorrect, then the Error Subcode MUST be set
-to Malformed AS_PATH.
+#### MULTI_EXIT_DISC Error Handling
 
-If the UPDATE message is received from an external peer, the local
-system MAY check whether the leftmost (with respect to the position
-of octets in the protocol message) AS in the AS_PATH attribute is
-equal to the autonomous system number of the peer that sent the
-message.  If the check determines this is not the case, the Error
-Subcode MUST be set to Malformed AS_PATH.  We note that despite the
-use of a Subcode that includes the word "malformed", this is a case
-of semantic, not syntactic, invalidity.
+The attribute is considered malformed if its length is not 4.
 
-If an optional attribute is recognized, then the value of this
-attribute MUST be checked.  If an error is detected, the Error Subcode
-MUST be set to Optional Attribute Error.  The Data field MUST contain
-the attribute (type, length, and value).
+An UPDATE message with a malformed MULTI_EXIT_DISC attribute SHALL be
+handled using the approach of "treat-as-withdraw".
 
-If any attribute appears more than once in the UPDATE message, then
-the Error Subcode MUST be set to Malformed Attribute List.
+#### LOCAL_PREF Error Handling
 
-The NLRI field in the UPDATE message is checked for syntactic
-validity.  If the field is syntactically incorrect, then the Error
-Subcode MUST be set to Invalid Network Field.
+If the attribute is received from an external neighbor, it SHALL be
+discarded using the approach of "attribute discard".
 
-If a prefix in the NLRI field is semantically incorrect (e.g., an
-unexpected multicast IP address), an error SHOULD be logged locally,
-and the prefix SHOULD be ignored.
+If the attribute is received from an internal neighbor, it SHALL be
+considered malformed if its length is not equal to 4.  If malformed, the
+UPDATE message SHALL be handled using the approach of "treat-as-
+withdraw".
 
-An UPDATE message that contains correct path attributes, but no NLRI,
-SHALL be treated as a valid UPDATE message.
+#### ATOMIC_AGGREGATE Error Handling
+
+The attribute SHALL be considered malformed if its length is not 0.
+
+An UPDATE message with a malformed ATOMIC_AGGREGATE attribute SHALL be
+handled using the approach of "attribute discard".
+
+#### AGGREGATOR Error Handling
+
+The AGGREGATOR attribute SHALL be considered malformed if any of the
+following applies:
+
+- Its length is not 6 (when the 4-octet AS number capability is not
+advertised to or not received from the peer {{RFC6793}}).
+
+- Its length is not 8 (when the 4-octet AS number capability is both
+advertised to and received from the peer).
+
+An UPDATE message with a malformed AGGREGATOR attribute SHALL be handled
+using the approach of "attribute discard".
 
 ## NOTIFICATION Message Error Handling
 
@@ -1658,6 +1988,8 @@ received from the neighbor exceeds the locally-configured, upper
 bound, then the speaker MUST send the neighbor a NOTIFICATION message
 with the Error Code Cease.  The speaker MAY also log this locally.
 
+<!-- xxx prefix limit - integrate spec? -->
+
 ## BGP Connection Collision Detection {#collision}
 
 If a pair of BGP speakers try to establish a BGP connection with each
@@ -1665,7 +1997,7 @@ other simultaneously, then two parallel connections will be formed.
 If the source IP address used by one of these connections is the same
 as the destination IP address used by the other, and the destination
 IP address used by the first connection is the same as the source IP
-address used by the other, connection collision has occurred.  In the
+address used by the other, a connection collision has occurred.  In the
 event of connection collision, one of the connections MUST be closed.
 
 Based on the value of the BGP Identifier, a convention is established
@@ -3558,7 +3890,8 @@ local system:
 
 If the local system receives an UPDATE message, and the UPDATE
 message error handling procedure (see {{updatemsgerr}}) detects an
-error (Event 28), the local system:
+error (Event 28), the local system: 
+<!-- xxx this is wrong now that we've integrated rfc 7606 -->
 
 - sends a NOTIFICATION message with an Update error,
 
@@ -3598,7 +3931,7 @@ system:
 
 - changes its state to Idle.
 
-# UPDATE Message Handling
+# UPDATE Message Handling {#updatemsg}
 
 An UPDATE message may be received only in the Established state.
 Receiving an UPDATE message in any other state is an error.  When an
@@ -3616,7 +3949,7 @@ depending on the type of the optional attribute, it is processed
 locally, retained, and updated, if necessary, for possible
 propagation to other BGP speakers.
 
-If the UPDATE message contains a non-empty WITHDRAWN ROUTES field,
+If the UPDATE message contains a non-empty Withdrawn Routes field,
 the previously advertised routes, whose destinations (expressed as IP
 prefixes) are contained in this field, SHALL be removed from the
 Adj-RIB-In.  This BGP speaker SHALL run its Decision Process because
@@ -3955,8 +4288,9 @@ proven to cause route loops.
 ~~~~
       for m = all routes still under consideration
           for n = all routes in still under consideration
-              if (cost(n) is lower than cost(m))
-                  remove m from consideration
+              if (cost(n) can be determined and cost(m) can be determined)
+                  if (cost(n) is lower than cost(m))
+                      remove m from consideration
 ~~~~
 
 > In the pseudo-code above, cost(n) is a function that returns
@@ -4418,6 +4752,23 @@ Finally, we would like to thank all the members of the IDR Working
 Group for their ideas and the support they have given to this
 document.
 
+## Acknowledgements in relationship to RFC 7606
+
+{{RFC7606}} was authored by Enke Chen, John Scudder, Pradosh Mohapatra,
+and Keyur Patel. Its contents have been partly subsumed in this document.
+
+RFC 7606 contains the following acknowledgments:
+
+The authors wish to thank Juan Alcaide, Deniz Bahadir, Ron Bonica,
+Mach Chen, Andy Davidson, Bruno Decraene, Stephen Farrell, Rex
+Fernando, Jeff Haas, Chris Hall, Joel Halpern, Dong Jie, Akira Kato,
+Miya Kohno, Warren Kumari, Tony Li, Alton Lo, Shin Miyakawa, Tamas
+Mondal, Jonathan Oddy, Tony Przygienda, Robert Raszuk, Yakov Rekhter,
+Eric Rosen, Shyam Sethuram, Rob Shakir, Naiming Shen, Adam Simpson,
+Ananth Suryanarayana, Kaliraj Vairavakkalai, Lili Wang, and Ondrej
+Zajicek for their observations and discussion of this topic and
+review of this document.
+
 ## Acknowledgements in relationship to RFC 8212
 
 {{?RFC8212}} was authored by Jared Mauch, Job Snijders, and Greg Hankins.
@@ -4433,7 +4784,6 @@ comments, support and review: Shane Amante, Christopher Morrow,
 Robert Raszuk, Greg Skinner, Adam Chappell, Sriram Kotikalapudi,
 Brian Dickson, Jeffrey Haas, John Heasley, Ignas Bagdonas, Donald
 Smith, Alvaro Retana, John Scudder, and Dale Worley.
-
 
 ## Acknowledgements in relationship to RFC 9687
 
@@ -4529,7 +4879,74 @@ issues discussed and the consensus reached" during development.
 - Add references to RFC 6793 ("BGP Support for Four-Octet Autonomous 
   System (AS) Number Space") from all the parts of the spec that it
   touches. (Issue #18)
+  
+- Bring changelog up to date, including for earlier versions.
+  
+- Add references to RFC 8654 ("Extended Message Support for BGP") from
+  all parts of the spec that it touches. (Issue #23)
+  
+## Version 03
 
+- The primary contribution of this version is to integrate RFC 7606
+  ("Revised Error Handling for BGP UPDATE Messages").  (Issue #19) 
+  
+This also pulled in a couple of dependent/related issues:
+
+- Removed the paragraph about "unrecognized well-known attribute."
+  (Issue #136)
+  
+- Deprecated UPDATE error subcodes 2-6, 8, 9, and 11, because the 
+  corresponding RFC 4271 error conditions no longer generate
+  NOTIFICATIONs under the revised error handling procedures.
+  (Issue #137)
+
+Because this was a large change, some details beyond the obvious 
+are called out below:
+
+- Added permission for an implementation to revert to session reset 
+  behavior by configuration. 
+  
+- RFC 4271 said a semantically incorrect Next Hop should result in
+  the update message being "ignored". This isn't mentioned in 7606
+  but that was an oversight. Changed "ignored" to "treat-as-withdraw".
+    
+- The Withdrawn Routes field was sometimes (inconsistently) given in
+  ALL CAPS. Made it consistently mixed-case.
+  
+- RFC 7606 is not fully obsoleted, because it also revises numerous
+  other RFCs, and it didn't seem desirable to pull all those revisions
+  into this spec.
+  
+- Added a definition for what "recognized" means. There seems to be 
+  general understanding of this by practitioners, but as far as I can 
+  tell, we've never formalized it, and some of the error procedures 
+  rely on it.
+  
+- Added definitions for AFI, SAFI, AFI/SAFI, MP_REACH_NLRI, 
+  MP_UNREACH_NLRI. This might end up being the wedge that pulls all of 
+  RFC 4760 along, who knows.
+    
+To do and/or not done:
+
+- In the FSM, the description of an UpdateMsgErr event in Established 
+  state is wrong now. This wasn't fixed in RFC 7606, and our FSM needs
+  more work, so I've opened #140 to track, but not otherwise addressed
+  it.
+  
+- Section 8 ("Guidance for Authors of BGP Specifications") isn't 
+  integrated. 
+  
+- The philosophical overview of Section 1 isn't integrated. It might 
+  be worth creating an appendix talking about the error-handling
+  philosophy, to retain this information, since it's non-obvious to
+  those who didn't live through it. That might also be a place to 
+  put the Section 8 material.
+  
+- Because not all of 7606 is integrated, and especially not the various
+  attribute updates for non-4271 attributes, some fancy footwork may be
+  needed with "updates" description text. I stubbed in a beginning, but
+  it will need polishing.
+  
 # TCP Options that May Be Used with BGP {#tcpopts}
 
 If a local system TCP user interface supports the TCP PUSH function,
@@ -4731,16 +5148,16 @@ the following UPDATE Message Error subcodes:
 |----------------------------------|------|-----------------|
 | Unspecific                       |  0   | See {{updatemsgerr}} |
 | Malformed Attribute List         |  1   | See {{updatemsgerr}} |
-| Unrecognized Well-known Attribute|  2   | See {{updatemsgerr}} |
-| Missing Well-known Attribute     |  3   | See {{updatemsgerr}} |
-| Attribute Flags Error            |  4   | See {{updatemsgerr}} |
-| Attribute Length Error           |  5   | See {{updatemsgerr}} |
-| Invalid ORIGIN Attribute         |  6   | See {{updatemsgerr}} |
+| Unrecognized Well-known Attribute (deprecated)|  2   | See {{updatemsgerr}} |
+| Missing Well-known Attribute  (deprecated)    |  3   | See {{updatemsgerr}} |
+| Attribute Flags Error (deprecated)            |  4   | See {{updatemsgerr}} |
+| Attribute Length Error (deprecated)           |  5   | See {{updatemsgerr}} |
+| Invalid ORIGIN Attribute (deprecated)         |  6   | See {{updatemsgerr}} |
 | [Deprecated]                     |  7   | See {{RFC4271}} Appendix A  |
-| Invalid NEXT_HOP Attribute       |  8   | See {{updatemsgerr}} |
-| Optional Attribute Error         |  9   | See {{updatemsgerr}} |
+| Invalid NEXT_HOP Attribute (deprecated)       |  8   | See {{updatemsgerr}} |
+| Optional Attribute Error (deprecated)         |  9   | See {{updatemsgerr}} |
 | Invalid Network Field            | 10   | See {{updatemsgerr}} |
-| Malformed AS_PATH                | 11   | See {{updatemsgerr}} |
+| Malformed AS_PATH (deprecated)                | 11   | See {{updatemsgerr}} |
 
 RFC 6608 created the registry "BGP Finite State Machine Error Subcodes".
 IANA is requested to update the reference in that registry (both overall,
