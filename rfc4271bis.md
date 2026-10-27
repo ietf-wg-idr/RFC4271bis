@@ -5169,17 +5169,19 @@ IANA is requested to create a registry called "BGP AS_PATH Segment Types"
 within the "Border Gateway Protocol (BGP) Parameters" group. The allocation
 policy is Standards Action.
 
-Values 1 and 2 are defined in {{aspath_segtypes}}. The values 3 and 4,
-defined in {{RFC5065}} are also included. (Note that it is not an error
-that the order of SET and SEQUENCE are reversed between the respective
-types.)
+Values 0 and 255 are reserved. Values 1 and 2 are defined in
+{{aspath_segtypes}}. The values 3 and 4, defined in {{RFC5065}} are also
+included. (Note that it is not an error that the order of SET and
+SEQUENCE are reversed between the respective types.) 
 
 | Name  |  Value | Reference | 
 |-------|-----------------------------------------------------|
+| Reserved | 0 | This Document |
 | AS_SET  | 1 |  This Document |
 | AS_SEQUENCE | 2 | This Document |
 | AS_CONFED_SEQUENCE | 3 | {{RFC5065}} |
 | AS_CONFED_SET | 4 | {{RFC5065}} |
+| Reserved | 255 | This Document |
 
 ## References to BGP Specification
 
