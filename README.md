@@ -7,11 +7,27 @@ This repo contains the IDR working group's effort to produce a Full Standard doc
 - [Presentation at IETF-123](https://datatracker.ietf.org/meeting/123/materials/slides-123-idr-making-bgp-an-internet-standard-rfc4271bis-00)
 - [Presentation at IETF-124](https://datatracker.ietf.org/meeting/124/materials/slides-124-idr-rfc4271bis-update-00)
 - [Presentation at IETF-126](https://datatracker.ietf.org/meeting/126/materials/slides-126-idr-revised-slides-for-rfc4271bis-01-00)
+- [Presentation at October 26, 2026 interim](https://datatracker.ietf.org/meeting/interim-2026-idr-03/materials/slides-interim-2026-idr-03-sessa-14-rfc4271bis-update-00.pdf)
 
 The slides and other WG materials provide full context, but at a high level our goal is to meet the requirements from BCP 9 for Full Standard (see the IETF-123 slides), with as little scope creep as we can manage. That having been said, some creep has been hard to avoid. Major factors include:
 
 - It's not possible to get approval for a Full Standard that doesn't include IPv6 support. This means either advancing (at minimum) RFCs 2545, 4760, and 5492 as independent documents too, or merging them into the base spec. 
 - It's at least highly desirable, if not mandatory, to update the finite state machine to incorporate the various state machine updates that have been done in other RFCs, such as 4724.
+
+### Ground Rules and Guidelines
+
+We DO want to:
+- incorporate only stable, deployed specs
+- be selective in what we incorporate
+- improve readability and usefulness of the spec(s)
+- fix points that are wrong and remove material that is not implemented
+
+We DON'T want to:
+- make significant normative changes
+- relitigate old decisions
+- invent new technology
+
+The normal WG process is the appropriate way to change old decisions and invent new things.
 
 ## How to Help
 
