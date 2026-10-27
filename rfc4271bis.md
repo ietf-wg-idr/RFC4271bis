@@ -1,7 +1,7 @@
 ---
 title: "A Border Gateway Protocol 4 (BGP-4)"
 abbrev: BGP-4
-docname: draft-ietf-idr-bgp4-rfc4271bis-03
+docname: draft-ietf-idr-bgp4-rfc4271bis-04
 category: std
 date: 2026
 
@@ -4806,13 +4806,13 @@ interested in the evolution of RFC 4271 should also
 consider consulting {{I-D.ietf-idr-bgp-issues}}, which "records the
 issues discussed and the consensus reached" during development. 
 
-## Version 00: 
+## Version 00 
 
 - Integrated all verified errata.
 
 - Converted source to Markdown format.
 
-## Version 01:
+## Version 01
 
 - Integrated RFC 6286, "Autonomous-System-Wide Unique BGP Identifier 
   for BGP-4". This also obsoletes RFC 6286. (Issue #16)
