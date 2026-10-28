@@ -6,7 +6,7 @@ category: std
 date: 2026
 
 obsoletes: 4271, 6286, 6608, 8212, 9687
-updates: 7606
+updates: 7606, 7607
 
 stand_alone: yes
 pi: 
@@ -86,6 +86,7 @@ informative:
   RFC7117:
   RFC7432:
   RFC7606:
+  RFC7607:
   RFC7705:
   RFC7964:
   RFC8212:
@@ -120,7 +121,8 @@ mechanisms that allow aggregation of routes, including aggregation of
 AS paths.
 
 This document obsoletes RFC 4271 and many other RFCs. It updates
-RFC 7606 by subsuming its core functionality.
+RFC 7606 and RFC 7607 by subsuming their functionality as relates to 
+RFC 4271.
 
 --- middle
 
@@ -567,6 +569,31 @@ specified in this document.  In addition to actual packet forwarding,
 the Routing Table is used for resolution of the next-hop addresses
 specified in BGP updates (see {{nexthop}}).
 
+# Protocol Invariants {#invariants}
+
+The following requirements apply throughout this specification.
+
+## Autonomous System Numbers {#own-asn}
+
+Each BGP speaker belongs to an Autonomous System (AS) and SHALL be
+configured with an Autonomous System number.
+<!-- xxx this is probably a place to mention AS transition 
+mechanisms where the speaker has more than one AS -->
+
+The configured Autonomous System number MUST NOT be 0.
+ 
+Unless explicitly specified otherwise, any occurrence of an Autonomous
+System number (or any of its synonyms) in this specification refers to
+an Autonomous System number other than 0.
+
+<!-- other candidates:
+
+ "its IP address"
+ version number
+ max message size
+ bgp identifier
+-->
+
 # Message Formats {#msgformat}
 
 This section describes message formats used by BGP.
@@ -667,7 +694,8 @@ Version:
 
 My Autonomous System:
   : This 2-octet unsigned integer indicates the Autonomous System
-    number of the sender. (This is modified by {{RFC6793}}.)
+    number of the sender. (This is modified by {{RFC6793}}.) The
+    value MUST NOT be 0.
  
 Hold Time:
   : This 2-octet unsigned integer indicates the number of seconds
@@ -1282,6 +1310,8 @@ system MAY include/prepend more than one instance of its own AS
 number in the AS_PATH attribute.  This is controlled via local
 configuration.
 
+The AS number 0 MUST NOT be added to the AS_PATH; see {{own-asn}}.
+
 ###  NEXT_HOP {#nexthop}
 
 The NEXT_HOP is a well-known mandatory attribute that defines the IP
@@ -1545,9 +1575,10 @@ the received OPEN message), or if the smallest, locally-supported
 version number is greater than the version the remote BGP peer bid,
 then the smallest, locally-supported version number.
 
-If the Autonomous System field of the OPEN message is unacceptable,
-then the Error Subcode MUST be set to Bad Peer AS.  The determination
-of acceptable Autonomous System numbers is outside the scope of this
+If the Autonomous System field of the OPEN message is unacceptable, then
+the Error Subcode MUST be set to Bad Peer AS.  Autonomous System number
+0 is unacceptable. Beyond this requirement, the determination of
+acceptable Autonomous System numbers is outside the scope of this
 protocol.
 
 If the Hold Time field of the OPEN message is unacceptable, then the
@@ -1816,7 +1847,8 @@ ORIGIN attribute, SHALL be handled using the approach of
 
 #### AS_PATH Error Handling
 
-An AS_PATH is considered malformed if an unrecognized segment type is
+An AS_PATH is considered malformed if it contains AS 0 in any position.
+It is also considered malformed if an unrecognized segment type is
 encountered or if it contains a malformed segment.  A segment is
 considered malformed if any of the following are true:
 
@@ -1906,6 +1938,8 @@ advertised to or not received from the peer {{RFC6793}}).
 
 - Its length is not 8 (when the 4-octet AS number capability is both
 advertised to and received from the peer).
+
+- The AS number it conveys is equal to 0.
 
 An UPDATE message with a malformed AGGREGATOR attribute SHALL be handled
 using the approach of "attribute discard".
@@ -4755,7 +4789,7 @@ document.
 ## Acknowledgements in relationship to RFC 7606
 
 {{RFC7606}} was authored by Enke Chen, John Scudder, Pradosh Mohapatra,
-and Keyur Patel. Its contents have been partly subsumed in this document.
+and Keyur Patel. Its contents have been partially subsumed in this document.
 
 RFC 7606 contains the following acknowledgments:
 
@@ -4768,6 +4802,19 @@ Eric Rosen, Shyam Sethuram, Rob Shakir, Naiming Shen, Adam Simpson,
 Ananth Suryanarayana, Kaliraj Vairavakkalai, Lili Wang, and Ondrej
 Zajicek for their observations and discussion of this topic and
 review of this document.
+
+## Acknowledgements in relationship to RFC 7607
+
+{{RFC7607}} was authored by Warren Kumari, Randy Bush, Heather Schiller,
+and Keyur Patel. Its contents have been partially subsumed in this
+document.
+
+RFC 7607 contains the following acknowledgments:
+
+The authors wish to thank Elwyn Davies, Enke Chen, Brian Dickson, Bruno
+Decraene, Robert Raszuk, Jakob Heitz, Danny McPherson, Chris Morrow,
+iLya, John Scudder, Jeff Tantsura, Daniel Ginsburg, and Susan Hares. 
+Apologies to those we may have missed; it was not intentional.
 
 ## Acknowledgements in relationship to RFC 8212
 
@@ -4946,6 +4993,16 @@ To do and/or not done:
   attribute updates for non-4271 attributes, some fancy footwork may be
   needed with "updates" description text. I stubbed in a beginning, but
   it will need polishing.
+  
+## Version 04
+
+- Merge RFC 7607, "Codification of AS 0 Processing". (Issue #20) As 
+  part of this, also introduced a new top-level section, "Protocol
+  Invariants". For now this is the home for the definition of the
+  system's own AS number (this previously was not defined!). It 
+  seems likely we will find more things to put in this section; if
+  it ends up holding only the one definition we can look for a place
+  to demote it, if wanted.
   
 # TCP Options that May Be Used with BGP {#tcpopts}
 
