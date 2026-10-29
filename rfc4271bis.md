@@ -92,6 +92,7 @@ informative:
   RFC7964:
   RFC8212:
   RFC8654:
+  RFC9003:
   RFC9687:
   I-D.ietf-idr-bgp-issues:
 
@@ -2056,7 +2057,8 @@ tuple is the same as defined in {{RFC4760}}, Section 7.
 
 If a BGP speaker decides to administratively shut down its peering with
 a neighbor, then the speaker SHOULD send a NOTIFICATION message with the
-Error Code Cease and the Error Subcode "Administrative Shutdown".
+Error Code Cease and the Error Subcode "Administrative Shutdown". If used,
+{{RFC9003}} specifies additional information in the Data field.
 
 If a BGP speaker decides to de-configure a peer, then the speaker SHOULD
 send a NOTIFICATION message with the Error Code Cease and the Error
@@ -2064,7 +2066,8 @@ Subcode "Peer De-configured".
 
 If a BGP speaker decides to administratively reset the peering with a
 neighbor, then the speaker SHOULD send a NOTIFICATION message with the
-Error Code Cease and the Error Subcode "Administrative Reset".
+Error Code Cease and the Error Subcode "Administrative Reset". If used,
+{{RFC9003}} specifies additional information in the Data field.
 
 If a BGP speaker decides to disallow a BGP connection (e.g., the peer is
 not configured locally) after the speaker accepts a transport protocol
