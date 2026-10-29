@@ -6,7 +6,7 @@ category: std
 date: 2026
 
 obsoletes: 4271, 6286, 6608, 8212, 9687
-updates: 7606, 7607
+updates: 7606, 7607, 9774
 
 stand_alone: yes
 pi: 
@@ -92,6 +92,7 @@ informative:
   RFC8212:
   RFC8654:
   RFC9687:
+  RFC9774:
   I-D.ietf-idr-bgp-issues:
 
   IS10747:
@@ -121,8 +122,8 @@ mechanisms that allow aggregation of routes, including aggregation of
 AS paths.
 
 This document obsoletes RFC 4271 and many other RFCs. It updates
-RFC 7606 and RFC 7607 by subsuming their functionality as relates to 
-RFC 4271.
+RFC 7606, RFC 7607 and RFC 9774 by subsuming their functionality as 
+relates to RFC 4271.
 
 --- middle
 
@@ -923,7 +924,7 @@ following values defined:
 
 |Value  |  Segment Type                                       |
 |-------|-----------------------------------------------------|
-| 1     |    AS_SET: unordered set of ASes a route in the UPDATE message has traversed                     |
+| 1 (deprecated)    |    AS_SET: deprecated                     |
 | 2     |    AS_SEQUENCE: ordered set of ASes a route in the UPDATE message has traversed                 |
 {: #aspath_segtypes title="AS_PATH Segment Type Values"}
 
@@ -1117,7 +1118,7 @@ OPEN Message Error subcodes:
 | 2     | Bad Peer AS                     |
 | 3     | Bad BGP Identifier              |
 | 4     | Unsupported Optional Parameter  |
-| 5     | [Deprecated - see Appendix A]   |
+| 5     | [Deprecated - see {{RFC4271}} Appendix A]   |
 | 6     | Unacceptable Hold Time          |
 {: title="OPEN Message Error subcodes"}
 
@@ -1132,7 +1133,7 @@ UPDATE Message Error subcodes:
 | 4     | Attribute Flags Error (deprecated)            |
 | 5     | Attribute Length Error (deprecated)           |
 | 6     | Invalid ORIGIN Attribute (deprecated)         |
-| 7     | [Deprecated - see Appendix A]   |
+| 7     | [Deprecated - see {{RFC4271}} Appendix A]   |
 | 8     | Invalid NEXT_HOP Attribute (deprecated)       |
 | 9     | Optional Attribute Error (deprecated)         |
 | 10    | Invalid Network Field           |
@@ -1258,9 +1259,9 @@ An ORIGIN value not equal to one of the defined values of (0, 1, or 2)
 
 AS_PATH is a well-known mandatory attribute.  This attribute
 identifies the autonomous systems through which routing information
-carried in this UPDATE message has passed.  The components of this
-list can be AS_SETs or AS_SEQUENCEs. (Other segments and behaviors 
-are added by {{RFC5065}}, if used.) 
+carried in this UPDATE message has passed.  The components of this 
+list are AS_SEQUENCE segments. (Additional segment types are defined 
+by {{RFC5065}}.)
 
 When a BGP speaker propagates a route it learned from another BGP
 speaker's UPDATE message, it modifies the route's AS_PATH attribute
@@ -1281,11 +1282,7 @@ sent:
    overflow in the AS_PATH segment (i.e., more than 255 ASes),
    it MUST prepend a new segment of type AS_SEQUENCE and
    prepend its own AS number to this new segment.
-  2. if the first path segment of the AS_PATH is of type AS_SET,
-   the local system prepends a new path segment of type
-   AS_SEQUENCE to the AS_PATH, including its own AS number in
-   that segment.
-  3. if the AS_PATH is empty, the local system creates a path
+  2. if the AS_PATH is empty, the local system creates a path
    segment of type AS_SEQUENCE, places its own AS into that
    segment, and places that segment into the AS_PATH.
 
@@ -1310,7 +1307,9 @@ system MAY include/prepend more than one instance of its own AS
 number in the AS_PATH attribute.  This is controlled via local
 configuration.
 
-The AS number 0 MUST NOT be added to the AS_PATH; see {{own-asn}}.
+The AS number 0 MUST NOT be added to the AS_PATH; see {{own-asn}}. The
+advertised AS_PATH MUST NOT contain an AS_SET (although see
+{{deprecate-as-set}}). 
 
 ###  NEXT_HOP {#nexthop}
 
@@ -1449,23 +1448,20 @@ sends to external peers, except in the case of BGP Confederations
 
 ### ATOMIC_AGGREGATE {#atomic}
 
-ATOMIC_AGGREGATE is a well-known discretionary attribute.
+ATOMIC_AGGREGATE is a well-known discretionary attribute. 
 
 When a BGP speaker aggregates several routes for the purpose of
-advertisement to a particular peer, the AS_PATH of the aggregated
-route could include an AS_SET formed from the set of ASes from
-which the aggregate was formed.  In many cases, the network
-administrator can determine if the aggregate can safely be advertised
-without the AS_SET, and without forming route loops.
+advertisement to a particular peer, the AS_PATH of the aggregated route
+might exclude some of the AS numbers present in the constituent routes.
 
-If an aggregate excludes at least some of the AS numbers present in
-the AS_PATH of the routes that are aggregated as a result of dropping
-the AS_SET, the aggregated route, when advertised to the peer, SHOULD
+If an aggregate excludes at least some of the AS numbers present in the
+AS_PATH of the routes that are aggregated, the aggregated route, when
+advertised to the peer, SHOULD <!-- consider upgrading to MUST -->
 include the ATOMIC_AGGREGATE attribute.
 
 A BGP speaker that receives a route with the ATOMIC_AGGREGATE
 attribute SHOULD NOT remove the attribute when propagating the route
-to other speakers.
+to other speakers. <!-- same here -->
 
 A BGP speaker that receives a route with the ATOMIC_AGGREGATE
 attribute MUST NOT make any NLRI of that route more specific (as
@@ -1848,9 +1844,11 @@ ORIGIN attribute, SHALL be handled using the approach of
 #### AS_PATH Error Handling
 
 An AS_PATH is considered malformed if it contains AS 0 in any position.
-It is also considered malformed if an unrecognized segment type is
-encountered or if it contains a malformed segment.  A segment is
-considered malformed if any of the following are true:
+It is considered malformed if it contains an AS_SET (although see
+{{deprecate-as-set}}). It is also considered malformed if an
+unrecognized segment type is encountered or if it contains a malformed
+segment.  A segment is considered malformed if any of the following are
+true:
 
 - There is an overrun where the Path Segment Length field of the last
 segment encountered would cause the Attribute Length to be exceeded.
@@ -4243,8 +4241,7 @@ as those described here.
 
 * Remove from consideration all routes that are not tied for
    having the smallest number of AS numbers present in their
-   AS_PATH attributes.  Note that when counting this number, an
-   AS_SET counts as 1, no matter how many ASes are in the set.
+   AS_PATH attributes.  
 
 * Remove from consideration all routes that are not tied for
    having the lowest Origin number in their Origin attribute.
@@ -4278,8 +4275,7 @@ the route, it is the neighbor AS from which the other IBGP
 speaker learned the route.  If the route is learned via IBGP,
 and the other IBGP speaker either (a) originated the route, or
 (b) created the route by aggregation and the AS_PATH attribute
-of the aggregate route is either empty or begins with an
-AS_SET, it is the local AS.
+of the aggregate route is empty, it is the local AS.
 
 > If a MULTI_EXIT_DISC attribute is removed before re-advertising
 a route into IBGP, then comparison based on the received EBGP
@@ -4417,16 +4413,15 @@ the more specific routes or aggregate the two routes and install, in
 Loc-RIB, the aggregated route, provided that both routes have the
 same value of the NEXT_HOP attribute.
 
-If a BGP speaker chooses to aggregate, then it SHOULD either include
-all ASes used to form the aggregate in an AS_SET, or add the
-ATOMIC_AGGREGATE attribute to the route.  This attribute is now
+If a BGP speaker chooses to aggregate, then it SHOULD <!-- MUST? --> add the
+ATOMIC_AGGREGATE attribute to the route.  <!-- This attribute is now
 primarily informational.  With the elimination of IP routing
 protocols that do not support classless routing, and the elimination
 of router and host implementations that do not support classless
-routing, there is no longer a need to de-aggregate.  Routes SHOULD
+routing, there is no longer a need to de-aggregate. -->  Routes SHOULD
 NOT be de-aggregated.  In particular, a route that carries the
 ATOMIC_AGGREGATE attribute MUST NOT be de-aggregated.  That is, the
-NLRI of this route cannot be more specific.  Forwarding along such a
+NLRI of this route cannot be made more specific.  Forwarding along such a
 route does not guarantee that IP packets will actually traverse only
 ASes listed in the AS_PATH attribute of the route.
 
@@ -4513,6 +4508,10 @@ information in an efficient manner.
 
 ####  Information Reduction {#informreduce}
 
+<!-- it seems to me we can eliminate this subsection, it's almost
+ vacuous. In the 1990s it needed to be explained; in 2026 it 
+ goes without saying. -->
+
 Information reduction may imply a reduction in granularity of policy
 control - after information is collapsed, the same policies will
 apply to all destinations and paths in the equivalence class.
@@ -4545,10 +4544,6 @@ of the same type and to the Network Layer Reachability Information.
 Routes that have different MULTI_EXIT_DISC attributes SHALL NOT be
 aggregated.
 
-If the aggregated route has an AS_SET as the first element in its
-AS_PATH attribute, then the router that originates the route SHOULD
-NOT advertise the MULTI_EXIT_DISC attribute with this route.
-
 Path attributes that have different type codes cannot be aggregated
 together.  Path attributes of the same type code may be aggregated,
 according to the following rules:
@@ -4577,7 +4572,7 @@ AS_PATH attribute:
      For the purpose of aggregating AS_PATH attributes, we model
      each AS within the AS_PATH attribute as a tuple <type, value>,
      where "type" identifies a type of the path segment the AS
-     belongs to (e.g., AS_SEQUENCE, AS_SET), and "value" identifies
+     belongs to (e.g., AS_SEQUENCE), and "value" identifies
      the AS number.  If the routes to be aggregated have different
      AS_PATH attributes, then the aggregated AS_PATH attribute SHALL
      satisfy all of the following conditions:
@@ -4586,17 +4581,10 @@ AS_PATH attribute:
        SHALL appear in all of the AS_PATHs in the initial set of
        routes to be aggregated.
 
-     - all tuples of type AS_SET in the aggregated AS_PATH SHALL
-       appear in at least one of the AS_PATHs in the initial set
-       (they may appear as either AS_SET or AS_SEQUENCE types).
-
      - for any tuple X of type AS_SEQUENCE in the aggregated
        AS_PATH, which precedes tuple Y in the aggregated AS_PATH,
        X precedes Y in each AS_PATH in the initial set, which
        contains Y, regardless of the type of Y.
-
-     - No tuple of type AS_SET with the same value SHALL appear
-       more than once in the aggregated AS_PATH.
 
      - Multiple tuples of type AS_SEQUENCE with the same value may
        appear in the aggregated AS_PATH only when adjacent to
@@ -4612,19 +4600,14 @@ AS_PATH attribute:
      routes to be aggregated.  Make this sequence the leading
      sequence of the aggregated AS_PATH attribute.
 
-     - set the type of the rest of the tuples from the AS_PATH
-     attributes of the routes to be aggregated to AS_SET, and
-     append them to the aggregated AS_PATH attribute.
-
-     - if the aggregated AS_PATH has more than one tuple with the
-     same value (regardless of tuple's type), eliminate all but
-     one such tuple by deleting tuples of the type AS_SET from
-     the aggregated AS_PATH attribute.
-
      - for each pair of adjacent tuples in the aggregated AS_PATH,
      if both tuples have the same type, merge them together, as
      long as doing so will not cause a segment with a length
      greater than 255 to be generated.
+          
+     - if any tuples were not consumed in the preceding steps, 
+     attach the ATOMIC_AGGREGATE path attribute to the aggregated 
+     route.
 
 ATOMIC_AGGREGATE:
    : If at least one of the routes to be aggregated has
@@ -4844,6 +4827,24 @@ Heasley, Nick Hilliard, Jeffrey Haas, Tom Petch, Susan Hares, Keyur
 Patel, Ben Maddison, Claudio Jeker, and John Scudder for their
 helpful review of this document.
 
+## Acknowledgements in relationship to RFC 9774
+
+{{?RFC9774}} was authored by Warren Kumari, Kotikalapudi Sriram, Lilia
+Hannachi, and Jeffrey Haas. Its contents have been partially subsumed in
+this document.
+
+RFC 9774 contained the following acknowledgements:
+
+The authors would like to thank Alvaro Retana, John Scudder, Ketan
+Talaulikar, Keyur Patel, Susan Hares, Claudio Jeker, Nick Hilliard,
+Robert Raszuk, John Heasley, Job Snijders, Jared Mauch, Jakob Heitz,
+Tony Przygienda, Douglas Montgomery, Randy Bush, Curtis Villamizar,
+Danny McPherson, Chris Morrow, Tom Petch, Ilya Varlashkin, Enke Chen,
+Tony Li, Florian Weimer, John Leslie, Paul Jakma, Rob Austein, Russ
+Housley, Sandra Murphy, Steven M. Bellovin, Steve Kent, Steve Padgett,
+and Alfred Hoenes for comments and suggestions. The comments and
+suggestions received from the IESG reviewers are also much appreciated.
+
 # Comparison of CURRENT_SPEC with RFC 4271 {#compare4271}
 
 This section describes significant technical changes between the present
@@ -5003,6 +5004,13 @@ To do and/or not done:
   seems likely we will find more things to put in this section; if
   it ends up holding only the one definition we can look for a place
   to demote it, if wanted.
+  
+- Merge RFC 9774, "Deprecation of AS_SET and AS_CONFED_SET in BGP".
+  (Issue #47) This entailed cutting out quite a bit of normative text,
+  for example, the part of the decision process that says the "length"
+  of an AS_SET is always considered to be 1. People wanting to know 
+  the rules for processing AS_SET for historical reasons are going to 
+  have to look back into RFC 4271 for them. 
   
 # TCP Options that May Be Used with BGP {#tcpopts}
 
@@ -5234,10 +5242,10 @@ SEQUENCE are reversed between the respective types.)
 | Name  |  Value | Reference | 
 |-------|-----------------------------------------------------|
 | Reserved | 0 | This Document |
-| AS_SET  | 1 |  This Document |
+| AS_SET (deprecated) | 1 |  This Document |
 | AS_SEQUENCE | 2 | This Document |
 | AS_CONFED_SEQUENCE | 3 | {{RFC5065}} |
-| AS_CONFED_SET | 4 | {{RFC5065}} |
+| AS_CONFED_SET (deprecated) | 4 | {{RFC5065}} |
 | Reserved | 255 | This Document |
 
 ## References to BGP Specification
@@ -5249,3 +5257,17 @@ document.
 IANA is requested to replace all references to RFC 4271 in the IP Flow
 Information Export (IPFIX) Entities registry group at
 https://www.iana.org/assignments/ipfix with references to this document.
+
+# Deprecation of AS_SET {#deprecate-as-set}
+
+{{RFC9774}} deprecated AS_SET from RFC 4271. This edition removes
+procedures for generating and advertising AS_SET and adopts the
+transmission and reception restrictions specified by RFC 9774.
+
+RFC 9774 included language permitting AS_SET to be transmitted and
+received in the exception case "Unless explicitly configured by a
+network operator to do otherwise (e.g., during a transition phase)."
+
+Since this specification has removed the relevant procedures, 
+implementors needing to provide this exception case will have to 
+refer to the previous edition, {{RFC4271}}. 
