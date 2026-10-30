@@ -82,6 +82,7 @@ informative:
   RFC4724:
   RFC5004:
   RFC5065:
+  RFC6286:
   RFC6514:
   RFC6793:
   RFC7117:
@@ -4981,6 +4982,17 @@ RFC 4486 contains the following acknowledgments:
 
 The authors would like to thank Yakov Rekhter, Pedro Marques, Andrew
 Lange, and Don Goodspeed for their review and suggestions.
+
+## Acknowledgements in relationship to RFC 6286
+
+{{RFC6286}} was authored by Enke Chen and Jenny Yuan. Its contents have
+been subsumed in this document.
+
+RFC 6286 contains the following acknowledgments:
+
+The authors would like to thank members of the IDR Working Group for
+discussions on the "IPv6-only Network" related issues that inspired this
+document.
 
 ## Acknowledgements in relationship to RFC 7606
 
