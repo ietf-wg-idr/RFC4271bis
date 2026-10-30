@@ -1377,8 +1377,8 @@ An ORIGIN value not equal to one of the defined values of (0, 1, or 2)
 AS_PATH is a well-known mandatory attribute.  This attribute
 identifies the autonomous systems through which routing information
 carried in this UPDATE message has passed.  The components of this 
-list are AS_SEQUENCE segments. (Additional segment types are defined 
-by {{RFC5065}}.)
+list can be AS_SETs or AS_SEQUENCEs. (Other segments and behaviors 
+are added by {{RFC5065}}, if used.) 
 
 When a BGP speaker propagates a route it learned from another BGP
 speaker's UPDATE message, it modifies the route's AS_PATH attribute
@@ -1399,7 +1399,11 @@ sent:
    overflow in the AS_PATH segment (i.e., more than 255 ASes),
    it MUST prepend a new segment of type AS_SEQUENCE and
    prepend its own AS number to this new segment.
-  2. if the AS_PATH is empty, the local system creates a path
+  2. if the first path segment of the AS_PATH is of type AS_SET,
+   the local system prepends a new path segment of type
+   AS_SEQUENCE to the AS_PATH, including its own AS number in
+   that segment.
+  3. if the AS_PATH is empty, the local system creates a path
    segment of type AS_SEQUENCE, places its own AS into that
    segment, and places that segment into the AS_PATH.
 
@@ -1425,8 +1429,8 @@ number in the AS_PATH attribute.  This is controlled via local
 configuration.
 
 The AS number 0 MUST NOT be added to the AS_PATH; see {{own-asn}}. The
-advertised AS_PATH MUST NOT contain an AS_SET (although see
-{{deprecate-as-set}}). 
+advertised AS_PATH MUST NOT contain an AS_SET unless AS_SET propagation 
+has been enabled by local configuration.
 
 ###  NEXT_HOP {#nexthop}
 
@@ -1565,7 +1569,7 @@ sends to external peers, except in the case of BGP Confederations
 
 ### ATOMIC_AGGREGATE {#atomic}
 
-ATOMIC_AGGREGATE is a well-known discretionary attribute. 
+ATOMIC_AGGREGATE is a well-known discretionary attribute.
 
 When a BGP speaker aggregates several routes for the purpose of
 advertisement to a particular peer, the AS_PATH of the aggregated route
@@ -1969,11 +1973,11 @@ ORIGIN attribute, SHALL be handled using the approach of
 #### AS_PATH Error Handling
 
 An AS_PATH is considered malformed if it contains AS 0 in any position.
-It is considered malformed if it contains an AS_SET (although see
-{{deprecate-as-set}}). It is also considered malformed if an
-unrecognized segment type is encountered or if it contains a malformed
-segment.  A segment is considered malformed if any of the following are
-true:
+It is considered malformed if it contains an AS_SET unless AS_SET
+propagation has been enabled by local configuration. It is also
+considered malformed if an unrecognized segment type is encountered or
+if it contains a malformed segment.  A segment is considered malformed
+if any of the following are true:
 
 - There is an overrun where the Path Segment Length field of the last
 segment encountered would cause the Attribute Length to be exceeded.
@@ -2098,6 +2102,8 @@ to 0 and is not used; no additional data is to be appended to the end
 of a "Send Hold Timer Expired" NOTIFICATION message.
 
 ## Finite State Machine Error Handling {#fsmerr}
+
+<!-- need a variable for AS_SET support -->
 
 If a BGP speaker receives an unexpected message (e.g., 
 KEEPALIVE/UPDATE/ROUTE-REFRESH message) on a session in OpenSent state,
@@ -4427,7 +4433,8 @@ as those described here.
 
 * Remove from consideration all routes that are not tied for
    having the smallest number of AS numbers present in their
-   AS_PATH attributes.  
+   AS_PATH attributes.  Note that when counting this number, an
+   AS_SET counts as 1, no matter how many ASes are in the set.
 
 * Remove from consideration all routes that are not tied for
    having the lowest Origin number in their Origin attribute.
@@ -4458,10 +4465,15 @@ possible MULTI_EXIT_DISC value (i.e., 0).
 neighbor AS from which the route was received.  If the route is
 learned via IBGP, and the other IBGP speaker didn't originate
 the route, it is the neighbor AS from which the other IBGP
-speaker learned the route.  If the route is learned via IBGP,
+speaker learned the route.  If <!-- the route is learned via IBGP,
 and the other IBGP speaker either (a) originated the route, or
-(b) created the route by aggregation and the AS_PATH attribute
-of the aggregate route is empty, it is the local AS.
+(b) created the route by aggregation and --> the AS_PATH attribute
+<!-- of the aggregate route --> is either empty or begins with an
+AS_SET, it is the local AS.
+<!-- xxx this seemed needlessly discursive anyway, but the
+discussion of aggregation seemed especially confusing now that
+we've removed the ability to form an AS_SET during aggregation,
+leaving it only as a feature of older implementations. -->
 
 > If a MULTI_EXIT_DISC attribute is removed before re-advertising
 a route into IBGP, then comparison based on the received EBGP
@@ -4754,36 +4766,17 @@ AS_PATH attribute:
    : If routes to be aggregated have identical AS_PATH attributes,
      then the aggregated route has the same AS_PATH attribute as
      each individual route.
+     
+     Otherwise, for the purpose of aggregating AS_PATH attributes, we
+     model each AS within the AS_PATH attribute as a tuple <type,
+     value>, where "type" identifies a type of the path segment the AS
+     belongs to (e.g., AS_SEQUENCE, AS_SET), and "value" identifies the
+     AS number.  An aggregated AS_PATH attribute can be formed as
+     follows:
 
-     For the purpose of aggregating AS_PATH attributes, we model
-     each AS within the AS_PATH attribute as a tuple <type, value>,
-     where "type" identifies a type of the path segment the AS
-     belongs to (e.g., AS_SEQUENCE), and "value" identifies
-     the AS number.  If the routes to be aggregated have different
-     AS_PATH attributes, then the aggregated AS_PATH attribute SHALL
-     satisfy all of the following conditions:
-
-     - all tuples of type AS_SEQUENCE in the aggregated AS_PATH
-       SHALL appear in all of the AS_PATHs in the initial set of
-       routes to be aggregated.
-
-     - for any tuple X of type AS_SEQUENCE in the aggregated
-       AS_PATH, which precedes tuple Y in the aggregated AS_PATH,
-       X precedes Y in each AS_PATH in the initial set, which
-       contains Y, regardless of the type of Y.
-
-     - Multiple tuples of type AS_SEQUENCE with the same value may
-       appear in the aggregated AS_PATH only when adjacent to
-       another tuple of the same type and value.
-
-   : An implementation may choose any algorithm that conforms to
-   these rules.  At a minimum, a conformant implementation SHALL
-   be able to perform the following algorithm that meets all of
-   the above conditions:
-
-   : - determine the longest leading sequence of tuples (as
-     defined above) common to all the AS_PATH attributes of the
-     routes to be aggregated.  Make this sequence the leading
+   : - determine the longest leading sequence of tuples of type
+     AS_SEQUENCE (as defined above) common to all the AS_PATH attributes
+     of the routes to be aggregated.  Make this sequence the leading
      sequence of the aggregated AS_PATH attribute.
 
      - for each pair of adjacent tuples in the aggregated AS_PATH,
@@ -4791,9 +4784,22 @@ AS_PATH attribute:
      long as doing so will not cause a segment with a length
      greater than 255 to be generated.
           
-     - if any tuples were not consumed in the preceding steps, 
-     attach the ATOMIC_AGGREGATE path attribute to the aggregated 
-     route.
+     - Attach the ATOMIC_AGGREGATE path attribute to the aggregated 
+     route. 
+     
+     Except in the identical AS_PATH case described above, the
+     aggregation procedure will not consume all tuples. This is why the
+     ATOMIC_AGGREGATE attribute is attached. 
+     
+     Optionally, the resulting AS_PATH MAY be truncated further. 
+     Details of when and how to do so are beyond the scope of this
+     specification. 
+     
+     {{RFC9774}} refers to the style of aggregation 
+     described above as "brief". It also defines a variant known as 
+     "consistent brief" which further truncates the AS_PATH under
+     some circumstances.
+     
 
 ATOMIC_AGGREGATE:
    : If at least one of the routes to be aggregated has
@@ -5221,11 +5227,10 @@ To do and/or not done:
   OPEN Message". This also obsoletes RFC 9072. (Issue #24) 
   
 - Merge RFC 9774, "Deprecation of AS_SET and AS_CONFED_SET in BGP".
-  (Issue #47) This entailed cutting out quite a bit of normative text,
-  for example, the part of the decision process that says the "length"
-  of an AS_SET is always considered to be 1. People wanting to know 
-  the rules for processing AS_SET for historical reasons are going to 
-  have to look back into RFC 4271 for them. 
+  (Issue #47) This required substantial restructuring of the aggregation
+  procedures. RFC 4271's aggregation description relied on construction
+  of AS_SETs, now deprecated. The replacement algorithm collapses to
+  "find the longest leading sequence". 
   
 # TCP Options that May Be Used with BGP {#tcpopts}
 
@@ -5485,16 +5490,13 @@ IANA is requested to replace all references to RFC 4271 in the IP Flow
 Information Export (IPFIX) Entities registry group at
 https://www.iana.org/assignments/ipfix with references to this document.
 
-# Deprecation of AS_SET {#deprecate-as-set}
+<!--
+# Aggregation
 
-{{RFC9774}} deprecated AS_SET from RFC 4271. This edition removes
-procedures for generating and advertising AS_SET and adopts the
-transmission and reception restrictions specified by RFC 9774.
+RFC 4271's aggregation rules were seldom implemented as written and
+almost never used in practice. This specification simplifies aggregation,
+to document only the implemented and practiced procedures. 
 
-RFC 9774 included language permitting AS_SET to be transmitted and
-received in the exception case "Unless explicitly configured by a
-network operator to do otherwise (e.g., during a transition phase)."
+etc
 
-Since this specification has removed the relevant procedures, 
-implementors needing to provide this exception case will have to 
-refer to the previous edition, {{RFC4271}}. 
+-->
