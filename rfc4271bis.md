@@ -5,7 +5,7 @@ docname: draft-ietf-idr-bgp4-rfc4271bis-04
 category: std
 date: 2026
 
-obsoletes: 4271, 6286, 6608, 8212, 9687
+obsoletes: 4271, 4486, 6286, 6608, 8212, 9072, 9687
 updates: 7606, 7607, 9774
 
 stand_alone: yes
@@ -78,6 +78,7 @@ informative:
   RFC4271:
   RFC4272:
   RFC4456:
+  RFC4486:
   RFC4724:
   RFC5004:
   RFC5065:
@@ -91,6 +92,8 @@ informative:
   RFC7964:
   RFC8212:
   RFC8654:
+  RFC9003:
+  RFC9072:
   RFC9687:
   RFC9774:
   I-D.ietf-idr-bgp-issues:
@@ -687,7 +690,7 @@ the following fields:
 |                                                               |
 +---------------------------------------------------------------+
 ~~~~
-{: title="OPEN Message Format"}
+{: title="OPEN Message Format (non-extended variant)"}
 
 Version:
   : This 1-octet unsigned integer indicates the protocol version
@@ -720,12 +723,16 @@ BGP Identifier:
 Optional Parameters Length:
   : This 1-octet unsigned integer indicates the total length of the
     Optional Parameters field in octets.  If the value of this
-    field is zero, no Optional Parameters are present.
+    field is zero, no Optional Parameters are present. If the 
+    length of the parameters to be encoded exceeds 255 octets, the 
+    extended variant {{openfmt-ext}} is used instead.
 
 Optional Parameters:
   : This field contains a list of optional parameters, in which
     each parameter is encoded as a <Parameter Type, Parameter
-    Length, Parameter Value> triplet.
+    Length, Parameter Value> triplet. If the length of the 
+    parameters to be encoded exceeds 255 octets, the extended
+    variant {{openfmt-ext}} is used instead.
 
 ~~~~ aasvg
      0                   1
@@ -734,14 +741,110 @@ Optional Parameters:
     |  Parm. Type   | Parm. Length  |  Parameter Value (variable)
     +---------------+---------------+-------...
 ~~~~
-{: title="Optional Parameters"}
+{: title="Optional Parameters (non-extended variant)"}
 
-  > Parameter Type is a one octet field that unambiguously identifies individual parameters.  Parameter Length is a one octet field that contains the length of the Parameter Value field in octets.  Parameter Value is a variable length field that is interpreted according to the value of the Parameter Type field.
+  > Parameter Type is a one octet field that unambiguously identifies 
+  individual parameters.  Parameter Length is a one octet field that
+  contains the length of the Parameter Value field in octets.  Parameter
+  Value is a variable length field that is interpreted according to the
+  value of the Parameter Type field. If the length of the parameters to
+  be encoded exceeds 255 octets, the extended variant {{openfmt-ext}} is
+  used instead.
 
   > {{?RFC3392}} defines the Capabilities Optional Parameter.
 
 The minimum length of the OPEN message is 29 octets (including the
 message header).
+
+### OPEN Message Format (Extended Variant) {#openfmt-ext}
+
+This version of the OPEN message is identical to that defined above,
+except for its encoding of the optional parameters. To preserve backward
+compatibility, the non-extended format {{openfmt}} SHOULD be used except
+when the length of the parameters to be encoded exceeds 255 octets, when
+this format MUST be used. Configuration MAY override this to force the
+extended format to be used in all cases; this might be used, for
+example, to test that a peer supports this specification. In any case,
+an implementation MUST accept an OPEN message that uses the encoding of
+this section even if the length of the Optional Parameters is 255
+or less.
+
+This encoding permits transmission of larger sets of Optional
+Parameters, including Capabilities {{RFC4760}}, than can be represented
+using the non-extended OPEN message encoding. 
+
+~~~~ aasvg
+ 0                   1                   2                   3
+ 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
++-+-+-+-+-+-+-+-+
+|    Version    |
++---------------+-+-+-+-+-+-+-+-+
+|     My Autonomous System      |
++-------------------------------+
+|           Hold Time           |
++-------------------------------+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                         BGP Identifier                        |
++---------------+---------------+-------------------------------+
+|Non-Ext OP Len.|Non-Ext OP Type|  Extended Opt. Parm. Length   |
++---------------+---------------+-------------------------------+
+|                                                               |
+|             Optional Parameters (variable)                    |
+|                                                               |
++---------------------------------------------------------------+
+~~~~
+{: title="OPEN Message Format (extended variant)" #ext-open}
+
+Only the fields that differ from those of the non-extended variant
+are defined below.
+
+Non-Extended Optional Parameters Length ("Non-Ext OP Len"):
+  : This 1-octet unsigned integer MUST be set to 255. Its value 
+    MUST be ignored on receipt once the use of the extended format 
+    is determined positively by inspection of the Non-Extended 
+    Optional Parameters Type (Non-Ext OP Type) field.
+
+Non-Extended Optional Parameters Type ("Non-Ext OP Type"):
+  : The 1-octet field following the Non-Ext OP Len (which would 
+    be the first Optional Parameter Type field in the non-extended
+    format and is called "Non-Ext OP Type" in the figure above) MUST be
+    set to 255 on transmission. On receipt, a value of 255 for this
+    field is the indication that the extended format is in use.
+    
+Extended Optional Parameters Length ("Extended Opt. Parm. Length"):
+  : This 2-octet unsigned integer indicates the total length of 
+    the Optional Parameters field in octets. If the value of this field
+    is zero, no Optional Parameters are present.
+
+Optional Parameters:
+  : This field contains a list of optional parameters, in which
+    each parameter is encoded as a <Parameter Type, Parameter
+    Length, Parameter Value> triplet. The rules for encoding Optional 
+    Parameters are unchanged with respect to those above, except that 
+    the Parameter Length field is extended to be a two-octet 
+    unsigned integer.
+
+~~~~ aasvg
+     0                   1                   2
+     0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    |  Parm. Type   |        Parameter Length       |
+    +---------------+-------------------------------+
+    |                                               |
+    |            Parameter Value (variable)         |
+    |                                               |
+    +-----------------------------------------------+
+~~~~
+{: title="Optional Parameters (extended variant)"}
+
+In parsing an OPEN message, if the one-octet Optional Parameters Length
+field (labeled "Non-Ext OP Len." in {{ext-open}}) is non-zero, a BGP
+speaker MUST use the value of the octet following the one-octet Optional
+Parameters Length field (labeled "Non-Ext OP Type" in {{ext-open}}) to
+determine both the encoding of the Optional Parameters length and the
+size of the Parameter Length field of individual Optional Parameters. If
+the value of the "Non-Ext OP Type" field is 255, then the encoding
+described in this subsection is used for the Optional Parameters length.
+Otherwise, the encoding defined in {{openfmt}} is used.
 
 ##  UPDATE Message Format {#updatefmt}
 
@@ -1152,6 +1255,20 @@ Finite State Machine Error Subcodes:
 | 2     | Receive Unexpected Message in OpenConfirm State |
 | 3     | Receive Unexpected Message in Established State |
 {: title="Finite State Machine Error Subcodes"}
+
+Cease Error Subcodes:
+
+| Value | Name                                            |
+|-------|-------------------------------------------------|
+| 1     | Maximum Number of Prefixes Reached              |
+| 2     | Administrative Shutdown                         |
+| 3     | Peer De-configured                              |
+| 4     | Administrative Reset                            |
+| 5     | Connection Rejected                             |
+| 6     | Other Configuration Change                      |
+| 7     | Connection Collision Resolution                 |
+| 8     | Out of Resources                                |
+{: title="Cease Error Subcodes"}
 
 Data:
   : This variable-length field is used to diagnose the reason for
@@ -1591,7 +1708,15 @@ message is from an internal peer, then the Error Subcode is set to
 
 If one of the Optional Parameters in the OPEN message is not
 recognized, then the Error Subcode MUST be set to Unsupported
-Optional Parameters.
+Optional Parameters. Note that a peer that does not support the
+extended OPEN format defined in this specification {{openfmt-ext}} would
+send such an error in response to receipt of an OPEN message that uses
+the extended format.
+
+If an Optional Parameter with type code 255 is encountered in any
+position other than that depicted as "Non-Ext OP Type" in {{ext-open}}
+it MUST be treated as an unrecognized Optional Parameter and handled per
+the above paragraph.
 
 If one of the Optional Parameters in the OPEN message is recognized,
 but is malformed, then the Error Subcode MUST be set to 0
@@ -2002,25 +2127,86 @@ with the Error Code Finite State Machine Error and the Error Subcode
 
 ## Cease {#ceaseerr}
 
-In the absence of any fatal errors (that are indicated in this
-section), a BGP peer MAY choose, at any given time, to close its BGP
-connection by sending the NOTIFICATION message with the Error Code
-Cease.  However, the Cease NOTIFICATION message MUST NOT be used when
-a fatal error indicated by this section does exist.
+### Sending a Cease
+
+In the absence of any of the conditions that are indicated in this
+section, a BGP peer MAY choose, at any given time, to close its BGP
+connection by sending the NOTIFICATION message with the Error Code Cease
+and no subcode.  However, if a condition indicated by this section does
+exist, the relevant subcode SHOULD be used.
 
 A BGP speaker MAY support the ability to impose a locally-configured,
-upper bound on the number of address prefixes the speaker is willing
-to accept from a neighbor.  When the upper bound is reached, the
-speaker, under control of local configuration, either (a) discards
-new address prefixes from the neighbor (while maintaining the BGP
-connection with the neighbor), or (b) terminates the BGP connection
-with the neighbor.  If the BGP speaker decides to terminate its BGP
-connection with a neighbor because the number of address prefixes
-received from the neighbor exceeds the locally-configured, upper
-bound, then the speaker MUST send the neighbor a NOTIFICATION message
-with the Error Code Cease.  The speaker MAY also log this locally.
+upper bound on the number of address prefixes the speaker is willing to
+accept from a neighbor.  When the upper bound is reached, the speaker,
+under control of local configuration, either (a) discards new address
+prefixes from the neighbor (while maintaining the BGP connection with
+the neighbor), or (b) terminates the BGP connection with the neighbor.
+If the BGP speaker decides to terminate its BGP connection with a
+neighbor because the number of address prefixes received from the
+neighbor exceeds the locally-configured, upper bound, then the speaker
+MUST send the neighbor a NOTIFICATION message with the Error Code Cease
+and the Error Subcode "Maximum Number of Prefixes Reached".  The speaker
+MAY log this locally.  The message MAY include the Address Family
+information {{RFC4760}} and the upper bound in the "Data" field, as
+shown in {{maxprefix}}, where the meaning and use of the <AFI, SAFI>
+tuple is the same as defined in {{RFC4760}}, Section 7.
 
-<!-- xxx prefix limit - integrate spec? -->
+~~~~ aasvg
+    +-------------------------------+
+    | AFI (2 octets)                |
+    +-------------------------------+
+    | SAFI (1 octet)                |
+    +-------------------------------+
+    | Prefix upper bound (4 octets) |
+    +-------------------------------+
+~~~~
+{: #maxprefix}
+
+If a BGP speaker decides to administratively shut down its peering with
+a neighbor, then the speaker SHOULD send a NOTIFICATION message with the
+Error Code Cease and the Error Subcode "Administrative Shutdown". If used,
+{{RFC9003}} specifies additional information in the Data field.
+
+If a BGP speaker decides to de-configure a peer, then the speaker SHOULD
+send a NOTIFICATION message with the Error Code Cease and the Error
+Subcode "Peer De-configured".
+
+If a BGP speaker decides to administratively reset the peering with a
+neighbor, then the speaker SHOULD send a NOTIFICATION message with the
+Error Code Cease and the Error Subcode "Administrative Reset". If used,
+{{RFC9003}} specifies additional information in the Data field.
+
+If a BGP speaker decides to disallow a BGP connection (e.g., the peer is
+not configured locally) after the speaker accepts a transport protocol
+connection, then the BGP speaker SHOULD send a NOTIFICATION message with
+the Error Code Cease and the Error Subcode "Connection Rejected".
+
+If a BGP speaker decides to administratively reset the peering with a
+neighbor due to a configuration change other than the ones described
+above, then the speaker SHOULD send a NOTIFICATION message with the
+Error Code Cease and the Error Subcode "Other Configuration Change".
+
+If a BGP speaker decides to send a NOTIFICATION message with the Error
+Code Cease as a result of the collision resolution procedure (as
+described in {{collision}}), then the subcode SHOULD be set to
+"Connection Collision Resolution".
+
+If a BGP speaker runs out of resources (e.g., memory) and decides to
+reset a session, then the speaker MAY send a NOTIFICATION message with
+the Error Code Cease and the Error Subcode "Out of Resources".
+
+### Receiving a Cease
+
+It is RECOMMENDED that a BGP speaker behave as though the
+DampPeerOscillations attribute {{fsm}} were true for this peer when
+re-trying a BGP connection after the speaker receives a Cease
+NOTIFICATION message with a subcode of "Administrative Shutdown",
+"Peer De-configured", "Connection Rejected", or "Out of Resources".
+An implementation SHOULD impose an upper bound on the number of
+consecutive automatic retries.  Once this bound is reached, the
+implementation would stop re-trying any BGP connections until some
+administrative intervention, i.e., set the AllowAutomaticStart
+attribute {{fsm}} to FALSE.
 
 ## BGP Connection Collision Detection {#collision}
 
@@ -4769,6 +4955,16 @@ Finally, we would like to thank all the members of the IDR Working
 Group for their ideas and the support they have given to this
 document.
 
+## Acknowledgements in relationship to RFC 4486
+
+{{RFC4486}} was authored by Enke Chen and Vincent Gillet. Its
+contents have been subsumed in this document.
+
+RFC 4486 contains the following acknowledgments:
+
+The authors would like to thank Yakov Rekhter, Pedro Marques, Andrew
+Lange, and Don Goodspeed for their review and suggestions.
+
 ## Acknowledgements in relationship to RFC 7606
 
 {{RFC7606}} was authored by Enke Chen, John Scudder, Pradosh Mohapatra,
@@ -4814,6 +5010,19 @@ comments, support and review: Shane Amante, Christopher Morrow,
 Robert Raszuk, Greg Skinner, Adam Chappell, Sriram Kotikalapudi,
 Brian Dickson, Jeffrey Haas, John Heasley, Ignas Bagdonas, Donald
 Smith, Alvaro Retana, John Scudder, and Dale Worley.
+
+## Acknowledgements in relationship to RFC 9072
+
+{{RFC9072}} was authored by Enke Chen and John Scudder. Its contents were 
+subsumed in this document.
+
+RFC 9072 contained the following acknowledgments:
+
+The authors would like to thank Yakov Rekhter and Srihari Sangli for
+discussing various options to enlarge the Optional Parameters field. We
+would also like to thank Matthew Bocci, Bruno Decraene, John Heasley,
+Jakob Heitz, Christer Holmberg, Pradosh Mohapatra, Keyur Patel, and
+Hannes Gredler for their valuable comments.
 
 ## Acknowledgements in relationship to RFC 9687
 
@@ -4997,13 +5206,19 @@ To do and/or not done:
   
 ## Version 04
 
+- Merge RFC 4486, "Subcodes for BGP Cease Notification Message".
+  (Issue #147)
+  
 - Merge RFC 7607, "Codification of AS 0 Processing". (Issue #20) As 
   part of this, also introduced a new top-level section, "Protocol
-  Invariants". For now this is the home for the definition of the
+  Invariants". For now, this is the home for the definition of the
   system's own AS number (this previously was not defined!). It 
   seems likely we will find more things to put in this section; if
   it ends up holding only the one definition we can look for a place
   to demote it, if wanted.
+
+- Merge RFC 9072, "Extended Optional Parameters Length for BGP 
+  OPEN Message". This also obsoletes RFC 9072. (Issue #24) 
   
 - Merge RFC 9774, "Deprecation of AS_SET and AS_CONFED_SET in BGP".
   (Issue #47) This entailed cutting out quite a bit of normative text,
@@ -5228,6 +5443,10 @@ RFC 6608 created the registry "BGP Finite State Machine Error Subcodes".
 IANA is requested to update the reference in that registry (both overall,
 and individual code points) to this document.
 
+RFC 4486 created the registry "BGP Cease NOTIFICATION message subcodes".
+IANA is requested to update the reference in that registry (both overall,
+and individual code points that reference RFC 4486) to this document.
+
 ## AS_PATH Segment Types
 
 IANA is requested to create a registry called "BGP AS_PATH Segment Types"
@@ -5247,6 +5466,14 @@ SEQUENCE are reversed between the respective types.)
 | AS_CONFED_SEQUENCE | 3 | {{RFC5065}} |
 | AS_CONFED_SET (deprecated) | 4 | {{RFC5065}} |
 | Reserved | 255 | This Document |
+
+## BGP OPEN Optional Parameter Types
+
+With the publication of RFC 9072, IANA assigned value 255 as the
+Extended Length type code in the "BGP OPEN Optional Parameter Types"
+registry. With the publication of this document, RFC 9072 will be
+obsoleted; thus, IANA is requested to update the reference to refer to
+this document.
 
 ## References to BGP Specification
 
