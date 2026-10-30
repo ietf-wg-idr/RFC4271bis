@@ -5,7 +5,7 @@ docname: draft-ietf-idr-bgp4-rfc4271bis-04
 category: std
 date: 2026
 
-obsoletes: 4271, 4486, 6286, 6608, 8212, 9687
+obsoletes: 4271, 4486, 6286, 6608, 8212, 9072, 9687
 updates: 7606, 7607
 
 stand_alone: yes
@@ -93,6 +93,7 @@ informative:
   RFC8212:
   RFC8654:
   RFC9003:
+  RFC9072:
   RFC9687:
   I-D.ietf-idr-bgp-issues:
 
@@ -688,7 +689,7 @@ the following fields:
 |                                                               |
 +---------------------------------------------------------------+
 ~~~~
-{: title="OPEN Message Format"}
+{: title="OPEN Message Format (non-extended variant)"}
 
 Version:
   : This 1-octet unsigned integer indicates the protocol version
@@ -721,12 +722,16 @@ BGP Identifier:
 Optional Parameters Length:
   : This 1-octet unsigned integer indicates the total length of the
     Optional Parameters field in octets.  If the value of this
-    field is zero, no Optional Parameters are present.
+    field is zero, no Optional Parameters are present. If the 
+    length of the parameters to be encoded exceeds 255 octets, the 
+    extended variant {{openfmt-ext}} is used instead.
 
 Optional Parameters:
   : This field contains a list of optional parameters, in which
     each parameter is encoded as a <Parameter Type, Parameter
-    Length, Parameter Value> triplet.
+    Length, Parameter Value> triplet. If the length of the 
+    parameters to be encoded exceeds 255 octets, the extended
+    variant {{openfmt-ext}} is used instead.
 
 ~~~~ aasvg
      0                   1
@@ -735,14 +740,110 @@ Optional Parameters:
     |  Parm. Type   | Parm. Length  |  Parameter Value (variable)
     +---------------+---------------+-------...
 ~~~~
-{: title="Optional Parameters"}
+{: title="Optional Parameters (non-extended variant)"}
 
-  > Parameter Type is a one octet field that unambiguously identifies individual parameters.  Parameter Length is a one octet field that contains the length of the Parameter Value field in octets.  Parameter Value is a variable length field that is interpreted according to the value of the Parameter Type field.
+  > Parameter Type is a one octet field that unambiguously identifies 
+  individual parameters.  Parameter Length is a one octet field that
+  contains the length of the Parameter Value field in octets.  Parameter
+  Value is a variable length field that is interpreted according to the
+  value of the Parameter Type field. If the length of the parameters to
+  be encoded exceeds 255 octets, the extended variant {{openfmt-ext}} is
+  used instead.
 
   > {{?RFC3392}} defines the Capabilities Optional Parameter.
 
 The minimum length of the OPEN message is 29 octets (including the
 message header).
+
+### OPEN Message Format (Extended Variant) {#openfmt-ext}
+
+This version of the OPEN message is identical to that defined above,
+except for its encoding of the optional parameters. To preserve backward
+compatibility, the non-extended format {{openfmt}} SHOULD be used except
+when the length of the parameters to be encoded exceeds 255 octets, when
+this format MUST be used. Configuration MAY override this to force the
+extended format to be used in all cases; this might be used, for
+example, to test that a peer supports this specification. In any case,
+an implementation MUST accept an OPEN message that uses the encoding of
+this section even if the length of the Optional Parameters is 255
+or less.
+
+This encoding permits transmission of larger sets of Optional
+Parameters, including Capabilities {{RFC4760}}, than can be represented
+using the non-extended OPEN message encoding. 
+
+~~~~ aasvg
+ 0                   1                   2                   3
+ 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
++-+-+-+-+-+-+-+-+
+|    Version    |
++---------------+-+-+-+-+-+-+-+-+
+|     My Autonomous System      |
++-------------------------------+
+|           Hold Time           |
++-------------------------------+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                         BGP Identifier                        |
++---------------+---------------+-------------------------------+
+|Non-Ext OP Len.|Non-Ext OP Type|  Extended Opt. Parm. Length   |
++---------------+---------------+-------------------------------+
+|                                                               |
+|             Optional Parameters (variable)                    |
+|                                                               |
++---------------------------------------------------------------+
+~~~~
+{: title="OPEN Message Format (extended variant)" #ext-open}
+
+Only the fields that differ from those of the non-extended variant
+are defined below.
+
+Non-Extended Optional Parameters Length ("Non-Ext OP Len"):
+  : This 1-octet unsigned integer MUST be set to 255. Its value 
+    MUST be ignored on receipt once the use of the extended format 
+    is determined positively by inspection of the Non-Extended 
+    Optional Parameters Type (Non-Ext OP Type) field.
+
+Non-Extended Optional Parameters Type ("Non-Ext OP Type"):
+  : The 1-octet field following the Non-Ext OP Len (which would 
+    be the first Optional Parameter Type field in the non-extended
+    format and is called "Non-Ext OP Type" in the figure above) MUST be
+    set to 255 on transmission. On receipt, a value of 255 for this
+    field is the indication that the extended format is in use.
+    
+Extended Optional Parameters Length ("Extended Opt. Parm. Length"):
+  : This 2-octet unsigned integer indicates the total length of 
+    the Optional Parameters field in octets. If the value of this field
+    is zero, no Optional Parameters are present.
+
+Optional Parameters:
+  : This field contains a list of optional parameters, in which
+    each parameter is encoded as a <Parameter Type, Parameter
+    Length, Parameter Value> triplet. The rules for encoding Optional 
+    Parameters are unchanged with respect to those above, except that 
+    the Parameter Length field is extended to be a two-octet 
+    unsigned integer.
+
+~~~~ aasvg
+     0                   1                   2
+     0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    |  Parm. Type   |        Parameter Length       |
+    +---------------+-------------------------------+
+    |                                               |
+    |            Parameter Value (variable)         |
+    |                                               |
+    +-----------------------------------------------+
+~~~~
+{: title="Optional Parameters (extended variant)"}
+
+In parsing an OPEN message, if the one-octet Optional Parameters Length
+field (labeled "Non-Ext OP Len." in {{ext-open}}) is non-zero, a BGP
+speaker MUST use the value of the octet following the one-octet Optional
+Parameters Length field (labeled "Non-Ext OP Type" in {{ext-open}}) to
+determine both the encoding of the Optional Parameters length and the
+size of the Parameter Length field of individual Optional Parameters. If
+the value of the "Non-Ext OP Type" field is 255, then the encoding
+described in this subsection is used for the Optional Parameters length.
+Otherwise, the encoding defined in {{openfmt}} is used.
 
 ##  UPDATE Message Format {#updatefmt}
 
@@ -1611,7 +1712,15 @@ message is from an internal peer, then the Error Subcode is set to
 
 If one of the Optional Parameters in the OPEN message is not
 recognized, then the Error Subcode MUST be set to Unsupported
-Optional Parameters.
+Optional Parameters. Note that a peer that does not support the
+extended OPEN format defined in this specification {{openfmt-ext}} would
+send such an error in response to receipt of an OPEN message that uses
+the extended format.
+
+If an Optional Parameter with type code 255 is encountered in any
+position other than that depicted as "Non-Ext OP Type" in {{ext-open}}
+it MUST be treated as an unrecognized Optional Parameter and handled per
+the above paragraph.
 
 If one of the Optional Parameters in the OPEN message is recognized,
 but is malformed, then the Error Subcode MUST be set to 0
@@ -4919,6 +5028,19 @@ Robert Raszuk, Greg Skinner, Adam Chappell, Sriram Kotikalapudi,
 Brian Dickson, Jeffrey Haas, John Heasley, Ignas Bagdonas, Donald
 Smith, Alvaro Retana, John Scudder, and Dale Worley.
 
+## Acknowledgements in relationship to RFC 9072
+
+{{RFC9072}} was authored by Enke Chen and John Scudder. Its contents were 
+subsumed in this document.
+
+RFC 9072 contained the following acknowledgments:
+
+The authors would like to thank Yakov Rekhter and Srihari Sangli for
+discussing various options to enlarge the Optional Parameters field. We
+would also like to thank Matthew Bocci, Bruno Decraene, John Heasley,
+Jakob Heitz, Christer Holmberg, Pradosh Mohapatra, Keyur Patel, and
+Hannes Gredler for their valuable comments.
+
 ## Acknowledgements in relationship to RFC 9687
 
 {{?RFC9687}} was authored by Job Snijders, Ben Cartwright-Cox, and Yingzhen Qu.
@@ -5083,16 +5205,19 @@ To do and/or not done:
   
 ## Version 04
 
+- Merge RFC 4486, "Subcodes for BGP Cease Notification Message".
+  (Issue #147)
+  
 - Merge RFC 7607, "Codification of AS 0 Processing". (Issue #20) As 
   part of this, also introduced a new top-level section, "Protocol
-  Invariants". For now this is the home for the definition of the
+  Invariants". For now, this is the home for the definition of the
   system's own AS number (this previously was not defined!). It 
   seems likely we will find more things to put in this section; if
   it ends up holding only the one definition we can look for a place
   to demote it, if wanted.
-  
-- Merge RFC 4486, "Subcodes for BGP Cease Notification Message".
-  (Issue #147)
+
+- Merge RFC 9072, "Extended Optional Parameters Length for BGP 
+  OPEN Message". This also obsoletes RFC 9072. (Issue #24) 
   
 # TCP Options that May Be Used with BGP {#tcpopts}
 
@@ -5333,6 +5458,14 @@ SEQUENCE are reversed between the respective types.)
 | AS_CONFED_SEQUENCE | 3 | {{RFC5065}} |
 | AS_CONFED_SET | 4 | {{RFC5065}} |
 | Reserved | 255 | This Document |
+
+## BGP OPEN Optional Parameter Types
+
+With the publication of RFC 9072, IANA assigned value 255 as the
+Extended Length type code in the "BGP OPEN Optional Parameter Types"
+registry. With the publication of this document, RFC 9072 will be
+obsoleted; thus, IANA is requested to update the reference to refer to
+this document.
 
 ## References to BGP Specification
 
