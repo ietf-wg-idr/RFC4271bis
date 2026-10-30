@@ -5,7 +5,7 @@ docname: draft-ietf-idr-bgp4-rfc4271bis-04
 category: std
 date: 2026
 
-obsoletes: 4271, 6286, 6608, 8212, 9072, 9687
+obsoletes: 4271, 4486, 6286, 6608, 8212, 9072, 9687
 updates: 7606, 7607
 
 stand_alone: yes
@@ -54,6 +54,7 @@ normative:
   RFC793: 
   RFC2119: 
   RFC2385: 
+  RFC4760:
   RFC8126: 
   RFC8174: 
 
@@ -77,8 +78,8 @@ informative:
   RFC4271:
   RFC4272:
   RFC4456:
+  RFC4486:
   RFC4724:
-  RFC4760:
   RFC5004:
   RFC5065:
   RFC6514:
@@ -91,6 +92,7 @@ informative:
   RFC7964:
   RFC8212:
   RFC8654:
+  RFC9003:
   RFC9072:
   RFC9687:
   I-D.ietf-idr-bgp-issues:
@@ -1253,6 +1255,20 @@ Finite State Machine Error Subcodes:
 | 3     | Receive Unexpected Message in Established State |
 {: title="Finite State Machine Error Subcodes"}
 
+Cease Error Subcodes:
+
+| Value | Name                                            |
+|-------|-------------------------------------------------|
+| 1     | Maximum Number of Prefixes Reached              |
+| 2     | Administrative Shutdown                         |
+| 3     | Peer De-configured                              |
+| 4     | Administrative Reset                            |
+| 5     | Connection Rejected                             |
+| 6     | Other Configuration Change                      |
+| 7     | Connection Collision Resolution                 |
+| 8     | Out of Resources                                |
+{: title="Cease Error Subcodes"}
+
 Data:
   : This variable-length field is used to diagnose the reason for
    the NOTIFICATION.  The contents of the Data field depend upon
@@ -2113,25 +2129,86 @@ with the Error Code Finite State Machine Error and the Error Subcode
 
 ## Cease {#ceaseerr}
 
-In the absence of any fatal errors (that are indicated in this
-section), a BGP peer MAY choose, at any given time, to close its BGP
-connection by sending the NOTIFICATION message with the Error Code
-Cease.  However, the Cease NOTIFICATION message MUST NOT be used when
-a fatal error indicated by this section does exist.
+### Sending a Cease
+
+In the absence of any of the conditions that are indicated in this
+section, a BGP peer MAY choose, at any given time, to close its BGP
+connection by sending the NOTIFICATION message with the Error Code Cease
+and no subcode.  However, if a condition indicated by this section does
+exist, the relevant subcode SHOULD be used.
 
 A BGP speaker MAY support the ability to impose a locally-configured,
-upper bound on the number of address prefixes the speaker is willing
-to accept from a neighbor.  When the upper bound is reached, the
-speaker, under control of local configuration, either (a) discards
-new address prefixes from the neighbor (while maintaining the BGP
-connection with the neighbor), or (b) terminates the BGP connection
-with the neighbor.  If the BGP speaker decides to terminate its BGP
-connection with a neighbor because the number of address prefixes
-received from the neighbor exceeds the locally-configured, upper
-bound, then the speaker MUST send the neighbor a NOTIFICATION message
-with the Error Code Cease.  The speaker MAY also log this locally.
+upper bound on the number of address prefixes the speaker is willing to
+accept from a neighbor.  When the upper bound is reached, the speaker,
+under control of local configuration, either (a) discards new address
+prefixes from the neighbor (while maintaining the BGP connection with
+the neighbor), or (b) terminates the BGP connection with the neighbor.
+If the BGP speaker decides to terminate its BGP connection with a
+neighbor because the number of address prefixes received from the
+neighbor exceeds the locally-configured, upper bound, then the speaker
+MUST send the neighbor a NOTIFICATION message with the Error Code Cease
+and the Error Subcode "Maximum Number of Prefixes Reached".  The speaker
+MAY log this locally.  The message MAY include the Address Family
+information {{RFC4760}} and the upper bound in the "Data" field, as
+shown in {{maxprefix}}, where the meaning and use of the <AFI, SAFI>
+tuple is the same as defined in {{RFC4760}}, Section 7.
 
-<!-- xxx prefix limit - integrate spec? -->
+~~~~ aasvg
+    +-------------------------------+
+    | AFI (2 octets)                |
+    +-------------------------------+
+    | SAFI (1 octet)                |
+    +-------------------------------+
+    | Prefix upper bound (4 octets) |
+    +-------------------------------+
+~~~~
+{: #maxprefix}
+
+If a BGP speaker decides to administratively shut down its peering with
+a neighbor, then the speaker SHOULD send a NOTIFICATION message with the
+Error Code Cease and the Error Subcode "Administrative Shutdown". If used,
+{{RFC9003}} specifies additional information in the Data field.
+
+If a BGP speaker decides to de-configure a peer, then the speaker SHOULD
+send a NOTIFICATION message with the Error Code Cease and the Error
+Subcode "Peer De-configured".
+
+If a BGP speaker decides to administratively reset the peering with a
+neighbor, then the speaker SHOULD send a NOTIFICATION message with the
+Error Code Cease and the Error Subcode "Administrative Reset". If used,
+{{RFC9003}} specifies additional information in the Data field.
+
+If a BGP speaker decides to disallow a BGP connection (e.g., the peer is
+not configured locally) after the speaker accepts a transport protocol
+connection, then the BGP speaker SHOULD send a NOTIFICATION message with
+the Error Code Cease and the Error Subcode "Connection Rejected".
+
+If a BGP speaker decides to administratively reset the peering with a
+neighbor due to a configuration change other than the ones described
+above, then the speaker SHOULD send a NOTIFICATION message with the
+Error Code Cease and the Error Subcode "Other Configuration Change".
+
+If a BGP speaker decides to send a NOTIFICATION message with the Error
+Code Cease as a result of the collision resolution procedure (as
+described in {{collision}}), then the subcode SHOULD be set to
+"Connection Collision Resolution".
+
+If a BGP speaker runs out of resources (e.g., memory) and decides to
+reset a session, then the speaker MAY send a NOTIFICATION message with
+the Error Code Cease and the Error Subcode "Out of Resources".
+
+### Receiving a Cease
+
+It is RECOMMENDED that a BGP speaker behave as though the
+DampPeerOscillations attribute {{fsm}} were true for this peer when
+re-trying a BGP connection after the speaker receives a Cease
+NOTIFICATION message with a subcode of "Administrative Shutdown",
+"Peer De-configured", "Connection Rejected", or "Out of Resources".
+An implementation SHOULD impose an upper bound on the number of
+consecutive automatic retries.  Once this bound is reached, the
+implementation would stop re-trying any BGP connections until some
+administrative intervention, i.e., set the AllowAutomaticStart
+attribute {{fsm}} to FALSE.
 
 ## BGP Connection Collision Detection {#collision}
 
@@ -4895,6 +4972,16 @@ Finally, we would like to thank all the members of the IDR Working
 Group for their ideas and the support they have given to this
 document.
 
+## Acknowledgements in relationship to RFC 4486
+
+{{RFC4486}} was authored by Enke Chen and Vincent Gillet. Its
+contents have been subsumed in this document.
+
+RFC 4486 contains the following acknowledgments:
+
+The authors would like to thank Yakov Rekhter, Pedro Marques, Andrew
+Lange, and Don Goodspeed for their review and suggestions.
+
 ## Acknowledgements in relationship to RFC 7606
 
 {{RFC7606}} was authored by Enke Chen, John Scudder, Pradosh Mohapatra,
@@ -5118,6 +5205,9 @@ To do and/or not done:
   
 ## Version 04
 
+- Merge RFC 4486, "Subcodes for BGP Cease Notification Message".
+  (Issue #147)
+  
 - Merge RFC 7607, "Codification of AS 0 Processing". (Issue #20) As 
   part of this, also introduced a new top-level section, "Protocol
   Invariants". For now, this is the home for the definition of the
@@ -5125,7 +5215,7 @@ To do and/or not done:
   seems likely we will find more things to put in this section; if
   it ends up holding only the one definition we can look for a place
   to demote it, if wanted.
-  
+
 - Merge RFC 9072, "Extended Optional Parameters Length for BGP 
   OPEN Message". This also obsoletes RFC 9072. (Issue #24) 
   
@@ -5344,6 +5434,10 @@ the following UPDATE Message Error subcodes:
 RFC 6608 created the registry "BGP Finite State Machine Error Subcodes".
 IANA is requested to update the reference in that registry (both overall,
 and individual code points) to this document.
+
+RFC 4486 created the registry "BGP Cease NOTIFICATION message subcodes".
+IANA is requested to update the reference in that registry (both overall,
+and individual code points that reference RFC 4486) to this document.
 
 ## AS_PATH Segment Types
 
