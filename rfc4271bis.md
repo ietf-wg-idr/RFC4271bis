@@ -1569,6 +1569,10 @@ sends to external peers, except in the case of BGP Confederations
 
 ### ATOMIC_AGGREGATE {#atomic}
 
+<!-- xxx Aggregation behavior is currently specified both here and
+in "Aggregating Routing Information". Consider restructuring so
+that normative aggregation requirements appear in only one place. -->
+
 ATOMIC_AGGREGATE is a well-known discretionary attribute.
 
 When a BGP speaker aggregates several routes for the purpose of
