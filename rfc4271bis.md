@@ -1597,16 +1597,13 @@ attribute of the route.
 
 ###  AGGREGATOR {#aggregator}
 
-AGGREGATOR is an optional transitive attribute, which MAY be included
-in updates that are formed by aggregation (see {{aggregating}}).  A
-BGP speaker that performs route aggregation MAY add the AGGREGATOR
-attribute, which SHALL contain its own AS number and IP address.  The
-IP address SHOULD be the same as the BGP Identifier of the speaker.
+AGGREGATOR is an optional transitive attribute, which MAY be included in
+updates that are formed by aggregation (see {{aggregating}}).  A BGP
+speaker that performs route aggregation MAY add the AGGREGATOR
+attribute, which SHALL contain its own AS number and BGP Identifier.
 
 {{RFC6793}} modifies the format of the AGGREGATOR attribute 
-to support four-octet AS numbers. There is no similar support for
-representation of IP Version 6 addresses in the AGGREGATOR attribute
-currently specified.
+to support four-octet AS numbers. 
 
 # BGP Error Handling {#errorhandling}
 
@@ -5230,6 +5227,14 @@ To do and/or not done:
 
 - Merge RFC 9072, "Extended Optional Parameters Length for BGP 
   OPEN Message". This also obsoletes RFC 9072. (Issue #24) 
+  
+- Changed the definition of AGGREGATOR from containing an IPv4 address
+  to containing a BGP Identifier. This resolves the lack of an
+  IPv6-specific encoding and is barely a normative change, since the
+  previous definition already stated that the address SHOULD be the BGP
+  Identifier. One can also view this as fixing a long-standing
+  specification defect, since a BGP Identifier has not been required to
+  be an IP address since RFC 6286. (Issue #150)
   
 # TCP Options that May Be Used with BGP {#tcpopts}
 
