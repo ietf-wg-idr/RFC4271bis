@@ -4791,9 +4791,9 @@ AS_PATH attribute:
      - Attach the ATOMIC_AGGREGATE path attribute to the aggregated 
      route. 
      
-     Except in the identical AS_PATH case described above, the
-     aggregation procedure will not consume all tuples. This is why the
-     ATOMIC_AGGREGATE attribute is attached. 
+     Except in the identical AS_PATH case described in the first
+     paragraph, the aggregation procedure will not consume all tuples.
+     This is why the ATOMIC_AGGREGATE attribute is attached. 
      
      Optionally, the resulting AS_PATH MAY be truncated further. 
      Details of when and how to do so are beyond the scope of this
