@@ -1377,7 +1377,7 @@ An ORIGIN value not equal to one of the defined values of (0, 1, or 2)
 
 AS_PATH is a well-known mandatory attribute.  This attribute
 identifies the autonomous systems through which routing information
-carried in this UPDATE message has passed.  The components of this 
+carried in this UPDATE message has passed.  The components of this
 list can be AS_SETs or AS_SEQUENCEs. (Other segments and behaviors 
 are added by {{RFC5065}}, if used.) 
 
@@ -1975,8 +1975,8 @@ ORIGIN attribute, SHALL be handled using the approach of
 #### AS_PATH Error Handling
 
 An AS_PATH is considered malformed if it contains AS 0 in any position.
-It is considered malformed if it contains an AS_SET unless AS_SET
-propagation has been enabled by local configuration. It is also
+It is considered malformed if it contains an AS_SET unless acceptance
+of AS_SETS has been enabled by local configuration. It is also
 considered malformed if an unrecognized segment type is encountered or
 if it contains a malformed segment.  A segment is considered malformed
 if any of the following are true:
@@ -4782,9 +4782,9 @@ AS_PATH attribute:
      sequence of the aggregated AS_PATH attribute.
 
      - for each pair of adjacent tuples in the aggregated AS_PATH,
-     if both tuples have the same type, merge them together, as
-     long as doing so will not cause a segment with a length
-     greater than 255 to be generated.
+     if both tuples have the same type (which they will), merge 
+     them together, as long as doing so will not cause a segment 
+     with a length greater than 255 to be generated.
           
      - Attach the ATOMIC_AGGREGATE path attribute to the aggregated 
      route. 
@@ -5514,9 +5514,10 @@ https://www.iana.org/assignments/ipfix with references to this document.
 <!--
 # Aggregation
 
-RFC 4271's aggregation rules were seldom implemented as written and
-almost never used in practice. This specification simplifies aggregation,
-to document only the implemented and practiced procedures. 
+RFC 4271's aggregation rules were seldom implemented as written (basic
+aggregation was pervasively implemented. "Complex" from the appendix was
+not) and almost never used in practice. This specification simplifies
+aggregation, to document only the implemented and practiced procedures. 
 
 etc
 
