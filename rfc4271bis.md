@@ -5218,9 +5218,6 @@ To do and/or not done:
   System (AS) Number Space") from all the parts of the spec that it
   touches. (Issue #18)
   
-- Merge RFC 4486, "Subcodes for BGP Cease Notification Message".
-  (Issue #147)
-  
 - Merge RFC 7607, "Codification of AS 0 Processing". (Issue #20) As 
   part of this, also introduced a new top-level section, "Protocol
   Invariants". For now, this is the home for the definition of the
@@ -5237,7 +5234,10 @@ To do and/or not done:
   procedures. RFC 4271's aggregation description relied on construction
   of AS_SETs, now deprecated. The replacement algorithm collapses to
   "find the longest leading sequence". 
-  
+
+- Merge RFC 4486, "Subcodes for BGP Cease Notification Message".
+  (Issue #147)
+    
 - Changed the definition of AGGREGATOR from containing an IPv4 address
   to containing a BGP Identifier. This finesses the lack of an
   IPv6-specific encoding and is barely a normative change, since the
