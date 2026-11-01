@@ -5145,10 +5145,6 @@ issues discussed and the consensus reached" during development.
   
 ## Version 02
 
-- Add references to RFC 6793 ("BGP Support for Four-Octet Autonomous 
-  System (AS) Number Space") from all the parts of the spec that it
-  touches. (Issue #18)
-  
 - Bring changelog up to date, including for earlier versions.
   
 - Add references to RFC 8654 ("Extended Message Support for BGP") from
@@ -5218,6 +5214,10 @@ To do and/or not done:
   
 ## Version 04
 
+- Add references to RFC 6793 ("BGP Support for Four-Octet Autonomous 
+  System (AS) Number Space") from all the parts of the spec that it
+  touches. (Issue #18)
+  
 - Merge RFC 4486, "Subcodes for BGP Cease Notification Message".
   (Issue #147)
   
