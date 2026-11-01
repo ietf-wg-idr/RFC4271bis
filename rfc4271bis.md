@@ -726,14 +726,14 @@ Optional Parameters Length:
     Optional Parameters field in octets.  If the value of this
     field is zero, no Optional Parameters are present. If the 
     length of the parameters to be encoded exceeds 255 octets, the 
-    extended variant {{openfmt-ext}} is used instead.
+    extended variant ({{openfmt-ext}}) is used instead.
 
 Optional Parameters:
   : This field contains a list of optional parameters, in which
     each parameter is encoded as a <Parameter Type, Parameter
     Length, Parameter Value> triplet. If the length of the 
     parameters to be encoded exceeds 255 octets, the extended
-    variant {{openfmt-ext}} is used instead.
+    variant ({{openfmt-ext}}) is used instead.
 
 ~~~~ aasvg
      0                   1
@@ -749,7 +749,7 @@ Optional Parameters:
   contains the length of the Parameter Value field in octets.  Parameter
   Value is a variable length field that is interpreted according to the
   value of the Parameter Type field. If the length of the parameters to
-  be encoded exceeds 255 octets, the extended variant {{openfmt-ext}} is
+  be encoded exceeds 255 octets, the extended variant ({{openfmt-ext}}) is
   used instead.
 
   > {{?RFC3392}} defines the Capabilities Optional Parameter.
@@ -761,7 +761,7 @@ message header).
 
 This version of the OPEN message is identical to that defined above,
 except for its encoding of the optional parameters. To preserve backward
-compatibility, the non-extended format {{openfmt}} SHOULD be used except
+compatibility, the non-extended format ({{openfmt}}) SHOULD be used except
 when the length of the parameters to be encoded exceeds 255 octets, when
 this format MUST be used. Configuration MAY override this to force the
 extended format to be used in all cases; this might be used, for
@@ -1715,7 +1715,7 @@ message is from an internal peer, then the Error Subcode is set to
 If one of the Optional Parameters in the OPEN message is not
 recognized, then the Error Subcode MUST be set to Unsupported
 Optional Parameters. Note that a peer that does not support the
-extended OPEN format defined in this specification {{openfmt-ext}} would
+extended OPEN format defined in this specification ({{openfmt-ext}}) would
 send such an error in response to receipt of an OPEN message that uses
 the extended format.
 
@@ -2214,7 +2214,7 @@ An implementation SHOULD impose an upper bound on the number of
 consecutive automatic retries.  Once this bound is reached, the
 implementation would stop re-trying any BGP connections until some
 administrative intervention, i.e., set the AllowAutomaticStart
-attribute {{fsm}} to FALSE.
+attribute ({{fsm}}) to FALSE.
 
 ## BGP Connection Collision Detection {#collision}
 
