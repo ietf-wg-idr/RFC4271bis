@@ -2206,7 +2206,7 @@ the Error Code Cease and the Error Subcode "Out of Resources".
 ### Receiving a Cease
 
 It is RECOMMENDED that a BGP speaker behave as though the
-DampPeerOscillations attribute {{fsm}} were true for this peer when
+DampPeerOscillations attribute ({{fsm}}) were true for this peer when
 re-trying a BGP connection after the speaker receives a Cease
 NOTIFICATION message with a subcode of "Administrative Shutdown",
 "Peer De-configured", "Connection Rejected", or "Out of Resources".
@@ -5239,7 +5239,7 @@ To do and/or not done:
   "find the longest leading sequence". 
   
 - Changed the definition of AGGREGATOR from containing an IPv4 address
-  to containing a BGP Identifier. This resolves the lack of an
+  to containing a BGP Identifier. This finesses the lack of an
   IPv6-specific encoding and is barely a normative change, since the
   previous definition already stated that the address SHOULD be the BGP
   Identifier. One can also view this as fixing a long-standing
