@@ -6,7 +6,7 @@ category: std
 date: 2026
 
 obsoletes: 4271, 4486, 6286, 6608, 8212, 9072, 9687
-updates: 7606, 7607
+updates: 7606, 7607, 9774
 
 stand_alone: yes
 pi: 
@@ -96,6 +96,7 @@ informative:
   RFC9003:
   RFC9072:
   RFC9687:
+  RFC9774:
   I-D.ietf-idr-bgp-issues:
 
   IS10747:
@@ -125,8 +126,8 @@ mechanisms that allow aggregation of routes, including aggregation of
 AS paths.
 
 This document obsoletes RFC 4271 and many other RFCs. It updates
-RFC 7606 and RFC 7607 by subsuming their functionality as relates to 
-RFC 4271.
+RFC 7606, RFC 7607 and RFC 9774 by subsuming their functionality as 
+relates to RFC 4271.
 
 --- middle
 
@@ -720,14 +721,14 @@ Optional Parameters Length:
     Optional Parameters field in octets.  If the value of this
     field is zero, no Optional Parameters are present. If the 
     length of the parameters to be encoded exceeds 255 octets, the 
-    extended variant {{openfmt-ext}} is used instead.
+    extended variant ({{openfmt-ext}}) is used instead.
 
 Optional Parameters:
   : This field contains a list of optional parameters, in which
     each parameter is encoded as a <Parameter Type, Parameter
     Length, Parameter Value> triplet. If the length of the 
     parameters to be encoded exceeds 255 octets, the extended
-    variant {{openfmt-ext}} is used instead.
+    variant ({{openfmt-ext}}) is used instead.
 
 ~~~~ aasvg
      0                   1
@@ -743,7 +744,7 @@ Optional Parameters:
   contains the length of the Parameter Value field in octets.  Parameter
   Value is a variable length field that is interpreted according to the
   value of the Parameter Type field. If the length of the parameters to
-  be encoded exceeds 255 octets, the extended variant {{openfmt-ext}} is
+  be encoded exceeds 255 octets, the extended variant ({{openfmt-ext}}) is
   used instead.
 
   > {{?RFC3392}} defines the Capabilities Optional Parameter.
@@ -755,7 +756,7 @@ message header).
 
 This version of the OPEN message is identical to that defined above,
 except for its encoding of the optional parameters. To preserve backward
-compatibility, the non-extended format {{openfmt}} SHOULD be used except
+compatibility, the non-extended format ({{openfmt}}) SHOULD be used except
 when the length of the parameters to be encoded exceeds 255 octets, when
 this format MUST be used. Configuration MAY override this to force the
 extended format to be used in all cases; this might be used, for
@@ -1022,7 +1023,7 @@ following values defined:
 
 |Value  |  Segment Type                                       |
 |-------|-----------------------------------------------------|
-| 1     |    AS_SET: unordered set of ASes a route in the UPDATE message has traversed                     |
+| 1 (deprecated)    |    AS_SET: deprecated                     |
 | 2     |    AS_SEQUENCE: ordered set of ASes a route in the UPDATE message has traversed                 |
 {: #aspath_segtypes title="AS_PATH Segment Type Values"}
 
@@ -1216,7 +1217,7 @@ OPEN Message Error subcodes:
 | 2     | Bad Peer AS                     |
 | 3     | Bad BGP Identifier              |
 | 4     | Unsupported Optional Parameter  |
-| 5     | [Deprecated - see Appendix A]   |
+| 5     | [Deprecated - see {{RFC4271}} Appendix A]   |
 | 6     | Unacceptable Hold Time          |
 {: title="OPEN Message Error subcodes"}
 
@@ -1231,7 +1232,7 @@ UPDATE Message Error subcodes:
 | 4     | Attribute Flags Error (deprecated)            |
 | 5     | Attribute Length Error (deprecated)           |
 | 6     | Invalid ORIGIN Attribute (deprecated)         |
-| 7     | [Deprecated - see Appendix A]   |
+| 7     | [Deprecated - see {{RFC4271}} Appendix A]   |
 | 8     | Invalid NEXT_HOP Attribute (deprecated)       |
 | 9     | Optional Attribute Error (deprecated)         |
 | 10    | Invalid Network Field           |
@@ -1397,7 +1398,9 @@ system MAY include/prepend more than one instance of its own AS
 number in the AS_PATH attribute.  This is controlled via local
 configuration.
 
-The AS number 0 MUST NOT be added to the AS_PATH; see {{own-asn}}.
+The AS number 0 MUST NOT be added to the AS_PATH; see {{own-asn}}. The
+advertised AS_PATH MUST NOT contain an AS_SET unless AS_SET propagation 
+has been enabled by local configuration.
 
 ###  NEXT_HOP {#nexthop}
 
@@ -1536,21 +1539,24 @@ sends to external peers, except in the case of BGP Confederations
 
 ### ATOMIC_AGGREGATE {#atomic}
 
-When a BGP speaker aggregates several routes for the purpose of
-advertisement to a particular peer, the AS_PATH of the aggregated
-route could include an AS_SET formed from the set of ASes from
-which the aggregate was formed.  In many cases, the network
-administrator can determine if the aggregate can safely be advertised
-without the AS_SET, and without forming route loops.
+<!-- xxx Aggregation behavior is currently specified both here and
+in "Aggregating Routing Information". Consider restructuring so
+that normative aggregation requirements appear in only one place. -->
 
-If an aggregate excludes at least some of the AS numbers present in
-the AS_PATH of the routes that are aggregated as a result of dropping
-the AS_SET, the aggregated route, when advertised to the peer, SHOULD
+ATOMIC_AGGREGATE is a well-known discretionary attribute.
+
+When a BGP speaker aggregates several routes for the purpose of
+advertisement to a particular peer, the AS_PATH of the aggregated route
+might exclude some of the AS numbers present in the constituent routes.
+
+If an aggregate excludes at least some of the AS numbers present in the
+AS_PATH of the routes that are aggregated, the aggregated route, when
+advertised to the peer, SHOULD <!-- consider upgrading to MUST -->
 include the ATOMIC_AGGREGATE attribute.
 
 A BGP speaker that receives a route with the ATOMIC_AGGREGATE
 attribute SHOULD NOT remove the attribute when propagating the route
-to other speakers.
+to other speakers. <!-- same here -->
 
 A BGP speaker that receives a route with the ATOMIC_AGGREGATE
 attribute MUST NOT make any NLRI of that route more specific (as
@@ -1564,16 +1570,13 @@ attribute of the route.
 
 ###  AGGREGATOR {#aggregator}
 
-AGGREGATOR is an optional transitive attribute, which MAY be included
-in updates that are formed by aggregation (see {{aggregating}}).  A
-BGP speaker that performs route aggregation MAY add the AGGREGATOR
-attribute, which SHALL contain its own AS number and IP address.  The
-IP address SHOULD be the same as the BGP Identifier of the speaker.
+AGGREGATOR is an optional transitive attribute, which MAY be included in
+updates that are formed by aggregation (see {{aggregating}}).  A BGP
+speaker that performs route aggregation MAY add the AGGREGATOR
+attribute, which SHALL contain its own AS number and BGP Identifier.
 
 {{RFC6793}} modifies the format of the AGGREGATOR attribute 
-to support four-octet AS numbers. There is no similar support for
-representation of IP Version 6 addresses in the AGGREGATOR attribute
-currently specified.
+to support four-octet AS numbers. 
 
 # BGP Error Handling {#errorhandling}
 
@@ -1681,7 +1684,7 @@ message is from an internal peer, then the Error Subcode is set to
 If one of the Optional Parameters in the OPEN message is not
 recognized, then the Error Subcode MUST be set to Unsupported
 Optional Parameters. Note that a peer that does not support the
-extended OPEN format defined in this specification {{openfmt-ext}} would
+extended OPEN format defined in this specification ({{openfmt-ext}}) would
 send such an error in response to receipt of an OPEN message that uses
 the extended format.
 
@@ -1940,9 +1943,11 @@ ORIGIN attribute, SHALL be handled using the approach of
 #### AS_PATH Error Handling
 
 An AS_PATH is considered malformed if it contains AS 0 in any position.
-It is also considered malformed if an unrecognized segment type is
-encountered or if it contains a malformed segment.  A segment is
-considered malformed if any of the following are true:
+It is considered malformed if it contains an AS_SET unless acceptance
+of AS_SETS has been enabled by local configuration. It is also
+considered malformed if an unrecognized segment type is encountered or
+if it contains a malformed segment.  A segment is considered malformed
+if any of the following are true:
 
 - There is an overrun where the Path Segment Length field of the last
 segment encountered would cause the Attribute Length to be exceeded.
@@ -2068,6 +2073,8 @@ of a "Send Hold Timer Expired" NOTIFICATION message.
 
 ## Finite State Machine Error Handling {#fsmerr}
 
+<!-- need a variable for AS_SET support -->
+
 If a BGP speaker receives an unexpected message (e.g., 
 KEEPALIVE/UPDATE/ROUTE-REFRESH message) on a session in OpenSent state,
 it MUST send to the neighbor a NOTIFICATION message with the Error Code
@@ -2167,7 +2174,7 @@ the Error Code Cease and the Error Subcode "Out of Resources".
 ### Receiving a Cease
 
 It is RECOMMENDED that a BGP speaker behave as though the
-DampPeerOscillations attribute {{fsm}} were true for this peer when
+DampPeerOscillations attribute ({{fsm}}) were true for this peer when
 re-trying a BGP connection after the speaker receives a Cease
 NOTIFICATION message with a subcode of "Administrative Shutdown",
 "Peer De-configured", "Connection Rejected", or "Out of Resources".
@@ -2175,7 +2182,7 @@ An implementation SHOULD impose an upper bound on the number of
 consecutive automatic retries.  Once this bound is reached, the
 implementation would stop re-trying any BGP connections until some
 administrative intervention, i.e., set the AllowAutomaticStart
-attribute {{fsm}} to FALSE.
+attribute ({{fsm}}) to FALSE.
 
 ## BGP Connection Collision Detection {#collision}
 
@@ -2850,7 +2857,7 @@ Status:     Mandatory
 Optional Session Attribute Status:
    : 1. The DelayOpen optional session attribute SHOULD be set
        to FALSE.
-     2. The DelayOpenTimer SHOULD not be running.
+     2. The DelayOpenTimer SHOULD NOT be running.
 
 #### Event 20: BGPOpen with DelayOpenTimer running
 
@@ -4428,11 +4435,8 @@ possible MULTI_EXIT_DISC value (i.e., 0).
 neighbor AS from which the route was received.  If the route is
 learned via IBGP, and the other IBGP speaker didn't originate
 the route, it is the neighbor AS from which the other IBGP
-speaker learned the route.  If the route is learned via IBGP,
-and the other IBGP speaker either (a) originated the route, or
-(b) created the route by aggregation and the AS_PATH attribute
-of the aggregate route is either empty or begins with an
-AS_SET, it is the local AS.
+speaker learned the route.  If the AS_PATH attribute
+is either empty or begins with an AS_SET, it is the local AS.
 
 > If a MULTI_EXIT_DISC attribute is removed before re-advertising
 a route into IBGP, then comparison based on the received EBGP
@@ -4570,16 +4574,15 @@ the more specific routes or aggregate the two routes and install, in
 Loc-RIB, the aggregated route, provided that both routes have the
 same value of the NEXT_HOP attribute.
 
-If a BGP speaker chooses to aggregate, then it SHOULD either include
-all ASes used to form the aggregate in an AS_SET, or add the
-ATOMIC_AGGREGATE attribute to the route.  This attribute is now
+If a BGP speaker chooses to aggregate, then it SHOULD <!-- MUST? --> add the
+ATOMIC_AGGREGATE attribute to the route.  <!-- This attribute is now
 primarily informational.  With the elimination of IP routing
 protocols that do not support classless routing, and the elimination
 of router and host implementations that do not support classless
-routing, there is no longer a need to de-aggregate.  Routes SHOULD
+routing, there is no longer a need to de-aggregate. -->  Routes SHOULD
 NOT be de-aggregated.  In particular, a route that carries the
 ATOMIC_AGGREGATE attribute MUST NOT be de-aggregated.  That is, the
-NLRI of this route cannot be more specific.  Forwarding along such a
+NLRI of this route cannot be made more specific.  Forwarding along such a
 route does not guarantee that IP packets will actually traverse only
 ASes listed in the AS_PATH attribute of the route.
 
@@ -4666,6 +4669,10 @@ information in an efficient manner.
 
 ####  Information Reduction {#informreduce}
 
+<!-- it seems to me we can eliminate this subsection, it's almost
+ vacuous. In the 1990s it needed to be explained; in 2026 it 
+ goes without saying. -->
+
 Information reduction may imply a reduction in granularity of policy
 control - after information is collapsed, the same policies will
 apply to all destinations and paths in the equivalence class.
@@ -4698,10 +4705,6 @@ of the same type and to the Network Layer Reachability Information.
 Routes that have different MULTI_EXIT_DISC attributes SHALL NOT be
 aggregated.
 
-If the aggregated route has an AS_SET as the first element in its
-AS_PATH attribute, then the router that originates the route SHOULD
-NOT advertise the MULTI_EXIT_DISC attribute with this route.
-
 Path attributes that have different type codes cannot be aggregated
 together.  Path attributes of the same type code may be aggregated,
 according to the following rules:
@@ -4726,58 +4729,40 @@ AS_PATH attribute:
    : If routes to be aggregated have identical AS_PATH attributes,
      then the aggregated route has the same AS_PATH attribute as
      each individual route.
+     
+     Otherwise, for the purpose of aggregating AS_PATH attributes, we
+     model each AS within the AS_PATH attribute as a tuple <type,
+     value>, where "type" identifies a type of the path segment the AS
+     belongs to (e.g., AS_SEQUENCE, AS_SET), and "value" identifies the
+     AS number.  An aggregated AS_PATH attribute can be formed as
+     follows:
 
-     For the purpose of aggregating AS_PATH attributes, we model
-     each AS within the AS_PATH attribute as a tuple <type, value>,
-     where "type" identifies a type of the path segment the AS
-     belongs to (e.g., AS_SEQUENCE, AS_SET), and "value" identifies
-     the AS number.  If the routes to be aggregated have different
-     AS_PATH attributes, then the aggregated AS_PATH attribute SHALL
-     satisfy all of the following conditions:
-
-     - all tuples of type AS_SEQUENCE in the aggregated AS_PATH
-       SHALL appear in all of the AS_PATHs in the initial set of
-       routes to be aggregated.
-
-     - all tuples of type AS_SET in the aggregated AS_PATH SHALL
-       appear in at least one of the AS_PATHs in the initial set
-       (they may appear as either AS_SET or AS_SEQUENCE types).
-
-     - for any tuple X of type AS_SEQUENCE in the aggregated
-       AS_PATH, which precedes tuple Y in the aggregated AS_PATH,
-       X precedes Y in each AS_PATH in the initial set, which
-       contains Y, regardless of the type of Y.
-
-     - No tuple of type AS_SET with the same value SHALL appear
-       more than once in the aggregated AS_PATH.
-
-     - Multiple tuples of type AS_SEQUENCE with the same value may
-       appear in the aggregated AS_PATH only when adjacent to
-       another tuple of the same type and value.
-
-   : An implementation may choose any algorithm that conforms to
-   these rules.  At a minimum, a conformant implementation SHALL
-   be able to perform the following algorithm that meets all of
-   the above conditions:
-
-   : - determine the longest leading sequence of tuples (as
-     defined above) common to all the AS_PATH attributes of the
-     routes to be aggregated.  Make this sequence the leading
+   : - determine the longest leading sequence of tuples of type
+     AS_SEQUENCE (as defined above) common to all the AS_PATH attributes
+     of the routes to be aggregated.  Make this sequence the leading
      sequence of the aggregated AS_PATH attribute.
 
-     - set the type of the rest of the tuples from the AS_PATH
-     attributes of the routes to be aggregated to AS_SET, and
-     append them to the aggregated AS_PATH attribute.
-
-     - if the aggregated AS_PATH has more than one tuple with the
-     same value (regardless of tuple's type), eliminate all but
-     one such tuple by deleting tuples of the type AS_SET from
-     the aggregated AS_PATH attribute.
-
      - for each pair of adjacent tuples in the aggregated AS_PATH,
-     if both tuples have the same type, merge them together, as
-     long as doing so will not cause a segment with a length
-     greater than 255 to be generated.
+     if both tuples have the same type (which they will), merge 
+     them together, as long as doing so will not cause a segment 
+     with a length greater than 255 to be generated.
+          
+     - Attach the ATOMIC_AGGREGATE path attribute to the aggregated 
+     route. 
+     
+     Except in the identical AS_PATH case described in the first
+     paragraph, the aggregation procedure will not consume all tuples.
+     This is why the ATOMIC_AGGREGATE attribute is attached. 
+     
+     Optionally, the resulting AS_PATH MAY be truncated further. 
+     Details of when and how to do so are beyond the scope of this
+     specification. 
+     
+     {{RFC9774}} refers to the style of aggregation 
+     described above as "brief". It also defines a variant known as 
+     "consistent brief" which further truncates the AS_PATH under
+     some circumstances.
+     
 
 ATOMIC_AGGREGATE:
    : If at least one of the routes to be aggregated has
@@ -5031,6 +5016,24 @@ Heasley, Nick Hilliard, Jeffrey Haas, Tom Petch, Susan Hares, Keyur
 Patel, Ben Maddison, Claudio Jeker, and John Scudder for their
 helpful review of this document.
 
+## Acknowledgements in relationship to RFC 9774
+
+{{?RFC9774}} was authored by Warren Kumari, Kotikalapudi Sriram, Lilia
+Hannachi, and Jeffrey Haas. Its contents have been partially subsumed in
+this document.
+
+RFC 9774 contained the following acknowledgements:
+
+The authors would like to thank Alvaro Retana, John Scudder, Ketan
+Talaulikar, Keyur Patel, Susan Hares, Claudio Jeker, Nick Hilliard,
+Robert Raszuk, John Heasley, Job Snijders, Jared Mauch, Jakob Heitz,
+Tony Przygienda, Douglas Montgomery, Randy Bush, Curtis Villamizar,
+Danny McPherson, Chris Morrow, Tom Petch, Ilya Varlashkin, Enke Chen,
+Tony Li, Florian Weimer, John Leslie, Paul Jakma, Rob Austein, Russ
+Housley, Sandra Murphy, Steven M. Bellovin, Steve Kent, Steve Padgett,
+and Alfred Hoenes for comments and suggestions. The comments and
+suggestions received from the IESG reviewers are also much appreciated.
+
 # Comparison of CURRENT_SPEC with RFC 4271 {#compare4271}
 
 This section describes significant technical changes between the present
@@ -5110,10 +5113,6 @@ issues discussed and the consensus reached" during development.
   
 ## Version 02
 
-- Add references to RFC 6793 ("BGP Support for Four-Octet Autonomous 
-  System (AS) Number Space") from all the parts of the spec that it
-  touches. (Issue #18)
-  
 - Bring changelog up to date, including for earlier versions.
   
 - Add references to RFC 8654 ("Extended Message Support for BGP") from
@@ -5183,8 +5182,9 @@ To do and/or not done:
   
 ## Version 04
 
-- Merge RFC 4486, "Subcodes for BGP Cease Notification Message".
-  (Issue #147)
+- Add references to RFC 6793 ("BGP Support for Four-Octet Autonomous 
+  System (AS) Number Space") from all the parts of the spec that it
+  touches. (Issue #18)
   
 - Merge RFC 7607, "Codification of AS 0 Processing". (Issue #20) As 
   part of this, also introduced a new top-level section, "Protocol
@@ -5196,6 +5196,23 @@ To do and/or not done:
 
 - Merge RFC 9072, "Extended Optional Parameters Length for BGP 
   OPEN Message". This also obsoletes RFC 9072. (Issue #24) 
+  
+- Merge RFC 9774, "Deprecation of AS_SET and AS_CONFED_SET in BGP".
+  (Issue #47) This required substantial restructuring of the aggregation
+  procedures. RFC 4271's aggregation description relied on construction
+  of AS_SETs, now deprecated. The replacement algorithm collapses to
+  "find the longest leading sequence". 
+
+- Merge RFC 4486, "Subcodes for BGP Cease Notification Message".
+  (Issue #147)
+    
+- Changed the definition of AGGREGATOR from containing an IPv4 address
+  to containing a BGP Identifier. This finesses the lack of an
+  IPv6-specific encoding and is barely a normative change, since the
+  previous definition already stated that the address SHOULD be the BGP
+  Identifier. One can also view this as fixing a long-standing
+  specification defect, since a BGP Identifier has not been required to
+  be an IP address since RFC 6286. (Issue #150)
   
 # TCP Options that May Be Used with BGP {#tcpopts}
 
@@ -5431,10 +5448,10 @@ SEQUENCE are reversed between the respective types.)
 | Name  |  Value | Reference | 
 |-------|-----------------------------------------------------|
 | Reserved | 0 | This Document |
-| AS_SET  | 1 |  This Document |
+| AS_SET (deprecated) | 1 |  This Document |
 | AS_SEQUENCE | 2 | This Document |
 | AS_CONFED_SEQUENCE | 3 | {{RFC5065}} |
-| AS_CONFED_SET | 4 | {{RFC5065}} |
+| AS_CONFED_SET (deprecated) | 4 | {{RFC5065}} |
 | Reserved | 255 | This Document |
 
 ## BGP OPEN Optional Parameter Types
@@ -5454,3 +5471,15 @@ document.
 IANA is requested to replace all references to RFC 4271 in the IP Flow
 Information Export (IPFIX) Entities registry group at
 https://www.iana.org/assignments/ipfix with references to this document.
+
+<!--
+# Aggregation
+
+RFC 4271's aggregation rules were seldom implemented as written (basic
+aggregation was pervasively implemented. "Complex" from the appendix was
+not) and almost never used in practice. This specification simplifies
+aggregation, to document only the implemented and practiced procedures. 
+
+etc
+
+-->
