@@ -4467,15 +4467,8 @@ possible MULTI_EXIT_DISC value (i.e., 0).
 neighbor AS from which the route was received.  If the route is
 learned via IBGP, and the other IBGP speaker didn't originate
 the route, it is the neighbor AS from which the other IBGP
-speaker learned the route.  If <!-- the route is learned via IBGP,
-and the other IBGP speaker either (a) originated the route, or
-(b) created the route by aggregation and --> the AS_PATH attribute
-<!-- of the aggregate route --> is either empty or begins with an
-AS_SET, it is the local AS.
-<!-- xxx this seemed needlessly discursive anyway, but the
-discussion of aggregation seemed especially confusing now that
-we've removed the ability to form an AS_SET during aggregation,
-leaving it only as a feature of older implementations. -->
+speaker learned the route.  If the AS_PATH attribute
+is either empty or begins with an AS_SET, it is the local AS.
 
 > If a MULTI_EXIT_DISC attribute is removed before re-advertising
 a route into IBGP, then comparison based on the received EBGP
