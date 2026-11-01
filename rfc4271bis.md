@@ -2889,7 +2889,7 @@ Status:     Mandatory
 Optional Session Attribute Status:
    : 1. The DelayOpen optional session attribute SHOULD be set
        to FALSE.
-     2. The DelayOpenTimer SHOULD not be running.
+     2. The DelayOpenTimer SHOULD NOT be running.
 
 #### Event 20: BGPOpen with DelayOpenTimer running
 
