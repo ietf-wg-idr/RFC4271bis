@@ -297,11 +297,6 @@ Unfeasible route:
 Unrecognized:
   : See Recognized.
     
-Well-known:
-  : A path attribute is called "well-known" if its Optional bit is set
-    to 0, as discussed in {{updatefmt}}. There are 5 such attributes,
-    ORIGIN, AS_PATH, NEXT_HOP, LOCAL_PREF, and ATOMIC_AGGREGATE.
-
 ##  Specification of Requirements
 
 {::boilerplate bcp14-tagged}
@@ -960,21 +955,21 @@ Path Attributes:
 <!-- [rfced] this text should be indented under path attributes -->
 
 > The high-order bit (bit 0) of the Attribute Flags octet is the
-Optional bit.  It defines whether the attribute is optional (if
-set to 1) or well-known (if set to 0).
+Optional bit.  The attributes ORIGIN, AS_PATH, NEXT_HOP, LOCAL_PREF, 
+and ATOMIC_AGGREGATE have their Optional bit set to 0. (The reasons
+for this choice are historical; the bit setting must be carried 
+forward to preserve backward compatibility.)
 
 > The second high-order bit (bit 1) of the Attribute Flags octet
 is the Transitive bit.  It defines whether an optional
 attribute is transitive (if set to 1) or non-transitive (if set
 to 0).
 
-> For well-known attributes, the Transitive bit MUST be set to 1.
-(See {{pathattributes}} for a discussion of transitive attributes.)
-
 > The third high-order bit (bit 2) of the Attribute Flags octet
 is the Partial bit.  It defines whether the information
 contained in the optional transitive attribute is partial (if
-set to 1) or complete (if set to 0).  For well-known attributes
+set to 1) or complete (if set to 0).  For the attributes
+ORIGIN, AS_PATH, NEXT_HOP, LOCAL_PREF, and ATOMIC_AGGREGATE,
 and for optional non-transitive attributes, the Partial bit
 MUST be set to 0.
 
@@ -1003,9 +998,10 @@ Flags and the Attribute Type Code.  The supported Attribute
 Type Codes, and their attribute values and uses are as follows:
 
 > a) ORIGIN (Type Code 1):
- : ORIGIN is a well-known mandatory attribute that defines the
-   origin of the path information.  The data octet can assume
-   the following values:
+ : ORIGIN is an attribute whose Optional bit is set to 0, whose
+   Transitive bit is set to 1, and whose Partial bit is set to 0. It
+   defines the origin of the path information.  The data octet can
+   assume the following values:
 
 |Value  |    Meaning                                          |
 |-------|-----------------------------------------------------|
@@ -1018,10 +1014,11 @@ Type Codes, and their attribute values and uses are as follows:
  > Usage of this attribute is defined in {{origin}}.
 
 > b) AS_PATH (Type Code 2):
- : AS_PATH is a well-known mandatory attribute that is composed
-   of a sequence of AS path segments.  Each AS path segment is
-   represented by a triple <path segment type, path segment
-   length, path segment value>.
+ : AS_PATH is an attribute whose Optional bit is set to 0, whose
+   Transitive bit is set to 1, and whose Partial bit is set to 0. It is
+   composed of a sequence of AS path segments.  Each AS path segment is
+   represented by a triple <path segment type, path segment length, path
+   segment value>.
 
 > The path segment type is a 1-octet length field with the
 following values defined:
@@ -1043,8 +1040,9 @@ following values defined:
 > Usage of this attribute is defined in {{aspath}}.
 
 c) NEXT_HOP (Type Code 3):
-: This is a well-known mandatory attribute that defines the
-(unicast) IP address of the router that SHOULD be used as
+: NEXT_HOP is an attribute whose Optional bit is set to 0, whose
+Transitive bit is set to 1, and whose Partial bit is set to 0. It
+defines the (unicast) IP address of the router that SHOULD be used as
 the next hop to the destinations listed in the Network Layer
 Reachability Information field of the UPDATE message.
 
@@ -1063,16 +1061,18 @@ given in {{RFC7964}}.
 : Usage of this attribute is defined in {{med}}.
 
 e) LOCAL_PREF (Type Code 5):
-: LOCAL_PREF is a well-known attribute that is a four-octet
-unsigned integer.  A BGP speaker uses it to inform its other
-internal peers of the advertising speaker's degree of
-preference for an advertised route.
+: LOCAL_PREF is an attribute whose Optional bit is set to 0, whose
+Transitive bit is set to 1, and whose Partial bit is set to 0. It is a
+four-octet unsigned integer.  A BGP speaker uses it to inform its other
+internal peers of the advertising speaker's degree of preference for an
+advertised route.
 
 : Usage of this attribute is defined in {{localpref}}.
 
 f) ATOMIC_AGGREGATE (Type Code 6): 
-   : ATOMIC_AGGREGATE is a well-known discretionary attribute of
-   length 0.
+   : ATOMIC_AGGREGATE is an attribute whose Optional bit is set to 0,
+   whose Transitive bit is set to 1, and whose Partial bit is set to 0.
+   It is of length 0.
 
    : Usage of this attribute is defined in {{atomic}}.
 
@@ -1287,39 +1287,24 @@ The minimum length of the NOTIFICATION message is 21 octets
 
 This section discusses the path attributes of the UPDATE message.
 
-Path attributes fall into four separate categories:
+BGP implementations MUST recognize ORIGIN, AS_PATH, NEXT_HOP, 
+LOCAL_PREF, and ATOMIC_AGGREGATE. 
 
-{: style="format %d."}
-
-* Well-known mandatory.
-* Well-known discretionary.
-* Optional transitive.
-* Optional non-transitive.
-
-BGP implementations MUST recognize all well-known attributes.  Some
-of these attributes are mandatory and MUST be included in every
-UPDATE message that contains NLRI.  Others are discretionary and may
-or may not be sent in a particular UPDATE message.
-
-Once a BGP peer has updated any well-known attributes, it MUST pass
-these attributes to its peers in any updates it transmits.
-
-In addition to well-known attributes, each path MAY contain one or
-more optional attributes.  It is not required or expected that all
-BGP implementations support all optional attributes.  The handling of
-an unrecognized optional attribute is determined by the setting of
-the Transitive bit in the attribute flags octet.  Paths with
+In addition to these, whose use is described below, each path MAY also
+contain one or more optional attributes.  It is not required or expected
+that all BGP implementations support all optional attributes.  The
+handling of an unrecognized optional attribute is determined by the
+setting of the Transitive bit in the attribute flags octet.  Paths with
 unrecognized optional transitive attributes SHOULD be accepted.  If a
-path with an unrecognized optional transitive attribute is accepted
-and passed to other BGP peers, then the unrecognized optional 
-transitive attribute of that path MUST be passed, along with the path,
-to other BGP peers with the Partial bit in the Attribute Flags octet
-set to 1.  If a path with a recognized, optional transitive attribute
-is accepted and passed along to other BGP peers and the Partial bit
-in the Attribute Flags octet is set to 1 by some previous AS, it MUST
-NOT be set back to 0 by the current AS.  Unrecognized optional 
-non-transitive attributes MUST be quietly ignored and not passed along to
-other BGP peers.
+path with an unrecognized optional transitive attribute is accepted and
+passed to other BGP peers, then the unrecognized optional transitive
+attribute of that path MUST be passed, along with the path, to other BGP
+peers with the Partial bit in the Attribute Flags octet set to 1.  If a
+path with a recognized, optional transitive attribute is accepted and
+passed along to other BGP peers and the Partial bit in the Attribute
+Flags octet is set to 1 by some previous AS, it MUST NOT be set back to
+0 by the current AS.  Unrecognized optional non-transitive attributes
+MUST be quietly ignored and not passed along to other BGP peers.
 
 Optional transitive attributes MAY be attached to the path by
 the originator or by any other BGP speaker in the path.  The rules 
@@ -1339,23 +1324,6 @@ The same attribute (attribute with the same type) cannot appear more
 than once within the Path Attributes field of a particular UPDATE
 message. <!-- xxx possibly make the weak 'cannot' into a MUST NOT -->
 
-The mandatory category refers to an attribute that MUST be present in
-both IBGP and EBGP exchanges if NLRI are contained in the UPDATE
-message.  Attributes classified as optional for the purpose of the
-protocol extension mechanism may be purely discretionary,
-discretionary, required, or disallowed in certain contexts.
-
-| Attribute           | EBGP                 | IBGP            |
-|---------------------|----------------------|-----------------|
-|   ORIGIN            |  mandatory           |   mandatory     |
-|   AS_PATH           |  mandatory           |   mandatory     |
-|   NEXT_HOP          |  mandatory           |   mandatory     |
-|   MULTI_EXIT_DISC   |  discretionary       |   discretionary |
-|   LOCAL_PREF        |  see {{localpref}}   |   required      |
-|   ATOMIC_AGGREGATE  |  see {{atomic}} and {{overlap}} |      |
-|   AGGREGATOR        |  discretionary       |   discretionary |
-{: title="Path Attribute Classification"}
-
 ## Path Attribute Usage
 
 The usage of each BGP path attribute is described in the following
@@ -1364,7 +1332,7 @@ when processing path attributes.
 
 ### ORIGIN {#origin}
 
-ORIGIN is a well-known mandatory attribute.  The ORIGIN attribute is
+ORIGIN MUST be included with every update.  The ORIGIN attribute is
 generated by the speaker that originates the associated routing
 information.  Its value SHOULD NOT be changed by any other speaker.
 
@@ -1373,7 +1341,7 @@ An ORIGIN value not equal to one of the defined values of (0, 1, or 2)
 
 ### AS_PATH {#aspath}
 
-AS_PATH is a well-known mandatory attribute.  This attribute
+AS_PATH MUST be included with every update.  This attribute
 identifies the autonomous systems through which routing information
 carried in this UPDATE message has passed.  The components of this
 list can be AS_SETs or AS_SEQUENCEs. (Other segments and behaviors 
@@ -1433,10 +1401,10 @@ has been enabled by local configuration.
 
 ###  NEXT_HOP {#nexthop}
 
-The NEXT_HOP is a well-known mandatory attribute that defines the IP
-address of the router that SHOULD be used as the next hop to the
-destinations listed in the UPDATE message.  The NEXT_HOP attribute is
-calculated as follows:
+The NEXT_HOP MUST be included with every update, unless the encoding of
+{{RFC4760}} is in use. It defines the IP address of the router that
+SHOULD be used as the next hop to the destinations listed in the UPDATE
+message.  The NEXT_HOP attribute is calculated as follows:
 
 1. When sending a message to an internal peer, if the route is not
    locally originated, the BGP speaker SHOULD NOT modify the
@@ -1553,14 +1521,14 @@ to performing route selection (Decision Process phases 1 and 2).  See
 
 ###  LOCAL_PREF {#localpref}
 
-LOCAL_PREF is a well-known discretionary attribute that SHALL be included in all
-UPDATE messages that a given BGP speaker sends to other internal
-peers.  A BGP speaker SHALL calculate the degree of preference for
-each external route based on the locally-configured policy, and
-include the degree of preference when advertising a route to its
-internal peers.  The higher degree of preference MUST be preferred.
-A BGP speaker uses the degree of preference learned via LOCAL_PREF in
-its Decision Process (see {{phase1}}).
+LOCAL_PREF SHALL be included in all UPDATE messages that a given BGP
+speaker sends to other internal peers.  A BGP speaker SHALL calculate
+the degree of preference for each external route based on the
+locally-configured policy, and include the degree of preference when
+advertising a route to its internal peers.  The higher degree of
+preference MUST be preferred. A BGP speaker uses the degree of
+preference learned via LOCAL_PREF in its Decision Process (see
+{{phase1}}).
 
 A BGP speaker MUST NOT include this attribute in UPDATE messages it
 sends to external peers, except in the case of BGP Confederations
@@ -1571,8 +1539,6 @@ sends to external peers, except in the case of BGP Confederations
 <!-- xxx Aggregation behavior is currently specified both here and
 in "Aggregating Routing Information". Consider restructuring so
 that normative aggregation requirements appear in only one place. -->
-
-ATOMIC_AGGREGATE is a well-known discretionary attribute.
 
 When a BGP speaker aggregates several routes for the purpose of
 advertisement to a particular peer, the AS_PATH of the aggregated route
@@ -1916,9 +1882,8 @@ treated as malformed and the "treat-as-withdraw" approach used, unless
 the specification for the attribute mandates different handling for
 incorrect Attribute Flags.
 
-If any attribute is received with its Optional bit clear (i.e., with
-its value set to "well-known"), but is not recognized, the 
-"treat-as-withdraw" approach MUST be used. 
+If any attribute is received with its Optional bit clear, but is not 
+recognized, the "treat-as-withdraw" approach MUST be used. 
 
 Type-specific error handling procedures for attributes specified in this
 document are given in {{paerrs}}. If an optional attribute is
@@ -5247,8 +5212,15 @@ To do and/or not done:
 ## Version 05
 
 - Fixed two lingering places where BGP Identifier was described
-  as an IP address, that were missed during RFC 6793 integration.
+  as an IP address, that were missed during RFC 6286 integration.
   (Issue #154)
+
+- Got rid of the mandatory/discretionary/well-known taxonomy, 
+  while retaining "optional" and "transitive". Instead of relying
+  on the taxonomy to tell people how to set the Optional, Transitive,
+  and Partial bits for any of the mandatory attributes, spell out
+  the concrete requirements where the attributes are defined.
+  (Issue #55) (Issue #138) (Issue #139)
   
 # TCP Options that May Be Used with BGP {#tcpopts}
 
