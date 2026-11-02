@@ -717,9 +717,9 @@ Hold Time:
 BGP Identifier:
    : This 4-octet unsigned integer indicates the BGP Identifier of
      the sender.  A given BGP speaker sets the value of its BGP
-     Identifier to an IP address that is assigned to that BGP
-     speaker.  The value of the BGP Identifier is determined upon
-     startup and is the same for every local interface and BGP peer.
+     Identifier to a valid BGP Identifier. The value of the BGP
+     Identifier is determined upon startup and is the same for every
+     local interface and BGP peer.
 
 Optional Parameters Length:
   : This 1-octet unsigned integer indicates the total length of the
@@ -1079,11 +1079,9 @@ f) ATOMIC_AGGREGATE (Type Code 6):
 g) AGGREGATOR (Type Code 7): 
    : AGGREGATOR is an optional transitive attribute of length 6.
    The attribute contains the last AS number that formed the
-   aggregate route (encoded as 2 octets), followed by the IP
-   address of the BGP speaker that formed the aggregate route
-   (encoded as 4 octets).  This SHOULD be the same address as
-   the one used for the BGP Identifier of the speaker.
-   (This is modified by {{RFC6793}}.)
+   aggregate route (encoded as 2 octets), followed by the BGP
+   Identifier of the BGP speaker that formed the aggregate route
+   (encoded as 4 octets). (This is modified by {{RFC6793}}.)
 
    : Usage of this attribute is defined in {{aggregator}}.
 
@@ -5245,6 +5243,12 @@ To do and/or not done:
   Identifier. One can also view this as fixing a long-standing
   specification defect, since a BGP Identifier has not been required to
   be an IP address since RFC 6286. (Issue #150)
+
+## Version 05
+
+- Fixed two lingering places where BGP Identifier was described
+  as an IP address, that were missed during RFC 6793 integration.
+  (Issue #154)
   
 # TCP Options that May Be Used with BGP {#tcpopts}
 
