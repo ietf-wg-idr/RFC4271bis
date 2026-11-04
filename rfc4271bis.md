@@ -5220,7 +5220,7 @@ To do and/or not done:
   on the taxonomy to tell people how to set the Optional, Transitive,
   and Partial bits for any of the mandatory attributes, spell out
   the concrete requirements where the attributes are defined.
-  (Issue #55) (Issue #138) (Issue #139)
+  (Issue #49) (Issue #55) (Issue #138) (Issue #139)
   
 # TCP Options that May Be Used with BGP {#tcpopts}
 
