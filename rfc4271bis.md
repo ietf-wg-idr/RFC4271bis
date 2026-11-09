@@ -5,7 +5,7 @@ docname: draft-ietf-idr-bgp4-rfc4271bis-06
 category: std
 date: 2026
 
-obsoletes: 4271, 4486, 6286, 6608, 8212, 9072, 9687
+obsoletes: 4271, 4486, 5492, 6286, 6608, 8212, 9072, 9687
 updates: 7606, 7607, 9774
 
 stand_alone: yes
@@ -72,7 +72,6 @@ informative:
   RFC2439:
   RFC2474:
   RFC2858:
-  RFC3392:
   RFC2918:
   RFC3562:
   RFC4271:
@@ -82,6 +81,7 @@ informative:
   RFC4724:
   RFC5004:
   RFC5065:
+  RFC5492:
   RFC6286:
   RFC6514:
   RFC6793:
@@ -747,8 +747,6 @@ Optional Parameters:
   be encoded exceeds 255 octets, the extended variant ({{openfmt-ext}}) is
   used instead.
 
-  > {{?RFC3392}} defines the Capabilities Optional Parameter.
-
 The minimum length of the OPEN message is 29 octets (including the
 message header).
 
@@ -841,6 +839,87 @@ size of the Parameter Length field of individual Optional Parameters. If
 the value of the "Non-Ext OP Type" field is 255, then the encoding
 described in this subsection is used for the Optional Parameters length.
 Otherwise, the encoding defined in {{openfmt}} is used.
+
+### Capabilities Optional Parameter (Parameter Type 2) {#capabilities}
+
+A BGP speaker's OPEN message will typically include the Capabilities
+Optional Parameter, listing the capabilities supported by the speaker.
+The only exception is if no capabilities are required for the peering,
+which will seldom be the case.
+
+A BGP speaker determines the capabilities supported by its peer by
+examining the list of capabilities present in the Capabilities
+Optional Parameter carried by the OPEN message that the speaker
+receives from the peer.
+
+A BGP speaker that supports a particular capability may use this
+capability with its peer after the speaker determines (as described
+above) that the peer supports this capability.  Simply put, a given
+capability can be used on a peering if that capability has been
+advertised by both peers.  If either peer has not advertised it, the
+capability cannot be used. If the capability has been advertised by
+both peers, it is said to have been "exchanged" or "negotiated".
+
+#### Capabilities Format
+
+This optional parameter of type 2  contains one or more triples
+<Capability Code, Capability Length, Capability Value>, where each
+triple is encoded as shown below:
+
+~~~~ aasvg
+          +-----------------------------+
+          | Capability Code (1 octet)   |
+          +-----------------------------+
+          | Capability Length (1 octet) |
+          +-----------------------------+
+          |                             |
+          | Capability Value (variable) |
+          |                             |
+          +-----------------------------+
+~~~~
+{: title="Capability"}
+
+The use and meaning of these fields are as follows:
+
+Capability Code:
+  : Capability Code is a 1-octet unsigned integer that unambiguously 
+    identifies individual capabilities.
+
+Capability Length:
+  : Capability Length is a 1-octet unsigned integer that contains 
+    the length of the Capability Value field in octets. 
+
+Capability Value:
+  : Capability Value is a variable-length field that is interpreted
+    according to the value of the Capability Code field.
+
+BGP speakers SHOULD NOT include more than one instance of a
+capability with the same Capability Code, Capability Length, and
+Capability Value.  Note, however, that processing of multiple
+instances of such capability does not require special handling, as
+additional instances do not change the meaning of the announced
+capability; thus, a BGP speaker MUST be prepared to accept such
+multiple instances.
+
+BGP speakers MAY include more than one instance of a capability (as
+identified by the Capability Code) with non-zero Capability Length
+field, but with different Capability Value and either the same or
+different Capability Length.  Processing of these capability
+instances is specific to the Capability Code and MUST be described in
+the document specifying the capability.
+
+The Capabilities Optional Parameter (OPEN Optional Parameter Type 2)
+SHOULD only be included in the OPEN message once.  If the BGP speaker
+wishes to include multiple capabilities in the OPEN message, it
+SHOULD do so as discussed above -- by listing all those capabilities
+as TLVs within a single Capabilities Optional Parameter.  However,
+for backward compatibility, a BGP speaker MUST be prepared to receive
+an OPEN message that contains multiple Capabilities Optional
+Parameters, each of which contains one or more capabilities TLVs.
+The set of capabilities should be processed in the same way in either
+case, whether it is enumerated within a single Capabilities Optional
+Parameter of the OPEN message or split across multiple Capabilities
+Optional Parameters. <!-- see Issue #159 about possibly cutting this -->
 
 ##  UPDATE Message Format {#updatefmt}
 
@@ -1222,6 +1301,7 @@ OPEN Message Error subcodes:
 | 4     | Unsupported Optional Parameter  |
 | 5     | [Deprecated - see {{RFC4271}} Appendix A]   |
 | 6     | Unacceptable Hold Time          |
+| 7     | Required Capability Not Received |
 {: title="OPEN Message Error subcodes"}
 
 UPDATE Message Error subcodes:
@@ -1691,6 +1771,30 @@ the above paragraph.
 If one of the Optional Parameters in the OPEN message is recognized,
 but is malformed, then the Error Subcode MUST be set to 0
 (Unspecific).
+
+### Capabilities Optional Parameter Error Handling {#caperror}
+
+If the BGP speaker is configured to require support for a certain
+capability, and determines that its peer doesn't support this
+capability, the speaker MAY terminate peering. If it does so, then the
+Error Subcode MUST be set to 7 (Required Capability Not Received). The
+Data field in the NOTIFICATION message MUST list the set of required
+capabilities that were missing.  Each such capability is encoded in the
+same way as it would be encoded in the OPEN message.
+
+The decision to send the message and terminate the peering is local to
+the speaker.  If terminated, such peering SHOULD NOT be re-established
+automatically.
+
+For example, a BGP speaker may need to terminate peering if it
+established peering to exchange IPv6 routes and determines that its peer
+does not support Multiprotocol Extensions for BGP-4 {{RFC4760}}.
+
+If the BGP speaker receives from its peer a capability that it does not
+itself support or recognize, it MUST ignore that capability.  In
+particular, a NOTIFICATION message MUST NOT be generated and the BGP
+session MUST NOT be terminated in response to reception of a capability
+that is not supported by the local speaker. 
 
 ##  UPDATE Message Error Handling {#updatemsgerr}
 
@@ -4866,6 +4970,32 @@ factor, which is uniformly distributed in the range from 0.75 to 1.0.
 A new random value SHOULD be picked each time the timer is set.  The
 range of the jitter's random value MAY be configurable.
 
+# Backward Compatibility {#backcompat}
+
+This version of the BGP specification integrates many other past
+specifications, which were themselves introduced as extensions to the
+former base protocol specification, {{RFC4271}}. The main body of the
+specification documents the expected behavior of current implementations.
+However, other behaviors are needed to remain compatibile with older
+implementations. The subsections below provide the necessary details.
+
+## OPEN Message Generation and Processing {#openmsgbackcompat}
+
+Capabilities advertisement was not a mandatory element of {{RFC4271}}.
+A BGP speaker determines that its peer doesn't support capabilities
+advertisement if, in response to an OPEN message that carries the
+Capabilities Optional Parameter, the speaker receives a NOTIFICATION
+message with the Error Subcode set to Unsupported Optional Parameter.
+In this case, the speaker MAY attempt to
+re-establish a BGP connection with the peer without sending to the
+peer the Capabilities Optional Parameter, if doing so would not 
+conflict with the speaker's configuration. (In practice, this will
+seldom be the case.)
+
+Note that the Required Capability Not Received OPEN message error 
+subcode was formerly known as the Unsupported Capability subcode.
+This document revises its name. Its semantics remain unchanged.
+
 --- back
 
 # Acknowledgements
@@ -4928,6 +5058,16 @@ RFC 4486 contains the following acknowledgments:
 
 The authors would like to thank Yakov Rekhter, Pedro Marques, Andrew
 Lange, and Don Goodspeed for their review and suggestions.
+
+## Acknowledgements in relationship to RFC 5492
+
+{{RFC5492} was authored by John Scudder and Ravi Chandra. Its contents
+have been subsumed in this document.
+
+RFC 6286 contains the following acknowledgments:
+
+The authors would like to thank members of the IDR Working Group and the
+IESG and its Directorates for their review and comments.
 
 ## Acknowledgements in relationship to RFC 6286
 
@@ -5222,6 +5362,14 @@ To do and/or not done:
   the concrete requirements where the attributes are defined.
   (Issue #49) (Issue #55) (Issue #138) (Issue #139)
   
+## Version 06
+
+- Renamed "Unsupported Capability" to "Required Capability Not 
+  Received". (Issue #158)
+  
+- Integrated RFC 5492, "Capabilities Advertisement with BGP-4".
+  (Issue #160)
+  
 # TCP Options that May Be Used with BGP {#tcpopts}
 
 If a local system TCP user interface supports the TCP PUSH function,
@@ -5413,6 +5561,7 @@ the following OPEN Message Error subcodes:
 | Unsupported Optional Parameter| 4     | See {{openmsgerr}} |
 | [Deprecated]                  | 5     | See {{RFC4271}} Appendix A  |
 | Unacceptable Hold Time        | 6     | See {{openmsgerr}} |
+| Required Capability Not Received | 7  | See {{caperror}} |
 
 IANA maintains a subregistry below the BGP Error Subcodes registry
 called "UPDATE Message Error subcodes". IANA is requested to rename this
@@ -5469,6 +5618,15 @@ Extended Length type code in the "BGP OPEN Optional Parameter Types"
 registry. With the publication of this document, RFC 9072 will be
 obsoleted; thus, IANA is requested to update the reference to refer to
 this document.
+
+## Registrations from RFC 5492
+
+IANA maintains a registry called "Capability Codes" whose reference 
+is RFC 5492. Since this document obsoletes RFC 5492, IANA is requested
+to update the reference to this document.
+
+IANA is requested to update the reference for Capabilities in the 
+BGP OPEN Optional Parameter Types registry to reference this document.
 
 ## References to BGP Specification
 
