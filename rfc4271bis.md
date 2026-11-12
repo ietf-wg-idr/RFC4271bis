@@ -590,7 +590,7 @@ an Autonomous System number other than 0.
 
 The value AS_TRANS is used in backward compatibility procedures
 involving 2-octet Autonomous System number encodings. IANA has
-registered a value 23456 for AS_TRANS in its registry "Autonomous System
+registered the value 23456 for AS_TRANS in its registry "Autonomous System
 (AS) Numbers".
 
 <!-- other candidates:
@@ -5026,8 +5026,8 @@ This document revises its name. Its semantics remain unchanged.
 
 The previous edition of this specification ({{RFC4271}}) defined
 Autonomous System numbers as 2-octet entities; this is why the "My
-Autonomous System" field of the OPEN message is only 16 bits and a
-capability is used to carry the speaker's actual Autonomous System
+Legacy Autonomous System" field of the OPEN message is only 16 bits and
+a capability is used to carry the speaker's actual Autonomous System
 number, an encoding adopted from {{RFC6793}}. 
 
 RFC 6793 refers to a BGP speaker that natively supports the 4-octet AS
