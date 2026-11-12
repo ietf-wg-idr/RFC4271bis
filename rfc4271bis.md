@@ -764,7 +764,7 @@ this section even if the length of the Optional Parameters is 255
 or less.
 
 This encoding permits transmission of larger sets of Optional
-Parameters, including Capabilities {{RFC4760}}, than can be represented
+Parameters, including Capabilities ({{capabilities}}), than can be represented
 using the non-extended OPEN message encoding. 
 
 ~~~~ aasvg
