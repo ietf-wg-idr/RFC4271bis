@@ -5061,10 +5061,10 @@ Lange, and Don Goodspeed for their review and suggestions.
 
 ## Acknowledgements in relationship to RFC 5492
 
-{{RFC5492} was authored by John Scudder and Ravi Chandra. Its contents
+{{RFC5492}} was authored by John Scudder and Ravi Chandra. Its contents
 have been subsumed in this document.
 
-RFC 6286 contains the following acknowledgments:
+RFC 5492 contains the following acknowledgments:
 
 The authors would like to thank members of the IDR Working Group and the
 IESG and its Directorates for their review and comments.
