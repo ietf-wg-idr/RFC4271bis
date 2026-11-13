@@ -135,7 +135,7 @@ relates to RFC 4271.
 
 The Border Gateway Protocol (BGP) is an inter-Autonomous System
 routing protocol. This version of BGP, BGP-4, was first documented
-in {{RFC1771}}, which was superceded by {{RFC4271}}, which in 
+in {{RFC1771}}, which was superseded by {{RFC4271}}, which in 
 turn is obsoleted by this document.
 
 The primary function of a BGP-speaking system is to exchange network
@@ -4976,7 +4976,7 @@ This version of the BGP specification integrates many other past
 specifications, which were themselves introduced as extensions to the
 former base protocol specification, {{RFC4271}}. The main body of the
 specification documents the expected behavior of current implementations.
-However, other behaviors are needed to remain compatibile with older
+However, other behaviors are needed to remain compatible with older
 implementations. The subsections below provide the necessary details.
 
 ## OPEN Message Generation and Processing {#openmsgbackcompat}
