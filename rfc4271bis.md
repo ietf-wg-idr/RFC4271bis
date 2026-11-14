@@ -5,7 +5,7 @@ docname: draft-ietf-idr-bgp4-rfc4271bis-06
 category: std
 date: 2026
 
-obsoletes: 4271, 4486, 5492, 6286, 6608, 8212, 9072, 9687
+obsoletes: 4271, 4486, 5492, 6286, 6608, 6793, 8212, 9072, 9687
 updates: 7606, 7607, 9774
 
 stand_alone: yes
@@ -586,6 +586,13 @@ Unless explicitly specified otherwise, any occurrence of an Autonomous
 System number (or any of its synonyms) in this specification refers to
 an Autonomous System number other than 0.
 
+## AS_TRANS {#astrans}
+
+The value AS_TRANS is used in backward compatibility procedures
+involving 2-octet Autonomous System number encodings. IANA has
+registered the value 23456 for AS_TRANS in its registry "Autonomous System
+(AS) Numbers".
+
 <!-- other candidates:
 
  "its IP address"
@@ -673,7 +680,7 @@ the following fields:
 +-+-+-+-+-+-+-+-+
 |    Version    |
 +---------------+-+-+-+-+-+-+-+-+
-|     My Autonomous System      |
+|  My Legacy Autonomous System  |
 +-------------------------------+
 |           Hold Time           |
 +-------------------------------+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -692,10 +699,16 @@ Version:
   : This 1-octet unsigned integer indicates the protocol version
     number of the message.  The current BGP version number is 4.
 
-My Autonomous System:
-  : This 2-octet unsigned integer indicates the Autonomous System
-    number of the sender. (This is modified by {{RFC6793}}.) The
-    value MUST NOT be 0.
+My Legacy Autonomous System:
+  : This is a 2-octet unsigned integer present for backward 
+    compatibility with older editions of the protocol. If the Autonomous
+    System number of the sender can be represented in 16 bits (in other
+    words, if its value is 65,534 or less), that value is placed in this
+    field. Otherwise (if the value is greater than 65,534), the value
+    AS_TRANS ({{astrans}}) is placed in this field. This field is ignored
+    on receipt; the actual value of the sender's Autonomous System
+    number is found in the "4-octet AS number capability" ({{as4byte}}).
+    The value MUST NOT be 0.
  
 Hold Time:
   : This 2-octet unsigned integer indicates the number of seconds
@@ -773,7 +786,7 @@ using the non-extended OPEN message encoding.
 +-+-+-+-+-+-+-+-+
 |    Version    |
 +---------------+-+-+-+-+-+-+-+-+
-|     My Autonomous System      |
+|  My Legacy Autonomous System  |
 +-------------------------------+
 |           Hold Time           |
 +-------------------------------+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -842,10 +855,10 @@ Otherwise, the encoding defined in {{openfmt}} is used.
 
 ### Capabilities Optional Parameter (Parameter Type 2) {#capabilities}
 
-A BGP speaker's OPEN message will typically include the Capabilities
-Optional Parameter, listing the capabilities supported by the speaker.
-The only exception is if no capabilities are required for the peering,
-which will seldom be the case.
+A BGP speaker's OPEN message will include the Capabilities Optional
+Parameter, listing the capabilities supported by the speaker. The only
+exception is if backward compatibility procedures ({{backcompat}}) are
+in use to allow peering with an older implementation .
 
 A BGP speaker determines the capabilities supported by its peer by
 examining the list of capabilities present in the Capabilities
@@ -920,6 +933,16 @@ The set of capabilities should be processed in the same way in either
 case, whether it is enumerated within a single Capabilities Optional
 Parameter of the OPEN message or split across multiple Capabilities
 Optional Parameters. <!-- see Issue #159 about possibly cutting this -->
+
+#### 4-octet AS Number Capability {#as4byte}
+
+This capability, also called the "Support for 4-octet AS number"
+capability, has been assigned type code 65 by IANA. Its value is the
+Autonomous System number of the sender, encoded as a 4-octet integer.
+Its value MUST NOT be 0.
+
+This capability MUST be sent with the OPEN, unless the peer does not
+support capabilities ({{backcompat}}).
 
 ##  UPDATE Message Format {#updatefmt}
 
@@ -1113,8 +1136,9 @@ following values defined:
   the path segment value field.
 
 > The path segment value field contains one or more AS
-  numbers, each encoded as a 2-octet length field. 
-  (This is modified by {{RFC6793}}.)
+  numbers, each encoded as a 4-octet length field. 
+  (Unless backward compatibility procedures are in use;
+  see {{as2byte}} for details.)
 
 > Usage of this attribute is defined in {{aspath}}.
 
@@ -1156,11 +1180,12 @@ f) ATOMIC_AGGREGATE (Type Code 6):
    : Usage of this attribute is defined in {{atomic}}.
 
 g) AGGREGATOR (Type Code 7): 
-   : AGGREGATOR is an optional transitive attribute of length 6.
+   : AGGREGATOR is an optional transitive attribute of length 8.
    The attribute contains the last AS number that formed the
-   aggregate route (encoded as 2 octets), followed by the BGP
+   aggregate route (encoded as 4 octets), followed by the BGP
    Identifier of the BGP speaker that formed the aggregate route
-   (encoded as 4 octets). (This is modified by {{RFC6793}}.)
+   (encoded as 4 octets). (Unless backward compatibility procedures are
+   in use; see {{as2byte}} for details.)
 
    : Usage of this attribute is defined in {{aggregator}}.
 
@@ -1650,8 +1675,8 @@ updates that are formed by aggregation (see {{aggregating}}).  A BGP
 speaker that performs route aggregation MAY add the AGGREGATOR
 attribute, which SHALL contain its own AS number and BGP Identifier.
 
-{{RFC6793}} modifies the format of the AGGREGATOR attribute 
-to support four-octet AS numbers. 
+(The format of this attribute is different if backward compatibility
+procedures are in use; see {{as2byte}} for details.)
 
 # BGP Error Handling {#errorhandling}
 
@@ -4504,6 +4529,7 @@ as those described here.
    having the smallest number of AS numbers present in their
    AS_PATH attributes.  Note that when counting this number, an
    AS_SET counts as 1, no matter how many ASes are in the set.
+   This number is sometimes called the "AS path length".
 
 * Remove from consideration all routes that are not tied for
    having the lowest Origin number in their Origin attribute.
@@ -4979,7 +5005,7 @@ specification documents the expected behavior of current implementations.
 However, other behaviors are needed to remain compatible with older
 implementations. The subsections below provide the necessary details.
 
-## OPEN Message Generation and Processing {#openmsgbackcompat}
+## Capabilities Advertisement
 
 Capabilities advertisement was not a mandatory element of {{RFC4271}}.
 A BGP speaker determines that its peer doesn't support capabilities
@@ -4995,6 +5021,200 @@ seldom be the case.)
 Note that the Required Capability Not Received OPEN message error 
 subcode was formerly known as the Unsupported Capability subcode.
 This document revises its name. Its semantics remain unchanged.
+
+## Two-Octet Autonomous System Numbers {#as2byte}
+
+The previous edition of this specification ({{RFC4271}}) defined
+Autonomous System numbers as 2-octet entities; this is why the "My
+Legacy Autonomous System" field of the OPEN message is only 16 bits and
+a capability is used to carry the speaker's actual Autonomous System
+number, an encoding adopted from {{RFC6793}}. 
+
+RFC 6793 refers to a BGP speaker that natively supports the 4-octet AS
+encoding adopted by this document as a "NEW speaker", and one that only
+supports the 2-octet encoding as an "OLD speaker". It refers to an AS
+number whose value can be represented in 16 bits (in other words, whose
+value is 65,534 or less) as a "mappable" AS number. These terms are used
+below.
+
+An implementation of this specification MUST choose one of the following
+options. Either it must use the procedures specified below
+({{as2byte-procedures}}) when interoperating with OLD BGP speakers, or
+if it does not provide such backward compatibility support, then it
+must terminate a peering attempt from an OLD BGP speaker according to
+the procedures of {{caperror}}, including the "4-octet AS number
+capability" in the data portion.
+
+### Interaction between NEW and OLD BGP Speakers {#as2byte-procedures}
+
+#### AS4_PATH Attribute {#as4path}
+
+The AS4_PATH attribute is an optional transitive attribute with type
+code 17. Its usage is described below.
+
+#### AS4_AGGREGATOR Attribute
+
+The AS4_AGGREGATOR attribute is an optional transitive attribute with
+type code 18. Its usage is described below.
+
+#### Generating Updates
+
+When communicating with an OLD BGP speaker, a NEW BGP speaker MUST send
+the AS path information in the AS_PATH attribute encoded with two-octet
+AS numbers.  The NEW BGP speaker MUST also send the AS path information
+in the AS4_PATH attribute (encoded with four-octet AS numbers), except
+for the case where all of the AS path information is composed of
+mappable four-octet AS numbers only.  In this case, the NEW BGP speaker
+MUST NOT send the AS4_PATH attribute.
+
+In the AS_PATH attribute encoded with two-octet AS numbers, non-mappable
+four-octet AS numbers are represented by the well-known two-octet AS
+number, AS_TRANS.  This will preserve the path length property of the AS
+path information and also help in updating the AS path information
+received on a NEW BGP speaker from an OLD BGP speaker, as explained in
+the next section.
+
+The NEW BGP speaker constructs the AS4_PATH attribute from the AS path
+information.  Whenever the AS path information contains the
+AS_CONFED_SEQUENCE or AS_CONFED_SET path segment, the NEW BGP speaker
+MUST exclude such path segments from the AS4_PATH attribute being
+constructed.
+
+The AS4_PATH attribute, being optional transitive, will be carried
+across a series of OLD BGP speakers without modification and will help
+preserve the non-mappable four-octet AS numbers in the AS path
+information.
+
+Similarly, if the NEW BGP speaker has to send the AGGREGATOR attribute,
+and if the aggregating Autonomous System's AS number is a non-mappable
+four-octet AS number, then the speaker MUST use the AS4_AGGREGATOR
+attribute and set the AS number field in the existing AGGREGATOR
+attribute to the reserved AS number, AS_TRANS.  Note that if the AS
+number is mappable, then the AS4_AGGREGATOR attribute MUST NOT be sent.
+
+#### Processing Received Updates
+
+When a NEW BGP speaker receives an update from an OLD BGP speaker, it
+MUST be prepared to receive the AS4_PATH attribute along with the
+existing AS_PATH attribute.  If the AS4_PATH attribute is also received,
+both of the attributes will be used to construct the exact AS path
+information, and therefore the information carried by both of the
+attributes will be considered for AS path loop detection.
+
+Note that a route may have traversed a series of Autonomous Systems with
+two-octet AS numbers and OLD BGP speakers only.  In that case, if the
+route carries the AS4_PATH attribute, this attribute would have remained
+unmodified since the route left the last NEW BGP speaker.  The trailing
+AS path information (representing Autonomous Systems with two-octet AS
+numbers and OLD BGP speakers only) is contained only in the current
+AS_PATH attribute (encoded in the leading part of the AS_PATH
+attribute).
+
+Under certain conditions, it may not be possible to reconstruct all of
+the AS path information from the AS_PATH and the AS4_PATH attributes of
+a route.  This occurs, for example, when two or more routes that carry
+the AS4_PATH attribute are aggregated by an OLD BGP speaker, and the
+AS4_PATH attribute of at least one of these routes carries at least one
+four-octet AS number (as opposed to a two-octet AS number that is
+encoded in 4 octets).  Depending on the implementation, either the
+AS4_PATH attribute would be lost during route aggregation, or both the
+AS_PATH attribute and the AS4_PATH attribute would contain valid,
+partial information that cannot be combined seamlessly, resulting in
+incomplete AS path information in these cases.
+
+A NEW BGP speaker MUST also be prepared to receive the AS4_AGGREGATOR
+attribute along with the AGGREGATOR attribute from an OLD BGP speaker. 
+When both of the attributes are received, if the AS number in the
+AGGREGATOR attribute is not AS_TRANS, then:
+
+-  the AS4_AGGREGATOR attribute and the AS4_PATH attribute SHALL
+   be ignored,
+
+-  the AGGREGATOR attribute SHALL be taken as the information
+   about the aggregating node, and
+
+-  the AS_PATH attribute SHALL be taken as the AS path
+   information.
+
+Otherwise,
+
+-  the AGGREGATOR attribute SHALL be ignored,
+
+-  the AS4_AGGREGATOR attribute SHALL be taken as the information
+   about the aggregating node, and
+
+-  the AS path information would need to be constructed, as in all
+   other cases.
+
+In order to construct the AS path information, it is necessary to
+first calculate the number of AS numbers in the AS_PATH and AS4_PATH
+attributes using the method specified in {{phase2tiebreak}}
+and in [RFC5065] for route selection.
+
+If the number of AS numbers in the AS_PATH attribute is less than the
+number of AS numbers in the AS4_PATH attribute, then the AS4_PATH
+attribute SHALL be ignored, and the AS_PATH attribute SHALL be taken
+as the AS path information.
+
+If the number of AS numbers in the AS_PATH attribute is larger than
+or equal to the number of AS numbers in the AS4_PATH attribute, then
+the AS path information SHALL be constructed by taking as many AS
+numbers and path segments as necessary from the leading part of the
+AS_PATH attribute, and then prepending them to the AS4_PATH attribute
+so that the AS path information has a number of AS numbers identical
+to that of the AS_PATH attribute.  Note that a valid
+AS_CONFED_SEQUENCE or AS_CONFED_SET path segment SHALL be prepended
+if it is either the leading path segment or is adjacent to a path
+segment that is prepended.
+
+### Error handling
+
+#### AS4_PATH Error Handling
+
+A malformed AS4_PATH MUST be handled using the "attribute discard"
+approach.
+
+The AS4_PATH attribute MUST NOT be carried in an UPDATE message between
+NEW BGP speakers.  A NEW BGP speaker that receives the AS4_PATH
+attribute attribute in an UPDATE message from another NEW BGP speaker
+MUST discard the path attribute and continue processing the UPDATE
+message.  This case SHOULD be logged locally for analysis.
+
+In addition, the path segment types AS_CONFED_SEQUENCE and AS_CONFED_SET
+{{RFC5065}} MUST NOT be carried in the AS4_PATH attribute of an UPDATE
+message.  A NEW BGP speaker that receives these path segment types in
+the AS4_PATH attribute of an UPDATE message from an OLD BGP speaker MUST
+discard these path segments, adjust the relevant attribute fields
+accordingly, and continue processing the UPDATE message.  This case
+SHOULD be logged locally for analysis.
+
+The AS4_PATH attribute in an UPDATE message SHALL be considered
+malformed under the following conditions:
+
+-  the attribute length is not a multiple of two or is too small
+   (i.e., less than 6) for the attribute to carry at least one AS
+   number, or
+
+-  the path segment length in the attribute is either zero or is
+   inconsistent with the attribute length, or
+
+-  the path segment type in the attribute is not one of the types
+   defined: AS_SEQUENCE, AS_SET, AS_CONFED_SEQUENCE, and
+   AS_CONFED_SET.
+   
+#### AS4_AGGREGATOR Error Handling
+
+A malformed AS4_AGGREGATOR MUST be handled using the "attribute discard"
+approach.
+
+The AS4_AGGREGATOR attribute MUST NOT be carried in an UPDATE message
+between NEW BGP speakers.  A NEW BGP speaker that receives the
+AS4_AGGREGATOR attribute in an UPDATE message from another NEW BGP
+speaker MUST discard the path attribute and continue processing the
+UPDATE message.  This case SHOULD be logged locally for analysis.
+
+The AS4_AGGREGATOR attribute in an UPDATE message SHALL be considered
+malformed if the attribute length is not 8.
 
 --- back
 
@@ -5079,6 +5299,20 @@ RFC 6286 contains the following acknowledgments:
 The authors would like to thank members of the IDR Working Group for
 discussions on the "IPv6-only Network" related issues that inspired this
 document.
+
+## Acknowledgements in relationship to RFC 6793
+
+{{RFC6793}} was authored by Enke Chen and Quaizar Vohra. Its contents 
+have been subsumed in this document.
+
+RFC 6793 contains the following acknowledgments:
+
+The authors would like to thank Yakov Rekhter, Chaitanya Kodeboyina,
+and Jeffrey Haas for the numerous discussions that went into the
+making of this document.
+
+The authors would also like to thank members of the IDR Working Group
+for their review and comments.
 
 ## Acknowledgements in relationship to RFC 7606
 
@@ -5368,7 +5602,18 @@ To do and/or not done:
   Received". (Issue #158)
   
 - Integrated RFC 5492, "Capabilities Advertisement with BGP-4".
-  (Issue #160)
+  This also obsoletes RFC 5492. (Issue #160) Capabilities are now
+  mandatory other than for backward compatibility; they're 
+  necessary for four-octet ASN support.
+  
+- Integrated RFC 6793, "BGP Support for Four-Octet Autonomous 
+  System (AS) Number Space". This also obsoletes RFC 6793. (Issue #164)
+  There is one normative change vs. RFC 6793, which is that support for
+  the compatibility mode is made optional. A non-normative change is
+  that much of the explanatory material was not carried forward. Section
+  5 ("Handling BGP Communities") is only advisory and was also not
+  carried forward. This version does not update the FSM; this will be
+  done as part of a later FSM blitz.
   
 # TCP Options that May Be Used with BGP {#tcpopts}
 
