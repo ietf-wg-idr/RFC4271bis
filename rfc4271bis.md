@@ -703,8 +703,8 @@ My Legacy Autonomous System:
   : This is a 2-octet unsigned integer present for backward 
     compatibility with older editions of the protocol. If the Autonomous
     System number of the sender can be represented in 16 bits (in other
-    words, if its value is 65,534 or less), that value is placed in this
-    field. Otherwise (if the value is greater than 65,534), the value
+    words, if its value is 65,535 or less), that value is placed in this
+    field. Otherwise (if the value is greater than 65,535), the value
     AS_TRANS ({{astrans}}) is placed in this field. This field is ignored
     on receipt; the actual value of the sender's Autonomous System
     number is found in the "4-octet AS number capability" ({{as4byte}}).
@@ -938,8 +938,8 @@ Optional Parameters. <!-- see Issue #159 about possibly cutting this -->
 
 This capability, also called the "Support for 4-octet AS number"
 capability, has been assigned type code 65 by IANA. Its value is the
-Autonomous System number of the sender, encoded as a 4-octet integer.
-Its value MUST NOT be 0.
+Autonomous System number of the sender, encoded as a 4-octet unsigned 
+integer. Its value MUST NOT be 0.
 
 This capability MUST be sent with the OPEN, unless the peer does not
 support capabilities ({{backcompat}}).
@@ -5031,11 +5031,12 @@ a capability is used to carry the speaker's actual Autonomous System
 number, an encoding adopted from {{RFC6793}}. 
 
 RFC 6793 refers to a BGP speaker that natively supports the 4-octet AS
-encoding adopted by this document as a "NEW speaker", and one that only
-supports the 2-octet encoding as an "OLD speaker". It refers to an AS
-number whose value can be represented in 16 bits (in other words, whose
-value is 65,534 or less) as a "mappable" AS number. These terms are used
-below.
+encoding and procedures adopted by this document as a "NEW speaker", and
+one that only supports the 2-octet encoding and procedures as an "OLD
+speaker". It refers to an AS number whose value can be represented in 16
+bits (in other words, whose value is 65,535 or less) as a "mappable" AS
+number. Finally, it refers to all other AS numbers (those whose values
+are greater than 65,535) as "non-mappable." These terms are used below.
 
 An implementation of this specification MUST choose one of the following
 options. Either it must use the procedures specified below
@@ -5068,7 +5069,7 @@ mappable four-octet AS numbers only.  In this case, the NEW BGP speaker
 MUST NOT send the AS4_PATH attribute.
 
 In the AS_PATH attribute encoded with two-octet AS numbers, non-mappable
-four-octet AS numbers are represented by the well-known two-octet AS
+four-octet AS numbers are represented by the reserved two-octet AS
 number, AS_TRANS.  This will preserve the path length property of the AS
 path information and also help in updating the AS path information
 received on a NEW BGP speaker from an OLD BGP speaker, as explained in
