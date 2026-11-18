@@ -5624,10 +5624,13 @@ To do and/or not done:
   the compatibility mode is made optional. A non-normative change is
   that much of the explanatory material was not carried forward. Section
   5 ("Handling BGP Communities") is only advisory and was also not
-  carried forward. No changes were made to the FSM as part of this
-  integration. Some FSM text still reflects assumptions from the
-  2-octet ASN era and will be reviewed separately as part of a planned
-  FSM update.
+  carried forward. 
+  
+To do and/or not done:
+
+- No changes were made to the FSM as part of the integration of RFC 6793. 
+  Some FSM text still reflects assumptions from the 2-octet ASN era and
+  will be reviewed separately as part of a planned FSM update.
   
 # TCP Options that May Be Used with BGP {#tcpopts}
 
