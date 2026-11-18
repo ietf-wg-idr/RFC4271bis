@@ -5040,6 +5040,10 @@ bits (in other words, whose value is 65,535 or less) as a "mappable" AS
 number. Finally, it refers to all other AS numbers (those whose values
 are greater than 65,535) as "non-mappable." These terms are used below.
 
+An OLD speaker is any speaker that does not advertise the 4-octet AS
+Number Capability {{as4byte}}. A NEW speaker is any speaker that does
+advertise it.
+
 An implementation of this specification MUST choose one of the following
 options. Either it must use the procedures specified below
 ({{as2byte-procedures}}) when interoperating with OLD BGP speakers, or
