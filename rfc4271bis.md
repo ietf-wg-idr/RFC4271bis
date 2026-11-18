@@ -708,9 +708,9 @@ My Legacy Autonomous System:
     AS_TRANS ({{astrans}}) is placed in this field. This field is
     ignored on receipt; the actual value of the sender's Autonomous
     System number is found in the "4-octet AS number capability"
-    ({{as4byte}}). An exception is if the peer does not support 4-octet
-    procedures and backward compatibility compatibility procedures are
-    in use; see {{as2byteopen}} for details.) The value MUST NOT be 0.
+    ({{as4byte}}). An exception applies when backward compatibility
+    procedures are in use with a peer that does not support 4-octet AS
+    numbers; see {{as2byteopen}} for details. The value MUST NOT be 0.
  
 Hold Time:
   : This 2-octet unsigned integer indicates the number of seconds
