@@ -705,10 +705,12 @@ My Legacy Autonomous System:
     System number of the sender can be represented in 16 bits (in other
     words, if its value is 65,535 or less), that value is placed in this
     field. Otherwise (if the value is greater than 65,535), the value
-    AS_TRANS ({{astrans}}) is placed in this field. This field is ignored
-    on receipt; the actual value of the sender's Autonomous System
-    number is found in the "4-octet AS number capability" ({{as4byte}}).
-    The value MUST NOT be 0.
+    AS_TRANS ({{astrans}}) is placed in this field. This field is
+    ignored on receipt; the actual value of the sender's Autonomous
+    System number is found in the "4-octet AS number capability"
+    ({{as4byte}}). An exception is if the peer does not support 4-octet
+    procedures and backward compatibility compatibility procedures are
+    in use; see {{as2byteopen}} for details.) The value MUST NOT be 0.
  
 Hold Time:
   : This 2-octet unsigned integer indicates the number of seconds
@@ -5047,6 +5049,11 @@ the procedures of {{caperror}}, including the "4-octet AS number
 capability" in the data portion.
 
 ### Interaction between NEW and OLD BGP Speakers {#as2byte-procedures}
+
+#### Peer AS Number {#as2byteopen}
+
+The OLD peer's autonomous system number is found in the My Legacy
+Autonomous System field of the OPEN received from the OLD peer. 
 
 #### AS4_PATH Attribute {#as4path}
 
