@@ -855,10 +855,10 @@ Otherwise, the encoding defined in {{openfmt}} is used.
 
 ### Capabilities Optional Parameter (Parameter Type 2) {#capabilities}
 
-A BGP speaker's OPEN message will include the Capabilities Optional
+A BGP speaker's OPEN message MUST include the Capabilities Optional
 Parameter, listing the capabilities supported by the speaker. The only
-exception is if backward compatibility procedures ({{backcompat}}) are
-in use to allow peering with an older implementation .
+exception to this requirement is if the peer does not support
+Capabilities. This exception is discussed further in {{capbackcompat}}.
 
 A BGP speaker determines the capabilities supported by its peer by
 examining the list of capabilities present in the Capabilities
@@ -942,7 +942,7 @@ Autonomous System number of the sender, encoded as a 4-octet unsigned
 integer. Its value MUST NOT be 0.
 
 This capability MUST be sent with the OPEN, unless the peer does not
-support capabilities ({{backcompat}}).
+support capabilities ({{capbackcompat}}).
 
 ##  UPDATE Message Format {#updatefmt}
 
@@ -5005,7 +5005,7 @@ specification documents the expected behavior of current implementations.
 However, other behaviors are needed to remain compatible with older
 implementations. The subsections below provide the necessary details.
 
-## Capabilities Advertisement
+## Capabilities Advertisement {#capbackcompat}
 
 Capabilities advertisement was not a mandatory element of {{RFC4271}}.
 A BGP speaker determines that its peer doesn't support capabilities
