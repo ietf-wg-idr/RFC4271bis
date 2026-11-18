@@ -1,7 +1,7 @@
 ---
 title: "A Border Gateway Protocol 4 (BGP-4)"
 abbrev: BGP-4
-docname: draft-ietf-idr-bgp4-rfc4271bis-06
+docname: draft-ietf-idr-bgp4-rfc4271bis-07
 category: std
 date: 2026
 
@@ -54,7 +54,6 @@ normative:
   RFC793: 
   RFC2119: 
   RFC2385: 
-  RFC4760:
   RFC8126: 
   RFC8174: 
 
@@ -79,9 +78,11 @@ informative:
   RFC4456:
   RFC4486:
   RFC4724:
+  RFC4760:
   RFC5004:
   RFC5065:
   RFC5492:
+  RFC5549:
   RFC6286:
   RFC6514:
   RFC6793:
@@ -98,6 +99,7 @@ informative:
   RFC9687:
   RFC9774:
   I-D.ietf-idr-bgp-issues:
+  IANA.address-family-numbers:
 
   IS10747:
     title: "Information Processing Systems - Telecommunications and Information Exchange between Systems - Protocol for Exchange of Inter-domain Routeing Information among Intermediate Systems to Support Forwarding of ISO 8473 PDUs"
@@ -160,11 +162,11 @@ header of the packet.  This, in turn, reflects the set of policy decisions
 that can (and cannot) be enforced using BGP.  BGP can support only those
 policies conforming to the destination-based forwarding paradigm.
 
-Since its first publication, BGP-4 has been extended by many other
-specifications. Notable extensions include {{RFC4760}}, which generalizes
-BGP-4 to allow support for advertising routing information of address
-families beyond IP Version 4 as documented in the present specification, and
-IP Version 6 in particular.
+This document describes BGP in terms of AFI/SAFI-specific reachability
+information and the MP_REACH_NLRI and MP_UNREACH_NLRI attributes. The
+original IPv4 unicast encoding specified by RFC 4271 remains supported
+for interoperability and is described in the backward compatibility
+section.
 
 ## Definition of Commonly Used Terms {#definitions}
 
@@ -241,6 +243,14 @@ Import Policy:
     information learned from other BGP speakers, and the application of
     the Import Policy results in the routes that will be considered in
     the Decision Process by the local BGP speaker.
+    
+IP Address:
+  : An Internet Protocol v4 (IPv4) or Internet Protocol v6 (IPv6) 
+    address. Where a specific version of the Internet Protocol is 
+    intended, it will be indicated as "IPv4" or "IPv6".
+
+IP Address Prefix:
+  : A prefix as described in {{nlri}}, representing an IP address.
 
 Legacy IPv4 Encoding:
   : Although this protocol can encode information about many different
@@ -265,7 +275,11 @@ NLRI:
   : Network Layer Reachability Information. When used without 
     modification, one of the IP address prefixes carried in the NLRI 
     field of an UPDATE message. When the NLRI field itself is intended, 
-    it is written as such.
+    it is written as such. <!-- xxx needs work -->
+    
+Prefix:
+  : An address prefix as defined in {{nlri}}. A prefix can be an 
+  IP Address Prefix, or a prefix of some other address family.
 
 Recognized:
   : A path attribute, or other message type or part identified by a type
@@ -399,7 +413,7 @@ a packet based solely on the destination address carried in the IP header of
 the packet. BGP as documented herein can support any policy conforming to
 the destination-based forwarding paradigm. Some policies cannot be supported
 by the destination-based forwarding paradigm, and thus require techniques
-such as source routing (aka explicit routing) to be enforced. Many
+such as source routing (a.k.a. explicit routing) to be enforced. Many
 extensions to BGP exist, which may enable such policies. These extensions
 are beyond the scope of this document.
 
@@ -946,6 +960,57 @@ integer. Its value MUST NOT be 0.
 This capability MUST be sent with the OPEN, unless the peer does not
 support capabilities ({{capbackcompat}}).
 
+#### Multiprotocol Extensions Capability {#mpbgpcap}
+
+This capability, also called the "Multiprotocol Extensions for BGP-4"
+capability, or "MP-BGP" capability, has been assigned type code 1 by
+IANA.
+
+This capability SHOULD be sent with the OPEN, unless the peer does not
+support capabilities ({{backcompat}}), or unless the peering is
+configured to use only the legacy NLRI encoding {{nlrilegacy}}.
+
+The fields in the Capabilities Optional Parameter are set as follows.
+The Capability Code field is set to 1 (which indicates Multiprotocol
+Extensions capabilities).  The Capability Length field is set to 4. The
+Capability Value field is defined as:
+
+~~~~ aasvg
+                     0       7      15      23      31
+                     +-------+-------+-------+-------+
+                     |      AFI      | Res.  | SAFI  |
+                     +-------+-------+-------+-------+
+~~~~
+{: title="Multiprotocol Extensions Capability"}
+
+   The use and meaning of this field is as follow:
+
+AFI:
+ : Address Family Identifier (16 bit), encoded the same way as
+   in the Multiprotocol Extensions
+
+Res.:
+ : Reserved (8 bit) field.  SHOULD be set to 0 by the sender
+   and ignored by the receiver.
+
+ : Note that not setting the field value to 0 may create issues
+   for a receiver not ignoring the field.  In addition, this
+   definition is problematic if it is ever attempted to redefine
+   the field.
+   <!-- I don't know what that last sentence means! -->
+
+SAFI:
+ : Subsequent Address Family Identifier (8 bit), encoded the
+   same way as in the Multiprotocol Extensions.
+
+A speaker that supports multiple <AFI, SAFI> tuples includes them as
+multiple Capabilities in the Capabilities Optional Parameter.
+
+To have a bi-directional exchange of routing information for a
+particular <AFI, SAFI> between a pair of BGP speakers, each such speaker
+MUST advertise to the other (via the Capability Advertisement mechanism)
+the capability to support that particular <AFI, SAFI> route.
+
 ##  UPDATE Message Format {#updatefmt}
 
 UPDATE messages are used to transfer routing information between BGP
@@ -961,70 +1026,26 @@ from service (see {{routes_adv_store}}).  An UPDATE message MUST NOT
 simultaneously advertise a feasible route and withdraw unfeasible routes
 from service.  However, in order to preserve backward compatibility, an
 implementation SHOULD still be prepared to receive an UPDATE message
-that simultaneously advertises and withdraws routes. ({{RFC4760}}
-specifies an alternate encoding to advertise and withdraw routes, and
-can be used to support address families other than IP Version 4.)
+that simultaneously advertises and withdraws routes. Feasible routes are
+advertised using the MP_REACH_NLRI attribute ({{mpreach}}) and unfeasible
+routes are withdrawn using the MP_UNREACH_NLRI attribute ({{mpunreach}}).
+For IPv4 unicast routes, a legacy encoding is available as well 
+({{nlrilegacy}}) and can be used for backward compatibility when needed.
 
-The UPDATE message always includes the fixed-size BGP
-header, and also includes the other fields, as shown below (note,
-some of the shown fields may not be present in every UPDATE message):
+When the legacy encoding is not in use, the UPDATE message consists of
+the fixed-size BGP header followed by a reserved field which must
+contain zeroes, and a set of path attributes, as shown below:
 
 ~~~~ aasvg
 +-----------------------------------------------------+
-|   Withdrawn Routes Length (2 octets)                |
-+-----------------------------------------------------+
-|   Withdrawn Routes (variable)                       |
+|   Reserved, must be zero (2 octets)                 |
 +-----------------------------------------------------+
 |   Total Path Attribute Length (2 octets)            |
 +-----------------------------------------------------+
 |   Path Attributes (variable)                        |
 +-----------------------------------------------------+
-|   Network Layer Reachability Information (variable) |
-+-----------------------------------------------------+
 ~~~~
 {: title="UPDATE message format"}
-
-Withdrawn Routes Length:
-  : This 2-octets unsigned integer indicates the total length of
-   the Withdrawn Routes field in octets.  Its value allows the
-   length of the Network Layer Reachability Information field to
-   be determined, as specified below.
-
-  : A value of 0 indicates that no routes are being withdrawn from
-   service, and that the Withdrawn Routes field is not present in
-   this UPDATE message.
-
-Withdrawn Routes:
-  : This is a variable-length field that contains a list of IP
-   address prefixes for the routes that are being withdrawn from
-   service.  Each IP address prefix is encoded as a 2-tuple of the
-   form <length, prefix>, whose fields are described below:
-
-~~~~ aasvg
-    +---------------------------+
-    |   Length (1 octet)        |
-    +---------------------------+
-    |   Prefix (variable)       |
-    +---------------------------+
-~~~~
-{: title="IP Address Prefix" #ipaddressprefix}
-
-The use and the meaning of these fields are as follows:
-
-{: style="format %c)"}
-
-* Length:
-   The Length field indicates the length in bits of the IP
-   address prefix.  A length of zero indicates a prefix that
-   matches all IP addresses (with prefix, itself, of zero
-   octets).
-
-* Prefix:
-   The Prefix field contains an IP address prefix, followed by
-   the minimum number of trailing bits needed to make the end
-   of the field fall on an octet boundary.  Note that the value
-   of trailing bits is irrelevant. Trailing bits MUST be set
-   to zero on transmission and MUST be disregarded on receipt.
 
 Total Path Attribute Length:
    : This 2-octet unsigned integer indicates the total length of the
@@ -1086,7 +1107,8 @@ unused.  They MUST be zero when sent and MUST be ignored when
 received.
 
 > The Attribute Type Code octet contains the Attribute Type Code.
-Currently defined Attribute Type Codes are discussed in {{pathattributes}}.
+Attribute Type Codes defined in this document are discussed in 
+{{pathattributes}}.
 
 > If the Extended Length bit of the Attribute Flags octet is set
 to 0, the third octet of the Path Attribute contains the length
@@ -1191,60 +1213,46 @@ g) AGGREGATOR (Type Code 7):
 
    : Usage of this attribute is defined in {{aggregator}}.
 
-Network Layer Reachability Information:
-   : This variable length field contains a list of IP address
-   prefixes.  The length, in octets, of the Network Layer
-   Reachability Information is not encoded explicitly, but can be
-   calculated as:
-
-~~~~
-   UPDATE message Length - 23 - Total Path Attributes Length
-   - Withdrawn Routes Length
-~~~~
-{: title="NLRI Length Calculation"}
-
-   > where UPDATE message Length is the value encoded in the fixed-size
-BGP header, Total Path Attribute Length, and Withdrawn
-Routes Length are the values encoded in the variable part of
-the UPDATE message, and 23 is a combined length of the fixed-size
-BGP header, the Total Path Attribute Length field, and the
-Withdrawn Routes Length field.
-
-   > Reachability information is encoded as a list of IP
-address prefixes for the routes that are being made available for
-service.  Each IP address prefix is encoded as described above
-under {{ipaddressprefix}}.
-<!-- not really the right xref but there isn't a standalone subsection-->
+h) MP_REACH_NLRI (Type Code 14):
+   : MP_REACH_NLRI is an optional non-transitive attribute whose
+   length is variable. It is used to to advertise both a feasible
+   route, and the next hop to be used for that route, unless the
+   legacy encoding is in use ({nlrilegacy}).
+   
+   : Usage of this attribute is defined in {{mpreach}}.
+   
+h) MP_UNREACH_NLRI (Type Code 15):
+   : MP_UNREACH_NLRI is an optional non-transitive attribute whose 
+   length is variable. It is used to withdraw one or more unfeasible
+   routes from service, unless the legacy encoding is in use
+   ({nlrilegacy}).
+   
+   : Usage of this attribute is defined in {{mpunreach}}.
 
 The minimum length of the UPDATE message is 23 octets -- 19 octets
-for the fixed header + 2 octets for the Withdrawn Routes Length + 2
-octets for the Total Path Attribute Length (the value of Withdrawn
-Routes Length is 0 and the value of Total Path Attribute Length is
-0).
+for the fixed header + 2 octets for the Reserved field + 2
+octets for the Total Path Attribute Length.
 
 An UPDATE message can advertise, at most, one set of path attributes,
 but multiple destinations, provided that the destinations share these
 attributes.  All path attributes contained in a given UPDATE message
-apply to all destinations carried in the NLRI field of the UPDATE
-message.
+apply to all destinations advertised as NLRI in the UPDATE message.
 
 An UPDATE message can list multiple routes that are to be withdrawn
 from service.  Each such route is identified by its destination
-(expressed as an IP prefix), which unambiguously identifies the route
-in the context of the BGP speaker - BGP speaker connection to which
+(expressed as a prefix), which unambiguously identifies the route
+in the context of the BGP speaker - BGP speaker connection over which
 it has been previously advertised.
 
 When an UPDATE message advertises only routes that are to be
-withdrawn from service, the message will not include path attributes or
-Network Layer Reachability Information. Conversely, when an UPDATE
-message advertises only a feasible route, the Withdrawn Routes field
-will not be present (Withdrawn Routes Length will be equal to 0).
+withdrawn from service, the message will not include path attributes
+other than MP_UNREACH_NLRI.
 
-For backward compatibility, a BGP speaker MUST be able to process UPDATE
+<!-- For backward compatibility, a BGP speaker MUST be able to process UPDATE
 messages that include the same address prefix in the Withdrawn Routes
 and Network Layer Reachability Information fields.  A BGP speaker MUST
 treat an UPDATE message of this form as though the Withdrawn Routes do
-not contain the address prefix.
+not contain the address prefix. -->
 
 ## KEEPALIVE Message Format {#keepalivefmt}
 
@@ -1390,12 +1398,53 @@ Data:
 The minimum length of the NOTIFICATION message is 21 octets
 (including message header).
 
+# Network Layer Reachability Information (NLRI) Encoding {#nlri}
+
+<!-- something has to be said about scoping this to just 1/1 and 2/1 -->
+<!-- I guess also 1/2 and 2/2 -->
+
+Network Layer Reachability information is encoded as one or more
+2-tuples of the form <length, prefix>, whose fields are described below:
+
+~~~~ aasvg
+                       +---------------------------+
+                       |   Length (1 octet)        |
+                       +---------------------------+
+                       |   Prefix (variable)       |
+                       +---------------------------+
+~~~~
+{: title="NLRI" #nlriencoding}
+
+The use and the meaning of these fields are as follows:
+
+* Length:
+   The Length field indicates the length, in bits, of the address
+   prefix.  A length of zero indicates a prefix that matches all (as
+   specified by the address family) addresses (with prefix, itself, of
+   zero octets).
+
+* Prefix:
+   The Prefix field contains an address prefix followed by enough
+   trailing bits to make the end of the field fall on an octet boundary.
+   Note that the value of trailing bits is irrelevant. Trailing bits
+   MUST be set to zero on transmission and MUST be disregarded on
+   receipt.
+   
+These 2-tuples are sometimes referred to as "prefixes". When used this
+way, "prefix" means the entire 2-tuple, both the Length field and the
+Prefix field. If solely the Prefix field is intended, that will be 
+stated explicitly.
+
+## IPv4 NLRI Encoding
+
+## IPv6 NLRI Encoding
+
 # Path Attributes {#pathattributes}
 
 This section discusses the path attributes of the UPDATE message.
 
 BGP implementations MUST recognize ORIGIN, AS_PATH, NEXT_HOP, 
-LOCAL_PREF, and ATOMIC_AGGREGATE. 
+LOCAL_PREF, ATOMIC_AGGREGATE, MP_REACH_NLRI, and MP_UNREACH_NLRI.
 
 In addition to these, whose use is described below, each path MAY also
 contain one or more optional attributes.  It is not required or expected
@@ -1423,7 +1472,8 @@ All optional attributes (both transitive and non-transitive), MAY be
 updated (if appropriate) by BGP speakers in the path.
 
 The sender of an UPDATE message SHOULD order path attributes within
-the UPDATE message in ascending order of attribute type.  The
+the UPDATE message in ascending order of attribute type, except that
+the MP_REACH_NLRI or MP_UNREACH_NLRI, if present, must be first.  The
 receiver of an UPDATE message MUST be prepared to handle path
 attributes within UPDATE messages that are out of order.
 
@@ -1437,22 +1487,285 @@ The usage of each BGP path attribute is described in the following
 clauses. Refer to {{paerrs}} for details regarding error handling
 when processing path attributes.
 
+### MP_REACH_NLRI {#mpreach}
+
+The Multiprotocol Reachable NLRI, or MP_REACH_NLRI, attribute is used to
+advertise a feasible route to a peer and to permit a router to advertise
+the Network Layer address of the router that should be used as the next
+hop to the destinations listed in the Network Layer Reachability
+Information field of the MP_REACH_NLRI attribute.
+  
+The attribute is encoded as shown below:
+
+~~~~ aasvg
+        +---------------------------------------------------------+
+        | Address Family Identifier (2 octets)                    |
+        +---------------------------------------------------------+
+        | Subsequent Address Family Identifier (1 octet)          |
+        +---------------------------------------------------------+
+        | Length of Next Hop Network Address (1 octet)  ^  a.k.a. |
+        +---------------------------------------------- |  Next   |
+        | Network Address of Next Hop (variable)        v  Hop    |
+        +---------------------------------------------------------+
+        | Reserved (1 octet)                                      |
+        +---------------------------------------------------------+
+        | Network Layer Reachability Information (variable)       |
+        +---------------------------------------------------------+
+~~~~
+{: title="MP_REACH_NLRI" #mpreach_encoding}
+
+The use and meaning of these fields are as follows:
+
+Address Family Identifier (AFI):
+  : This field in combination with the Subsequent Address Family
+     Identifier field identifies the set of Network Layer protocols to
+     which the address carried in the Next Hop field must belong, the
+     way in which the address of the next hop is encoded, and the
+     semantics of the Network Layer Reachability Information that
+     follows.  If the Next Hop is allowed to be from more than one
+     Network Layer protocol, the encoding of the Next Hop MUST provide a
+     way to determine its Network Layer protocol. 
+
+  : Presently defined values for the Address Family Identifier field
+     are specified in the IANA's Address Family Numbers registry
+     {{IANA.address-family-numbers}}.
+   
+Subsequent Address Family Identifier (SAFI):
+ : This field in combination with the Address Family Identifier
+ field identifies the set of Network Layer protocols to which
+ the address carried in the Next Hop must belong, the way in
+ which the address of the next hop is encoded, and the semantics
+ of the Network Layer Reachability Information that follows.  If
+ the Next Hop is allowed to be from more than one Network Layer
+ protocol, the encoding of the Next Hop MUST provide a way to
+ determine its Network Layer protocol.
+
+Length of Next Hop Network Address:
+ : A 1-octet field whose value expresses the length of the "Network
+ Address of Next Hop" field, measured in octets. Collectively, this
+ field and the next are also called the "Next Hop field."
+
+Network Address of Next Hop:
+ : A variable-length field that contains the Network Address of the next
+ router on the path to the destination system.  The Network Layer
+ protocol associated with the Network Address of the Next Hop is
+ identified by a combination of <AFI, SAFI> carried in the attribute. 
+ Collectively, this field and the previous are also called the "Next Hop
+ field."
+
+Reserved:
+ : A 1 octet field that MUST be set to 0, and MUST be ignored
+ upon receipt.
+
+Network Layer Reachability Information (NLRI):
+ : A variable length field that lists NLRI for the feasible routes
+ that are being advertised in this attribute.  The semantics of
+ NLRI is identified by a combination of <AFI, SAFI> carried in
+ the attribute.
+
+ : When the Subsequent Address Family Identifier (SAFI) field is set to
+ 1 or 2, each NLRI is encoded as specified in {{nlri}}. When the SAFI
+ field is set to any other value, the NLRI encoding is dependent on the
+ specification of that SAFI. In general, the encoding is dependent on
+ the concatenation of AFI and SAFI, such that the same SAFI can have
+ different encodings for different AFIs.
+  
+The next hop information carried in the MP_REACH_NLRI path attribute
+defines the Network Layer address of the router that SHOULD be used as
+the next hop to the destinations listed in the NLRI field of the
+MP_REACH_NLRI attribute in the UPDATE message. Rules for constructing
+this information are supplied in ({{nexthoprules}}).
+
+<!-- An UPDATE message that carries the MP_REACH_NLRI MUST also carry the
+ORIGIN and the AS_PATH attributes (both in EBGP and in IBGP
+exchanges).  Moreover, in IBGP exchanges such a message MUST also
+carry the LOCAL_PREF attribute. -->
+
+An UPDATE message that carries the MP_REACH_NLRI attribute MUST NOT
+carry the NEXT_HOP attribute. If such a message contains the NEXT_HOP
+attribute, the BGP speaker that receives the message MUST ignore the
+NEXT_HOP attribute. <!-- move to error handling? -->
+
+An UPDATE message that carries the MP_REACH_NLRI attribute MUST NOT
+carry the MP_UNREACH_NLRI attribute. <!-- and how to handle errors? -->
+
+An UPDATE message that carries the MP_REACH_NLRI attribute MUST NOT
+have a non-empty legacy encoding ({{nlrilegacy}}).
+
+MP_REACH_NLRI MUST be the first attribute to be encoded in any UPDATE
+message it is present in.
+
+<!-- An UPDATE message MUST NOT include the same address prefix (of the
+same <AFI, SAFI>) in more than one of the following fields: WITHDRAWN
+ROUTES field, Network Reachability Information fields, MP_REACH_NLRI
+field, and MP_UNREACH_NLRI field.  The processing of an UPDATE
+message in this form is undefined. -->
+
+#### Rules For Next Hop Information {#nexthoprules}
+
+These rules apply to constructing either the Next Hop field of the
+MP_REACH_NLRI attribute, or the NEXT_HOP attribute of the legacy
+encoding. The term "NH" in this section means either the Next Hop
+field, or the NEXT_HOP attribute, depending on the context in which the
+rules are being used.
+
+1. When sending a message to an internal peer, if the route is not
+   locally originated, the BGP speaker SHOULD NOT modify the NH unless
+   it has been explicitly configured to announce its own address as the
+   NH.  When announcing a locally-originated route to an internal peer,
+   the BGP speaker SHOULD use the interface address of the router
+   through which the announced network is reachable for the speaker as
+   the NH.  If the route is directly connected to the speaker, or if the
+   interface address of the router through which the announced network
+   is reachable for the speaker is the internal peer's address, then the
+   BGP speaker SHOULD use its own address for the next hop (the address
+   of the interface that is used to reach the peer).
+
+2. When sending a message to an external peer, X, and the peer is
+   one network layer hop away from the speaker:
+
+   - If the route being announced was learned from an internal
+     peer or is locally originated, the BGP speaker can use an interface
+     address of the internal peer router (or the internal router)
+     through which the announced network is reachable for the speaker
+     for the NH, provided that peer X shares a common subnet with this
+     address.  This is a form of "third party" NH attribute.
+
+   - Otherwise, if the route being announced was learned from an
+     external peer, the speaker can use an address of any adjacent
+     router (known from the received NH) that the speaker itself uses
+     for local route calculation in the NH, provided that peer X shares
+     a common subnet with this address.  This is a second form of "third
+     party" NH.
+
+   - Otherwise, if the external peer to which the route is being
+     advertised shares a common subnet with one of the interfaces of the
+     announcing BGP speaker, the speaker MAY use the address associated
+     with such an interface in the NH. This is known as a "first party"
+     NH.
+
+   - By default (if none of the above conditions apply), the BGP
+     speaker SHOULD use the address of the interface that the speaker
+     uses to establish the BGP connection to peer X in the NH.
+
+3. When sending a message to an external peer X, and the peer is
+   multiple nextwork layer hops away from the speaker (a.k.a. "multihop
+   EBGP"):
+
+   - The speaker MAY be configured to propagate the NH.
+     In this case, when advertising a route that the speaker learned
+     from one of its peers, the NH of the advertised route is exactly
+     the same as the NH of the learned route (the speaker does not
+     modify the NH).
+
+   - By default, the BGP speaker SHOULD use the address of the
+     interface that the speaker uses to establish the BGP connection to
+     peer X in the NH.
+
+Normally, the NH is chosen such that the shortest available path will be
+taken.  A BGP speaker MUST be able to support disabling the
+advertisement of third party NHs in order to handle imperfectly bridged
+media. <!-- is the "imperfectly bridged" thing too 90s? -->
+
+A route originated by a BGP speaker SHALL NOT be advertised to a peer
+using an address of that peer as NH.  A BGP speaker SHALL NOT install a
+route with itself as the NH.
+
+The NH is used by the BGP speaker to determine the actual outbound
+interface and immediate next-hop address used to forward transit packets
+to the associated destinations.
+
+The immediate next-hop address is determined by performing a recursive
+route lookup operation for the address in the NH, using the contents of
+the Routing Table, selecting one entry if multiple entries of equal cost
+exist.  The Routing Table entry that resolves the address in the NH will
+always specify the outbound interface.  If the entry specifies an
+attached subnet, but does not specify a next-hop address, then the
+address in the NH SHOULD be used as the immediate next-hop address.  If
+the entry also specifies the next-hop address, this address SHOULD be
+used as the immediate next-hop address for packet forwarding.
+
+### MP_UNREACH_NLRI {#mpunreach}
+
+This is an optional non-transitive attribute that can be used for the
+purpose of withdrawing multiple unfeasible routes from service.
+
+The attribute is encoded as shown below:
+
+~~~~ aasvg
+        +---------------------------------------------------------+
+        | Address Family Identifier (2 octets)                    |
+        +---------------------------------------------------------+
+        | Subsequent Address Family Identifier (1 octet)          |
+        +---------------------------------------------------------+
+        | Withdrawn Routes (variable)                             |
+        +---------------------------------------------------------+
+~~~~
+{: title="MP_UNREACH_NLRI" #mpunreach_encoding}
+
+The use and the meaning of these fields are as follows:
+
+Address Family Identifier (AFI): 
+: This field in combination with the Subsequent Address Family
+ Identifier field identifies the semantics of Withdrawn Routes 
+ Network Layer Reachability Information carried in the attribute.
+
+ : Presently defined values for the Address Family Identifier
+ field are specified in the IANA's Address Family Numbers
+ registry {{IANA.address-family-numbers}}.
+
+Subsequent Address Family Identifier (SAFI):
+
+: This field in combination with the Address Family Identifier
+ field identifies the semantics of Withdrawn Routes Network
+ Layer Reachability Information carried in the attribute.
+
+Withdrawn Routes Network Layer Reachability Information:
+
+: A variable-length field that lists NLRI for the routes that are
+ being withdrawn from service.  The semantics of NLRI is
+ identified by a combination of <AFI, SAFI> carried in the
+ attribute.
+
+ : When the Subsequent Address Family Identifier (SAFI) field is set to
+ 1 or 2, each NLRI is encoded as specified in {{nlri}}. When the SAFI
+ field is set to any other value, the NLRI encoding is dependent on the
+ specification of that SAFI. In general, the encoding is dependent on
+ the concatenation of AFI and SAFI, such that the same SAFI can have
+ different encodings for different AFIs.
+
+<!-- erratum 5120 proposes "each NLRI item". some fix is needed anyway -->
+<!-- same for MP_REACH_NLRI -->
+
+An UPDATE message that contains the MP_UNREACH_NLRI is not required
+to carry any other path attributes.
+
+An UPDATE message that carries the MP_UNREACH_NLRI attribute MUST NOT
+carry the MP_REACH_NLRI attribute. <!-- and how to handle errors? -->
+
+An UPDATE message that carries the MP_UNREACH_NLRI attribute MUST NOT
+have a non-empty legacy encoding ({{nlrilegacy}}).
+
+MP_UNREACH_NLRI MUST be the first attribute to be encoded in any UPDATE
+message it is present in.
+
 ### ORIGIN {#origin}
 
-ORIGIN MUST be included with every update.  The ORIGIN attribute is
-generated by the speaker that originates the associated routing
-information.  Its value SHOULD NOT be changed by any other speaker.
+ORIGIN MUST be included with every update that advertises a feasible
+route.  The ORIGIN attribute is generated by the speaker that originates
+the associated routing information.  Its value SHOULD NOT be changed by
+any other speaker.
 
 An ORIGIN value not equal to one of the defined values of (0, 1, or 2)
 (listed in {{origin_values}}) MUST NOT be sent.
 
 ### AS_PATH {#aspath}
 
-AS_PATH MUST be included with every update.  This attribute
-identifies the autonomous systems through which routing information
-carried in this UPDATE message has passed.  The components of this
-list can be AS_SETs or AS_SEQUENCEs. (Other segments and behaviors 
-are added by {{RFC5065}}, if used.) 
+AS_PATH MUST be included with every update that advertises a feasible
+route.  This attribute identifies the autonomous systems through which
+routing information carried in this UPDATE message has passed.  The
+components of this list can be AS_SETs or AS_SEQUENCEs. (Other segments
+and behaviors are added by {{RFC5065}}, if used.) 
 
 When a BGP speaker propagates a route it learned from another BGP
 speaker's UPDATE message, it modifies the route's AS_PATH attribute
@@ -1508,94 +1821,15 @@ has been enabled by local configuration.
 
 ###  NEXT_HOP {#nexthop}
 
-The NEXT_HOP MUST be included with every update, unless the encoding of
-{{RFC4760}} is in use. It defines the IP address of the router that
-SHOULD be used as the next hop to the destinations listed in the UPDATE
-message.  The NEXT_HOP attribute is calculated as follows:
+<!-- possibly move this to the legacy section -->
 
-1. When sending a message to an internal peer, if the route is not
-   locally originated, the BGP speaker SHOULD NOT modify the
-   NEXT_HOP attribute unless it has been explicitly configured to
-   announce its own IP address as the NEXT_HOP.  When announcing a
-   locally-originated route to an internal peer, the BGP speaker
-   SHOULD use the interface address of the router through which
-   the announced network is reachable for the speaker as the
-   NEXT_HOP.  If the route is directly connected to the speaker,
-   or if the interface address of the router through which the
-   announced network is reachable for the speaker is the internal
-   peer's address, then the BGP speaker SHOULD use its own IP
-   address for the NEXT_HOP attribute (the address of the
-   interface that is used to reach the peer).
-
-2. When sending a message to an external peer, X, and the peer is
-   one IP hop away from the speaker:
-
-   - If the route being announced was learned from an internal
-     peer or is locally originated, the BGP speaker can use an
-     interface address of the internal peer router (or the
-     internal router) through which the announced network is
-     reachable for the speaker for the NEXT_HOP attribute,
-     provided that peer X shares a common subnet with this
-     address.  This is a form of "third party" NEXT_HOP attribute.
-
-   - Otherwise, if the route being announced was learned from an
-     external peer, the speaker can use an IP address of any
-     adjacent router (known from the received NEXT_HOP attribute)
-     that the speaker itself uses for local route calculation in
-     the NEXT_HOP attribute, provided that peer X shares a common
-     subnet with this address.  This is a second form of "third
-     party" NEXT_HOP attribute.
-
-   - Otherwise, if the external peer to which the route is being
-     advertised shares a common subnet with one of the interfaces
-     of the announcing BGP speaker, the speaker MAY use the IP
-     address associated with such an interface in the NEXT_HOP
-     attribute.  This is known as a "first party" NEXT_HOP
-     attribute.
-
-   - By default (if none of the above conditions apply), the BGP
-     speaker SHOULD use the IP address of the interface that the
-     speaker uses to establish the BGP connection to peer X in the
-     NEXT_HOP attribute.
-
-3. When sending a message to an external peer X, and the peer is
-   multiple IP hops away from the speaker (aka "multihop EBGP"):
-
-   - The speaker MAY be configured to propagate the NEXT_HOP
-     attribute.  In this case, when advertising a route that the
-     speaker learned from one of its peers, the NEXT_HOP attribute
-     of the advertised route is exactly the same as the NEXT_HOP
-     attribute of the learned route (the speaker does not modify
-     the NEXT_HOP attribute).
-
-   - By default, the BGP speaker SHOULD use the IP address of the
-     interface that the speaker uses to establish the BGP connection
-     to peer X in the NEXT_HOP attribute.
-
-Normally, the NEXT_HOP attribute is chosen such that the shortest
-available path will be taken.  A BGP speaker MUST be able to support
-disabling the advertisement of third party NEXT_HOP attributes in
-order to handle imperfectly bridged media.
-
-A route originated by a BGP speaker SHALL NOT be advertised to a peer
-using an address of that peer as NEXT_HOP.  A BGP speaker SHALL NOT
-install a route with itself as the next hop.
-
-The NEXT_HOP attribute is used by the BGP speaker to determine the
-actual outbound interface and immediate next-hop address 
-used to forward transit packets to the associated destinations.
-
-The immediate next-hop address is determined by performing a
-recursive route lookup operation for the IP address in the NEXT_HOP
-attribute, using the contents of the Routing Table, selecting one
-entry if multiple entries of equal cost exist.  The Routing Table
-entry that resolves the IP address in the NEXT_HOP attribute will
-always specify the outbound interface.  If the entry specifies an
-attached subnet, but does not specify a next-hop address, then the
-address in the NEXT_HOP attribute SHOULD be used as the immediate
-next-hop address.  If the entry also specifies the next-hop address,
-this address SHOULD be used as the immediate next-hop address for
-packet forwarding.
+The NEXT_HOP MUST NOT be included with any update, unless the legacy
+encoding ({{nlrilegacy}}) is in use. If the legacy encoding is in use,
+the NEXT_HOP MUST be included with every update that advertises a
+feasible route. It defines the IP address of the router that SHOULD be
+used as the next hop to the destinations listed in the UPDATE message. 
+The NEXT_HOP attribute is calculated by following the rules given in
+{{nexthoprules}}.
 
 ###  MULTI_EXIT_DISC {#med}
 
@@ -1628,12 +1862,12 @@ to performing route selection (Decision Process phases 1 and 2).  See
 
 ###  LOCAL_PREF {#localpref}
 
-LOCAL_PREF SHALL be included in all UPDATE messages that a given BGP
-speaker sends to other internal peers.  A BGP speaker SHALL calculate
-the degree of preference for each external route based on the
-locally-configured policy, and include the degree of preference when
-advertising a route to its internal peers.  The higher degree of
-preference MUST be preferred. A BGP speaker uses the degree of
+LOCAL_PREF SHALL be included in every UPDATE message that advertises a
+feasible route that a given BGP speaker sends to other internal peers. 
+A BGP speaker SHALL calculate the degree of preference for each external
+route based on the locally-configured policy, and include the degree of
+preference when advertising a route to its internal peers.  The higher
+degree of preference MUST be preferred. A BGP speaker uses the degree of
 preference learned via LOCAL_PREF in its Decision Process (see
 {{phase1}}).
 
@@ -1838,12 +2072,6 @@ enabled by default). Furthermore, if offered, it is suggested that its
 scope be limited (for example, to a given AFI/SAFI or a given session)
 by default.
 
-In the procedures below, reference is made to AFI, SAFI, MP_REACH_NLRI,
-and MP_UNREACH_NLRI. These are specified in {{RFC4760}}; additionally,
-brief definitions can be found in {{definitions}}. Although they are
-defined outside this specification, they are discussed here because 
-they are integral to the procedures defined in this section.
-
 ### Error-Handling Approaches {#errapproaches}
 
 In this document, we refer to four different approaches to handle path
@@ -1907,23 +2135,25 @@ validly have an attribute length of zero.
 
 ### Parsing of Network Layer Reachability Information (NLRI) Fields {#nlrisyntax}
 
-#### Encoding NLRI
+#### Encoding NLRI {#nlrisyntax_encoding}
 
 To facilitate the determination of the NLRI field in an UPDATE message
 with a malformed attribute:
 
-- The MP_REACH_NLRI or MP_UNREACH_NLRI attribute (if present) SHALL be
-encoded as the very first path attribute in an UPDATE message.
+- The MP_REACH_NLRI or MP_UNREACH_NLRI attribute (if present) is
+required to be encoded as the very first path attribute in an UPDATE
+message. ({{mpreach}}, {{mpunreach}})
 
-- An UPDATE message MUST NOT contain more than one of the following:
+- An UPDATE message may not contain more than one of the following:
 non-empty Withdrawn Routes field, non-empty Network Layer Reachability
 Information field, MP_REACH_NLRI attribute, and MP_UNREACH_NLRI
-attribute. <!-- xxx make sure that the field restrictions are reflected
-in the relevant field definitions. -->
+attribute. ({{mpreach}}, {{mpunreach}}, {{nlrilegacy}})
 
 Since older BGP speakers might not implement these restrictions, an
-implementation MUST still be prepared to receive these fields in any
-position or combination.
+implementation SHOULD still be prepared to receive these fields in any
+position or combination. 
+<!-- I downgraded the MUST to a SHOULD. That is preparatory to allowing
+ people to write legacy-free implementations. -->
 
 If the legacy IPv4 encoding is used, the NLRI field for the IPv4
 unicast address family is carried immediately following all the
@@ -1933,7 +2163,7 @@ Message Length, Withdrawn Route Length, and Total Attribute Length (when
 they are consistent) carried in the message instead of relying on the
 length of individual attributes in the message.
 
-#### Missing NLRI
+#### Missing NLRI {#nlrisyntax_missing}
 
 {{RFC4724}} specifies an End-of-RIB message (EoR) that can be encoded as
 an UPDATE message that contains only an MP_UNREACH_NLRI attribute that
@@ -1952,7 +2182,7 @@ such an UPDATE message and if any encountered error specifies an
 error-handling approach other than "attribute discard", then the
 "session reset" approach MUST be used.
 
-#### Syntactic Correctness of NLRI Fields
+#### Syntactic Correctness of NLRI Fields {#nlrisyntax_correctness}
 
 The NLRI field or Withdrawn Routes field SHALL be considered
 "syntactically incorrect" if either of the following is true:
@@ -2051,9 +2281,32 @@ handle malformations.  It is possible that implementations may apply
 other error checks not contemplated here. If so, the error handling
 approach given here should generally be applied.
 
+#### MP_REACH_NLRI Error Handling
+
+If the Length of Next Hop Network Address field of the MP_REACH_NLRI
+attribute is inconsistent with that which was expected, the attribute is
+considered malformed.  Since the next hop precedes the NLRI field in the
+attribute, in this case it will not be possible to reliably locate the
+NLRI; thus, the "session reset" or "AFI/SAFI disable" approach MUST be
+used.
+
+"That which was expected", while somewhat vague, is intended to
+encompass the next hop specified for the Address Family Identifier and
+Subsequent Address Family Identifier fields and is potentially modified
+by any extensions in use.  For example, if {{RFC5549}} is in use, then
+the next hop would have to have a length of 4 or 16.
+
+{{nlrisyntax_encoding}} and {{nlrisyntax_correctness}} provide further
+discussion of the handling of this attribute. 
+
+7.12.  MP_UNREACH_NLRI
+
+{{nlrisyntax_encoding}} and {{nlrisyntax_correctness}} discuss the
+handling of this attribute.
+
 #### ORIGIN Error Handling
 <!-- I wanted to just call this subsection "ORIGIN", similarly for
- the following subsections. But that appeared to give the tooling 
+ the other subsections. But that appeared to give the tooling 
  fits; apparently it doesn't like duplicate section titles? It's OK
  to leave it as it is now, but it would be nicer (IMO) if there were
  a way to revert to the terser title. It's contextualized by the 
@@ -5228,6 +5481,94 @@ UPDATE message.  This case SHOULD be logged locally for analysis.
 The AS4_AGGREGATOR attribute in an UPDATE message SHALL be considered
 malformed if the attribute length is not 8.
 
+## Legacy IPv4 Route Encoding {#nlrilegacy}
+
+If this encoding is used in an UPDATE, then the MP_REACH_NLRI and
+MP_UNREACH_NLRI MUST NOT be present in that UPDATE.
+
+The UPDATE message always includes the fixed-size BGP
+header, and also includes the other fields, as shown below (note,
+some of the shown fields may not be present in every UPDATE message):
+
+~~~~ aasvg
++-----------------------------------------------------+
+|   Withdrawn Routes Length (2 octets)                |
++-----------------------------------------------------+
+|   Withdrawn Routes (variable)                       |
++-----------------------------------------------------+
+|   Total Path Attribute Length (2 octets)            |
++-----------------------------------------------------+
+|   Path Attributes (variable)                        |
++-----------------------------------------------------+
+|   Network Layer Reachability Information (variable) |
++-----------------------------------------------------+
+~~~~
+{: title="UPDATE message format"}
+
+Withdrawn Routes Length:
+  : This 2-octets unsigned integer indicates the total length of
+   the Withdrawn Routes field in octets.  Its value allows the
+   length of the Network Layer Reachability Information field to
+   be determined, as specified below.
+
+  : A value of 0 indicates that no routes are being withdrawn from
+   service, and that the Withdrawn Routes field is not present in
+   this UPDATE message.
+
+Withdrawn Routes:
+  : This is a variable-length field that contains a list of IP
+   address prefixes for the routes that are being withdrawn from
+   service.  Each IP address prefix is encoded as a 2-tuple of the
+   form <length, prefix>, whose fields are described below:
+   
+   
+...
+
+Network Layer Reachability Information:
+   : This variable length field contains a list of IP address
+   prefixes.  The length, in octets, of the Network Layer
+   Reachability Information is not encoded explicitly, but can be
+   calculated as:
+
+~~~~
+   UPDATE message Length - 23 - Total Path Attributes Length
+   - Withdrawn Routes Length
+~~~~
+{: title="NLRI Length Calculation"}
+
+   > where UPDATE message Length is the value encoded in the fixed-size
+BGP header, Total Path Attribute Length, and Withdrawn
+Routes Length are the values encoded in the variable part of
+the UPDATE message, and 23 is a combined length of the fixed-size
+BGP header, the Total Path Attribute Length field, and the
+Withdrawn Routes Length field.
+
+   > Reachability information is encoded as a list of IP
+address prefixes for the routes that are being made available for
+service.  Each IP address prefix is encoded as described above
+under {{nlri}}.
+
+The minimum length of the UPDATE message is 23 octets -- 19 octets
+for the fixed header + 2 octets for the Withdrawn Routes Length + 2
+octets for the Total Path Attribute Length (the value of Withdrawn
+Routes Length is 0 and the value of Total Path Attribute Length is
+0).
+
+...
+
+When an UPDATE message advertises only routes that are to be
+withdrawn from service, the message will not include path attributes
+(other than MP_UNREACH_NLRI) or
+Network Layer Reachability Information. Conversely, when an UPDATE
+message advertises only a feasible route, the Withdrawn Routes field
+will not be present (Withdrawn Routes Length will be equal to 0).
+
+For backward compatibility, a BGP speaker MUST be able to process UPDATE
+messages that include the same address prefix in the Withdrawn Routes
+and Network Layer Reachability Information fields.  A BGP speaker MUST
+treat an UPDATE message of this form as though the Withdrawn Routes do
+not contain the address prefix.
+
 --- back
 
 # Acknowledgements
@@ -5631,6 +5972,19 @@ To do and/or not done:
 - No changes were made to the FSM as part of the integration of RFC 6793. 
   Some FSM text still reflects assumptions from the 2-octet ASN era and
   will be reviewed separately as part of a planned FSM update.
+  
+## Version 07
+
+- Integrated RFC 4760, "Multiprotocol Extensions for BGP-4".
+  (Issue 163)(Other issues to be supplied) The document is reframed
+  using MP-BGP as the first-class encoding; it's described as being
+  preferred (though not mandatory) for AFI/SAFI 1/1, and the RFC 4271
+  encoding is moved to a backward compatibility section. Still in
+  progress before commit: need to make description consistent
+  throughout; the base document describes everything in terms of
+  "routes," "prefixes," and "nlri" which are assumed to be IPv4 routes.
+  It will be necessary to do a complete scrub of these assumptions. Also
+  need to look at IANA considerations and acknowledgments.
   
 # TCP Options that May Be Used with BGP {#tcpopts}
 
