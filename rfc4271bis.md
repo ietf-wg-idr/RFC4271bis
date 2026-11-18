@@ -5004,7 +5004,7 @@ This version of the BGP specification integrates many other past
 specifications, which were themselves introduced as extensions to the
 former base protocol specification, {{RFC4271}}. The main body of the
 specification documents the expected behavior of current implementations.
-However, other behaviors are needed to remain compatibile with older
+However, other behaviors are needed to remain compatible with older
 implementations. The subsections below provide the necessary details.
 
 ## Capabilities Advertisement {#capbackcompat}
@@ -5039,6 +5039,10 @@ speaker". It refers to an AS number whose value can be represented in 16
 bits (in other words, whose value is 65,535 or less) as a "mappable" AS
 number. Finally, it refers to all other AS numbers (those whose values
 are greater than 65,535) as "non-mappable." These terms are used below.
+
+An OLD speaker is any speaker that does not advertise the 4-octet AS
+Number Capability {{as4byte}}. A NEW speaker is any speaker that does
+advertise it.
 
 An implementation of this specification MUST choose one of the following
 options. Either it must use the procedures specified below
@@ -5289,10 +5293,10 @@ Lange, and Don Goodspeed for their review and suggestions.
 
 ## Acknowledgements in relationship to RFC 5492
 
-{{RFC5492} was authored by John Scudder and Ravi Chandra. Its contents
+{{RFC5492}} was authored by John Scudder and Ravi Chandra. Its contents
 have been subsumed in this document.
 
-RFC 6286 contains the following acknowledgments:
+RFC 5492 contains the following acknowledgments:
 
 The authors would like to thank members of the IDR Working Group and the
 IESG and its Directorates for their review and comments.
