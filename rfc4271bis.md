@@ -5613,8 +5613,10 @@ To do and/or not done:
   the compatibility mode is made optional. A non-normative change is
   that much of the explanatory material was not carried forward. Section
   5 ("Handling BGP Communities") is only advisory and was also not
-  carried forward. This version does not update the FSM; this will be
-  done as part of a later FSM blitz.
+  carried forward. No changes were made to the FSM as part of this
+  integration. Some FSM text still reflects assumptions from the
+  2-octet ASN era and will be reviewed separately as part of a planned
+  FSM update.
   
 # TCP Options that May Be Used with BGP {#tcpopts}
 
