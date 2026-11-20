@@ -8,6 +8,7 @@ This repo contains the IDR working group's effort to produce a Full Standard doc
 - [Presentation at IETF-124](https://datatracker.ietf.org/meeting/124/materials/slides-124-idr-rfc4271bis-update-00)
 - [Presentation at IETF-126](https://datatracker.ietf.org/meeting/126/materials/slides-126-idr-revised-slides-for-rfc4271bis-01-00)
 - [Presentation at October 26, 2026 interim](https://datatracker.ietf.org/meeting/interim-2026-idr-03/materials/slides-interim-2026-idr-03-sessa-14-rfc4271bis-update-00.pdf)
+- [Presentation at IETF-127](https://datatracker.ietf.org/meeting/127/materials/slides-127-idr-sessa-1-1-rfc4271bis-update-01.pdf)
 
 The slides and other WG materials provide full context, but at a high level our goal is to meet the requirements from BCP 9 for Full Standard (see the IETF-123 slides), with as little scope creep as we can manage. That having been said, some creep has been hard to avoid. Major factors include:
 

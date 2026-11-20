@@ -4781,10 +4781,10 @@ as those described here.
 {: tiebreak}
 
 * Remove from consideration all routes that are not tied for
-   having the smallest number of AS numbers present in their
-   AS_PATH attributes.  Note that when counting this number, an
-   AS_SET counts as 1, no matter how many ASes are in the set.
-   This number is sometimes called the "AS path length".
+   having the smallest number of AS numbers present in their AS_PATH
+   attributes.  This number is sometimes called the "AS path length". 
+   Note that when counting this number, an AS_SET counts as 1, no matter
+   how many ASes are in the set.
 
 * Remove from consideration all routes that are not tied for
    having the lowest Origin number in their Origin attribute.
