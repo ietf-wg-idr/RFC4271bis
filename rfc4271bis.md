@@ -1011,7 +1011,7 @@ Capability Value field is defined as:
 
 AFI:
  : Address Family Identifier (16 bit), encoded the same way as
-   in {{mpreach}}.
+   in {{mpreach}}. AFI 1 denotes IPv4 and AFI 2 denotes IPv6. 
 
 Res.:
  : Reserved (8 bit) field.  MUST be set to 0 by the sender
@@ -1019,7 +1019,9 @@ Res.:
 
 SAFI:
  : Subsequent Address Family Identifier (8 bit), encoded the
-   same way as in {{mpreach}}.
+   same way as in {{mpreach}}. SAFI 1 denotes unicast routing
+   information and SAFI 2 denotes multicast routing information.
+
 
 A speaker that supports multiple <AFI, SAFI> tuples includes them as
 multiple Capabilities.
@@ -1468,12 +1470,12 @@ way, "prefix" means the entire 2-tuple, both the Length field and the
 Prefix field. If solely the Prefix field is intended, that will be 
 stated explicitly.
 
-## IPv4 NLRI Encoding
+## IPv4 NLRI Encoding {#ipv4}
 
 In the case of IPv4 NLRI (AFI/SAFI of 1/1 or 1/2), legal values for
 Length range between 0 and 32.
 
-## IPv6 NLRI Encoding
+## IPv6 NLRI Encoding {#ipv6}
 
 In the case of IPv6 NLRI (AFI/SAFI of 2/1 or 2/2), legal values for
 Length range between 0 and 128.
@@ -2107,7 +2109,7 @@ particular AFI/SAFI" or "AFI/SAFI disable".
 - Treat-as-withdraw: In this approach, the UPDATE message containing the
 path attribute in question MUST be treated as though all contained
 routes had been withdrawn just as if they had been explicitly withdrawn
-({{mpunreach}}, {{nlrilegacy_withdraw}}), thus causing them to be
+({{mpunreach}}, {{nlrilegacyupdate}}), thus causing them to be
 removed from the Adj-RIB-In according to the procedures of
 {{updatemsg}}. For this approach to be used, the NLRI need to be
 successfully parsed; this is discussed in more detail in {{nlrisyntax}}.
@@ -5457,11 +5459,14 @@ malformed if the attribute length is not 8.
 
 ## Legacy IPv4 Route Encoding {#nlrilegacy}
 
-If this encoding is used in an UPDATE, then the MP_REACH_NLRI and
+### Legacy UPDATE Message Format {#nlrilegacyupdate}
+
+This encoding can be used to announce and withdraw routes of AFI/SAFI
+1/1 (only). If it is used in an UPDATE, then the MP_REACH_NLRI and
 MP_UNREACH_NLRI MUST NOT be present in that UPDATE.
 
 The UPDATE message always includes the fixed-size BGP
-header, and also includes the other fields, as shown below (note,
+header, and also includes other fields, as shown below (note,
 some of the shown fields may not be present in every UPDATE message):
 
 ~~~~ aasvg
@@ -5480,10 +5485,10 @@ some of the shown fields may not be present in every UPDATE message):
 {: title="UPDATE message format"}
 
 Withdrawn Routes Length:
-  : This 2-octets unsigned integer indicates the total length of
+  : This 2-octet unsigned integer indicates the total length of
    the Withdrawn Routes field in octets.  Its value allows the
    length of the Network Layer Reachability Information field to
-   be determined, as specified below.
+   be determined, as specified below. 
 
   : A value of 0 indicates that no routes are being withdrawn from
    service, and that the Withdrawn Routes field is not present in
@@ -5492,17 +5497,20 @@ Withdrawn Routes Length:
 Withdrawn Routes:
   : This is a variable-length field that contains a list of IP
    address prefixes for the routes that are being withdrawn from
-   service.  Each IP address prefix is encoded as a 2-tuple of the
-   form <length, prefix>, whose fields are described below:
+   service.  Each IP address prefix is encoded as specified in
+   {{ipv4}}.
    
-   
-...
+Total Path Attribute Length:
+  : As specified in {{updatefmt}}.
+  
+Path Attributes:
+  : As specified in {{updatefmt}}.
 
 Network Layer Reachability Information:
    : This variable-length field contains a list of IP address
-   prefixes.  The length, in octets, of the Network Layer
-   Reachability Information is not encoded explicitly, but can be
-   calculated as:
+   prefixes, encoded as specified in {{ipv4}}.  The length, in octets,
+   of the Network Layer Reachability Information is not encoded
+   explicitly, but can be calculated as:
 
 ~~~~
    UPDATE message Length - 23 - Total Path Attributes Length
@@ -5520,7 +5528,7 @@ Withdrawn Routes Length field.
    > Reachability information is encoded as a list of IP
 address prefixes for the routes that are being made available for
 service.  Each IP address prefix is encoded as described above
-under {{nlri}}.
+under {{ipv4}}.
 
 The minimum length of the UPDATE message is 23 octets -- 19 octets
 for the fixed header + 2 octets for the Withdrawn Routes Length + 2
@@ -5528,58 +5536,47 @@ octets for the Total Path Attribute Length (the value of Withdrawn
 Routes Length is 0 and the value of Total Path Attribute Length is
 0).
 
-...
+As {{updatefmt}} specifies, "An UPDATE message MUST NOT simultaneously
+advertise and withdraw routes". The implication is that an UPDATE using
+this encoding that has a nonzero Withdrawn Routes Length MUST NOT
+include any Network Layer Reachability Information, and an UPDATE that
+includes Network Layer Reachability Information MUST have Withdrawn
+Routes Length of zero. (Both of these can be empty, however, as
+discussed in {{eor}}.)
 
-When an UPDATE message advertises only routes that are to be
-withdrawn from service, the message will not include path attributes
-(other than MP_UNREACH_NLRI) or
-Network Layer Reachability Information. Conversely, when an UPDATE
-message advertises only a feasible route, the Withdrawn Routes field
-will not be present (Withdrawn Routes Length will be equal to 0).
+When an UPDATE message using the legacy encoding only withdraws routes,
+the message will not include path attributes or Network Layer
+Reachability Information. When an UPDATE message only advertises routes,
+the Withdrawn Routes field will not be present (Withdrawn Routes Length
+will be equal to 0).
 
-For backward compatibility, a BGP speaker MUST be able to process UPDATE
+<!-- For backward compatibility, a BGP speaker MUST be able to process UPDATE
 messages that include the same address prefix in the Withdrawn Routes
 and Network Layer Reachability Information fields.  A BGP speaker MUST
 treat an UPDATE message of this form as though the Withdrawn Routes do
-not contain the address prefix.
+not contain the address prefix. -->
+<!-- xxx even though this is the backcompat section, I still think this
+ paragraph is overly persnickety -->
 
-...
+### Legacy NEXT_HOP Attribute {#legacynexthop}
 
-c) NEXT_HOP (Type Code 3):
+NEXT_HOP (Type Code 3):
 : NEXT_HOP is an attribute whose Optional bit is set to 0, whose
-Transitive bit is set to 1, and whose Partial bit is set to 0. It
-defines the (unicast) IPv4 address of the router that SHOULD be used as
-the next hop to the destinations listed in the Network Layer
-Reachability Information field of the UPDATE message.
-
-: Usage of this attribute is defined in {{legacynexthop}}.
-
-...
-
-###  NEXT_HOP {#legacynexthop}
-
-<!-- possibly move this to the legacy section -->
-
-The NEXT_HOP MUST NOT be included with any update, unless the legacy
-encoding ({{nlrilegacy}}) is in use. If the legacy encoding is in use,
-the NEXT_HOP MUST be included with every update that advertises a
-feasible route. It defines the IP address of the router that SHOULD be
-used as the next hop to the destinations listed in the UPDATE message. 
+Transitive bit is set to 1, and whose Partial bit is set to 0. It MUST
+NOT be included with any update, unless the legacy encoding is in use.
+If the legacy encoding is in use, the NEXT_HOP MUST be included with
+every update that advertises a route. It defines the IP address of the
+router that SHOULD be used as the next hop to the destinations listed in
+the Network Layer Reachability Information field of the UPDATE message.
 The NEXT_HOP attribute is calculated by following the rules given in
 {{nexthoprules}}.
-
-...
-
-#### WITHDRAW PLACEHOLDER {#nlrilegacy_withdraw}
-
-...
 
 #### NEXT_HOP Error Handling
 
 The attribute is considered malformed if its length is not 4.
 
 If the NEXT_HOP attribute field is syntactically incorrect (does not
-represent a valid IP host address), the attribute MUST be treated as
+represent a valid IPv4 host address), the attribute MUST be treated as
 malformed.
 
 An UPDATE message with a malformed NEXT_HOP attribute SHALL be handled
@@ -5667,6 +5664,16 @@ RFC 4486 contains the following acknowledgments:
 
 The authors would like to thank Yakov Rekhter, Pedro Marques, Andrew
 Lange, and Don Goodspeed for their review and suggestions.
+
+## Acknowledgements in relationship to RFC 4760
+
+{{RFC4760}} was authored by Tony Bates, Ravi Chandra, Dave Katz, and
+Yakov Rekhter. Its contents have been subsumed in this document.
+
+RFC 4760 contains the following acknowledgments:
+
+The authors would like to thank members of the IDR Working Group for
+their review and comments.
 
 ## Acknowledgements in relationship to RFC 5492
 
