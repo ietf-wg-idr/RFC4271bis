@@ -6052,7 +6052,7 @@ To do and/or not done:
 ## Version 07
 
 - Integrated RFC 4760, "Multiprotocol Extensions for BGP-4".
-  (Issue #163)(Issue #59)(Issue #185)(Other issues to be supplied) The document is reframed
+  (Issue #163)(Issue #59)(Issue #185) The document is reframed
   using MP-BGP as the first-class encoding; it's described as being
   preferred (though not mandatory) for AFI/SAFI 1/1, and the RFC 4271
   encoding is moved to a backward compatibility section. 
