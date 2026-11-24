@@ -6052,29 +6052,38 @@ To do and/or not done:
 ## Version 07
 
 - Integrated RFC 4760, "Multiprotocol Extensions for BGP-4".
-  (Issue 163)(Other issues to be supplied) The document is reframed
+  (Issue #163)(Issue #59)(Issue #185)(Other issues to be supplied) The document is reframed
   using MP-BGP as the first-class encoding; it's described as being
   preferred (though not mandatory) for AFI/SAFI 1/1, and the RFC 4271
   encoding is moved to a backward compatibility section. 
   
 - Defined "key". (Issue #52)
 
+- Strongly discourage the use of the legacy encoding, while leaving it
+  specified and legal. (Issue #57)
+  
+- Fixed 4760 errata. (Issue #168)(Issue #201)(Issue #202)(Issue #203)
+  (Issue #205)
+
 - Defined and mandated EoR. (Issue #170)
+
+- Added CAR as an example. (Issue #186)
 
 - Clarified that keepalives are only needed if the session is quiet.
   (Issue #211)
   
 - Got rid of the acronym "PIB" for "Policy Information Base". 
-  (Issue #213)
+  (Issue #213)(Issue #80)
   
-- Got rid of "overlapping routes" never-implemented rule. (Issue #214)
+- Got rid of "overlapping routes" never-implemented rule. 
+  (Issue #214)(Issue #95)(Issue #91)
 
 - Removed the vestigial remaining part of the "Information Reduction"
   section. (Issue #217) Once done, also changed several mentions of
   "aggregation and information reduction" to just "aggregation".
 
 - Added robustness rules for when an update combines announcements and
-  withdrawals, and/or old and new NLRI encodings. (Issue #218)
+  withdrawals, and/or old and new NLRI encodings. (Issue #218)(Issue #167)
 
 # TCP Options that May Be Used with BGP {#tcpopts}
 
