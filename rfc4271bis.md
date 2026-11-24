@@ -1480,6 +1480,23 @@ Length range between 0 and 32.
 In the case of IPv6 NLRI (AFI/SAFI of 2/1 or 2/2), legal values for
 Length range between 0 and 128.
 
+## Other NLRI Encodings {#othernlri}
+
+The AFI/SAFI define the encoding and semantics of the NLRI. AFI/SAFI not
+specified in this document may define NLRI with arbitrary structure,
+including structures that do not exhibit prefix relationships.
+
+In the context of this document, route identity is determined by the key
+associated with the NLRI. Future AFI/SAFI definitions are expected to
+specify how route identity is determined for the NLRI they define.
+
+For extensible NLRI formats that define subtypes within a single
+AFI/SAFI, it is desirable that the information needed to determine route
+identity remain recognizable even to implementations that do not support
+every subtype. An example of this approach can be found in {{RFC9871}},
+where route identity can be determined independently of
+route-type-specific extensions.
+
 # Path Attributes {#pathattributes}
 
 This section discusses the path attributes of the UPDATE message.
@@ -2219,11 +2236,11 @@ and {{mpunreach}}.
 length of the MP_REACH_NLRI attribute is less than 5.
 
 #### Typed NLRI {#typednlri}
- 
+
 Certain AFI/SAFI, for example, MCAST-VPN {{RFC6514}}, MCAST-VPLS
 {{RFC7117}}, EVPN {{RFC7432}}, and CAR {{RFC9871}} have NLRI that are
 typed. Since supported NLRI type values are not expressed in the
-Multiprotocol Extensions Capability {{mpbgpcap}}, it is possible for a
+Multiprotocol Extensions Capability ({{mpbgpcap}}), it is possible for a
 BGP speaker to advertise support for a given AFI/SAFI while still not
 supporting a particular NLRI type defined within that AFI/SAFI.
 
@@ -2231,6 +2248,8 @@ A BGP speaker advertising support for an AFI/SAFI that defines typed
 NLRI MUST handle routes with unrecognized NLRI types within that
 AFI/SAFI by discarding those routes, unless the relevant specification
 for that AFI/SAFI specifies otherwise.
+
+Related considerations can be found in {{othernlri}}.
 
 ### Rules for Processing UPDATE Messages
 
