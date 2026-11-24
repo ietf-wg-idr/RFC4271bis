@@ -1056,7 +1056,8 @@ and withdrawn using the MP_UNREACH_NLRI attribute ({{mpunreach}}).
 An UPDATE message MUST NOT simultaneously advertise and withdraw routes.
 However, in order to preserve backward compatibility, an implementation
 SHOULD still be prepared to receive an UPDATE message that
-simultaneously advertises and withdraws routes.
+simultaneously advertises and withdraws routes, as discussed in
+{{robustness}}.
 
 For IPv4 unicast routes, a legacy encoding is also available for
 backward compatibility. The following description applies when the
@@ -1262,6 +1263,25 @@ advertised NLRI with the same set of accompanying path attributes.
 
 An UPDATE message can withdraw multiple routes from service by listing
 their NLRI in the MP_UNREACH_NLRI attribute.
+
+#### Receiver Robustness {#robustness}
+ 
+Although UPDATE messages are required to obey the restrictions on
+combining route advertisements and withdrawals, and on mixing the
+legacy and MP-BGP NLRI encodings specified in this document, older
+implementations might transmit UPDATE messages that violate these
+restrictions.
+
+When such an UPDATE message is received, each route advertisement and
+withdrawal contained in the UPDATE message SHOULD be processed
+independently, regardless of encoding.
+
+If an UPDATE message advertises a route whose NLRI matches the NLRI of a
+route it withdraws, the advertisement takes precedence and the
+withdrawal is ignored.
+
+These combinations remain non-conforming encodings and the assumptions
+in {{nlrisyntax_locating}} remain valid for purposes of error recovery.
 
 ### End-of-RIB Marker {#eor}
 
@@ -1639,10 +1659,9 @@ attribute, the BGP speaker that receives the message MUST ignore the
 NEXT_HOP attribute. 
 
 An UPDATE message that carries the MP_REACH_NLRI attribute MUST NOT
-carry the MP_UNREACH_NLRI attribute. <!-- and how to handle errors? -->
-
-An UPDATE message that carries the MP_REACH_NLRI attribute MUST NOT
-have a non-empty legacy encoding ({{nlrilegacy}}).
+carry the MP_UNREACH_NLRI attribute. An UPDATE message that carries the
+MP_REACH_NLRI attribute MUST NOT have a non-empty legacy encoding
+({{nlrilegacy}}). See also {{robustness}}.
 
 MP_REACH_NLRI MUST be the first path attribute to be encoded in any
 UPDATE message in which it is present.
@@ -1785,10 +1804,9 @@ An UPDATE message that carries the MP_UNREACH_NLRI attribute is not
 required to carry any other path attributes.
 
 An UPDATE message that carries the MP_UNREACH_NLRI attribute MUST NOT
-carry the MP_REACH_NLRI attribute. <!-- and how to handle errors? -->
-
-An UPDATE message that carries the MP_UNREACH_NLRI attribute MUST NOT
-have a non-empty legacy encoding ({{nlrilegacy}}).
+carry the MP_REACH_NLRI attribute. An UPDATE message that carries the
+MP_UNREACH_NLRI attribute MUST NOT have a non-empty legacy encoding
+({{nlrilegacy}}). See also {{robustness}}.
 
 MP_UNREACH_NLRI MUST be the first path attribute encoded in any
 UPDATE message in which it is present.
@@ -2189,6 +2207,8 @@ received, the location of the NLRI field can be determined using the
 Message Length, Withdrawn Route Length, and Total Attribute Length (when
 they are consistent) carried in the message instead of relying on the
 length of individual attributes in the message.
+
+(See also {{robustness}}.)
 
 #### Missing NLRI {#nlrisyntax_missing}
 
@@ -5569,13 +5589,7 @@ Reachability Information. When an UPDATE message only advertises routes,
 the Withdrawn Routes field will not be present (Withdrawn Routes Length
 will be equal to 0).
 
-<!-- For backward compatibility, a BGP speaker MUST be able to process UPDATE
-messages that include the same address prefix in the Withdrawn Routes
-and Network Layer Reachability Information fields.  A BGP speaker MUST
-treat an UPDATE message of this form as though the Withdrawn Routes do
-not contain the address prefix. -->
-<!-- xxx even though this is the backcompat section, I still think this
- paragraph is overly persnickety -->
+(See also {{robustness}}.)
 
 ### Legacy NEXT_HOP Attribute {#legacynexthop}
 
@@ -6041,12 +6055,7 @@ To do and/or not done:
   (Issue 163)(Other issues to be supplied) The document is reframed
   using MP-BGP as the first-class encoding; it's described as being
   preferred (though not mandatory) for AFI/SAFI 1/1, and the RFC 4271
-  encoding is moved to a backward compatibility section. Still in
-  progress before commit: need to make description consistent
-  throughout; the base document describes everything in terms of
-  "routes," "prefixes," and "nlri" which are assumed to be IPv4 routes.
-  It will be necessary to do a complete scrub of these assumptions. Also
-  need to look at IANA considerations and acknowledgments.
+  encoding is moved to a backward compatibility section. 
   
 - Defined "key". (Issue #52)
 
@@ -6063,6 +6072,9 @@ To do and/or not done:
 - Removed the vestigial remaining part of the "Information Reduction"
   section. (Issue #217) Once done, also changed several mentions of
   "aggregation and information reduction" to just "aggregation".
+
+- Added robustness rules for when an update combines announcements and
+  withdrawals, and/or old and new NLRI encodings. (Issue #218)
 
 # TCP Options that May Be Used with BGP {#tcpopts}
 
