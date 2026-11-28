@@ -1266,7 +1266,7 @@ their NLRI in the MP_UNREACH_NLRI attribute.
 
 #### Receiver Robustness {#robustness}
  
-Although UPDATE messages are required to obey the restrictions on
+Although implementations are required to obey the restrictions on
 combining route advertisements and withdrawals, and on mixing the
 legacy and MP-BGP NLRI encodings specified in this document, older
 implementations might transmit UPDATE messages that violate these
