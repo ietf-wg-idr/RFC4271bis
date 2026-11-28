@@ -6062,7 +6062,7 @@ To do and/or not done:
 - Strongly discourage the use of the legacy encoding, while leaving it
   specified and legal. (Issue #57)
   
-- Fixed 4760 errata. (Issue #168)(Issue #201)(Issue #202)(Issue #203)
+- Fixed RFC 4760 errata. (Issue #168)(Issue #201)(Issue #202)(Issue #203)
   (Issue #205)
 
 - Defined and mandated EoR. (Issue #170)
